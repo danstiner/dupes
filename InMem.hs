@@ -8,22 +8,22 @@ module InMem (
   , MemStore
 ) where
 
-import Blob
+import qualified Blob
 
 import Data.Map as Map
 
-data MemStore = MemStore (Map BlobId BlobData) deriving (Show)
+data MemStore = MemStore (Map Blob.Id Blob.Data) deriving (Show)
 
 createStore :: MemStore
 createStore = MemStore empty
 
-get :: BlobId -> MemStore -> Maybe BlobData
+get :: Blob.Id -> MemStore -> Maybe Blob.Data
 get key (MemStore map) = Map.lookup key map
 
-put :: Blob -> MemStore -> MemStore
-put (Blob id dat) (MemStore map) =
+put :: Blob.Blob -> MemStore -> MemStore
+put (Blob.Blob id dat) (MemStore map) =
   MemStore $ insert id dat map
 
-delete :: BlobId -> MemStore -> MemStore
+delete :: Blob.Id -> MemStore -> MemStore
 delete id (MemStore map) =
   MemStore $ Map.delete id map

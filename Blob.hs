@@ -2,23 +2,23 @@
 -- Content addressed blobs
 module Blob (
     Blob(Blob)
-  , BlobId
-  , BlobData
-  , createBlob
+  , Id
+  , Data
+  , create
 ) where
 
 import Data.ByteString (ByteString)
-import Crypto.Hash.SHA3 (hash, hashlazy)
+import qualified Crypto.Hash.SHA3 as SHA3
 
 type HashDigest = ByteString
 
 hashLength = 256
 
-data BlobId = Sha3BlobId HashDigest deriving (Eq, Show, Ord)
-type BlobData = ByteString
+data Id = Sha3 HashDigest deriving (Eq, Show, Ord)
+type Data = ByteString
 
-data Blob = Blob BlobId BlobData deriving (Show, Eq)
+data Blob = Blob Id Data deriving (Show, Eq)
 
-createBlob :: ByteString -> Blob
-createBlob s = Blob (Sha3BlobId $ hash hashLength s) s
+create :: ByteString -> Blob
+create s = Blob (Sha3 $ SHA3.hash hashLength s) s
 
