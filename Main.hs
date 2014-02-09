@@ -1,3 +1,13 @@
 
+import System.Environment
+
+import Traverser
+import InMem
+
 main :: IO ()
-main = print "Hello Cloud World"
+main = do
+  print "Hello Cloud World"
+  [path] <- getArgs
+  traverseAndPrint path
+--  fileStore <- traverseAndStore path createStore
+--  print fileStore

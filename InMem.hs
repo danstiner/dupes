@@ -5,6 +5,7 @@ module InMem (
   , get
   , put
   , InMem.delete
+  , MemStore
 ) where
 
 import Blob
