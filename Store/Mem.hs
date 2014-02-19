@@ -1,18 +1,16 @@
 
-
-module InMem (
+module Store.Mem (
     createStore
   , get
   , put
-  , InMem.delete
+  , Store.Mem.delete
   , MemStore
 ) where
 
 import qualified Blob
-
 import Data.Map as Map
 
-data MemStore = MemStore (Map Blob.Id Blob.Data) deriving (Show)
+newtype MemStore = MemStore (Map Blob.Id Blob.Data) deriving (Show)
 
 createStore :: MemStore
 createStore = MemStore empty

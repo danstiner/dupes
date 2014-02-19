@@ -1,10 +1,16 @@
 
 module Traverser (
---traverseAndStore,
+traverseAndStore,
+traverseAndStoreFlat,
 traverseAndPrint
 ) where
 
-import InMem (MemStore)
+import Store.Mem (MemStore)
+import Store.Mem as InMem
+import qualified Blob
+import qualified Data.ByteString as B
+import Store.Flat as Flat
+
 
 import Control.Monad ( forM_, liftM )
 import Control.Proxy
@@ -26,7 +32,26 @@ getRecursiveContents topPath () = runIdentityP $ do
 traverseAndPrint :: FilePath -> IO ()
 traverseAndPrint path =
   runProxy $ getRecursiveContents path
-        >-> useD (\file -> putStrLn $ "Found file " ++ file)
+    >-> useD (\file -> putStrLn $ "Found file " ++ file)
 
---traverseAndStore :: FilePath -> MemStore -> IO MemStore
---traverseAndStore path store = do store
+pathToBlob :: FilePath -> IO Blob.Blob
+pathToBlob path = do
+  contents <- B.readFile path
+  return $ Blob.create contents
+
+traverseAndStore :: FilePath -> MemStore -> IO ()
+traverseAndStore path store = 
+  runProxy $ getRecursiveContents path
+--    >-> useD (\filepath -> putStrLn $ show $ pathToBlob path)
+--    >-> toListD
+--    >-> foldD 
+
+putHelper :: FilePath -> Flat.Store -> IO ()
+putHelper path store = do
+  blob <- pathToBlob path
+  Flat.put blob store
+
+traverseAndStoreFlat :: FilePath -> Flat.Store -> IO ()
+traverseAndStoreFlat path store =
+  runProxy $ getRecursiveContents path
+    >-> useD (\filepath -> putHelper filepath store)
