@@ -5,17 +5,15 @@ traverseAndStoreFlat,
 traverseAndPrint
 ) where
 
-import Store.Mem (MemStore)
 import Store.Mem as InMem
 import qualified Blob
 import qualified Data.ByteString as B
 import Store.Flat as Flat
 
 
-import Control.Monad ( forM_, liftM )
+import Control.Monad ( forM_ )
 import Control.Proxy
 import System.Directory ( doesDirectoryExist, getDirectoryContents )
-import System.Environment ( getArgs )
 import System.FilePath ( (</>) )
 
 getRecursiveContents :: (Proxy p) => FilePath -> () -> Producer p FilePath IO ()

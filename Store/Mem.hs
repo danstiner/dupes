@@ -16,12 +16,12 @@ createStore :: MemStore
 createStore = MemStore empty
 
 get :: Blob.Id -> MemStore -> Maybe Blob.Data
-get key (MemStore map) = Map.lookup key map
+get i (MemStore m) = Map.lookup i m
 
 put :: Blob.Blob -> MemStore -> MemStore
-put (Blob.Blob id dat) (MemStore map) =
-  MemStore $ insert id dat map
+put (Blob.Blob i dat) (MemStore m) =
+  MemStore $ insert i dat m
 
 delete :: Blob.Id -> MemStore -> MemStore
-delete id (MemStore map) =
-  MemStore $ Map.delete id map
+delete i (MemStore m) =
+  MemStore $ Map.delete i m

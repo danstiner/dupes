@@ -19,18 +19,18 @@ createStore :: FilePath -> Store
 createStore path = Store path
 
 buildFilepath :: FilePath -> Blob.Id -> FilePath
-buildFilepath path id =
-  path ++ "/" ++ (Blob.toString id)
+buildFilepath path key =
+  path ++ "/" ++ (Blob.toString key)
 
 get :: Blob.Id -> Store -> IO Blob.Data
-get id (Store path) = 
-  B.readFile (buildFilepath path id)
+get key (Store path) =
+  B.readFile (buildFilepath path key)
 
 put :: Blob.Blob -> Store -> IO ()
-put (Blob.Blob id val) (Store path) =
-  B.writeFile (buildFilepath path id) val
+put (Blob.Blob key val) (Store path) =
+  B.writeFile (buildFilepath path key) val
 
 delete :: Blob.Id -> Store -> IO ()
-delete id (Store path) =
-  removeFile (buildFilepath path id)
+delete key (Store path) =
+  removeFile (buildFilepath path key)
 
