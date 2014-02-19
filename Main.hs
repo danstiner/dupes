@@ -2,7 +2,6 @@
 import System.Environment
 
 import Traverser
-import qualified Store.Mem
 import qualified Store.Flat as Flat
 
 main :: IO ()
