@@ -15,6 +15,7 @@ import Control.Monad ( forM_ )
 import Control.Proxy
 import System.Directory ( doesDirectoryExist, getDirectoryContents )
 import System.FilePath ( (</>) )
+import Control.Monad.Trans.State.Lazy (evalStateT)
 
 getRecursiveContents :: (Proxy p) => FilePath -> () -> Producer p FilePath IO ()
 getRecursiveContents topPath () = runIdentityP $ do
@@ -47,7 +48,7 @@ traverseAndStore path store =
 putHelper :: FilePath -> Flat.Store -> IO ()
 putHelper path store = do
   blob <- pathToBlob path
-  Flat.put blob store
+  evalStateT (Flat.put blob) store
 
 traverseAndStoreFlat :: FilePath -> Flat.Store -> IO ()
 traverseAndStoreFlat path store =
