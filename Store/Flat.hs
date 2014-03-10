@@ -16,12 +16,18 @@ import Control.Monad.Trans.Class (lift)
 
 newtype Store = Store FilePath
 
+pathPrefixSize :: Int
+pathPrefixSize = 2
+
 createStore :: FilePath -> Store
 createStore path = Store path
 
 buildFilepath :: FilePath -> Blob.Id -> FilePath
 buildFilepath path key =
-  path ++ "/objects/" ++ (Blob.toString key)
+  path ++ "/objects/" ++ prefix ++ "/" ++ postfix
+  where
+  	(prefix, postfix) = splitAt pathPrefixSize keystr
+  	keystr = Blob.toString key
 
 instance Store.Blob.BlobStore Store where
 	get key = do
