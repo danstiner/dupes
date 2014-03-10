@@ -9,13 +9,13 @@ import Store.Mem as InMem
 import qualified Blob
 import qualified Data.ByteString as B
 import Store.Flat as Flat
-
+import Store.Blob as BlobStore
 
 import Control.Monad ( forM_ )
 import Control.Proxy
 import System.Directory ( doesDirectoryExist, getDirectoryContents )
 import System.FilePath ( (</>) )
-import Control.Monad.Trans.State.Lazy (evalStateT)
+import Control.Monad.Trans.State (evalStateT)
 
 getRecursiveContents :: (Proxy p) => FilePath -> () -> Producer p FilePath IO ()
 getRecursiveContents topPath () = runIdentityP $ do
@@ -48,7 +48,7 @@ traverseAndStore path store =
 putHelper :: FilePath -> Flat.Store -> IO ()
 putHelper path store = do
   blob <- pathToBlob path
-  evalStateT (Flat.put blob) store
+  evalStateT (BlobStore.put blob) store
 
 traverseAndStoreFlat :: FilePath -> Flat.Store -> IO ()
 traverseAndStoreFlat path store =

@@ -1,50 +1,55 @@
 
 module Store.Mem (
     createStore
-  , get
-  , put
-  , delete
   , MemStore
 ) where
 
 import qualified Blob
+import qualified Ref
+import qualified Store.Blob
+import qualified Store.Ref
+
 import qualified Data.Map as Map
 import qualified Control.Monad.Trans.State as State
-import Control.Monad.Trans.Class (lift)
 
 newtype MemStore = MemStore (Map.Map Blob.Id Blob.Data) deriving (Show)
-
-type MemStateT = State.StateT MemStore
-type MemState = State.State MemStore
+newtype MemRefStore = MemRefStore (Map.Map Ref.Id Blob.Id) deriving (Show)
 
 createStore :: MemStore
 createStore = MemStore Map.empty
 
-getS :: Blob.Id -> MemStateT Maybe Blob.Data
-getS i = do
-	(MemStore m) <- State.get
-	v <- lift $ Map.lookup i m
-	return v
+instance Store.Blob.BlobStore MemStore where
+	get key = do
+		(MemStore m) <- State.get
+		let v = Map.lookup key m
+		case v of
+			Just val -> return $ Just (Blob.Blob key val)
+			Nothing -> return Nothing
 
-putS :: Blob.Blob -> MemState ()
-putS (Blob.Blob i dat) = do
-	(MemStore m) <- State.get
-	let newStore = MemStore $ Map.insert i dat m
-	State.put $ newStore
+	put (Blob.Blob key dat) = do
+		(MemStore m) <- State.get
+		let newStore = MemStore $ Map.insert key dat m
+		State.put $ newStore
 
-deleteS :: Blob.Id -> MemState ()
-deleteS i = do
-	(MemStore m) <- State.get
-	let newStore = MemStore $ Map.delete i m
-	State.put $ newStore
+	delete key = do
+		(MemStore m) <- State.get
+		let newStore = MemStore $ Map.delete key m
+		State.put $ newStore
 
-get :: Blob.Id -> MemStore -> Maybe Blob.Data
-get i (MemStore m) = Map.lookup i m
+instance Store.Ref.RefStore MemRefStore where
+	read name = do
+		(MemRefStore m) <- State.get
+		let v = Map.lookup name m
+		case v of
+			Just val -> return $ Just (Ref.Ref name val)
+			Nothing -> return Nothing
 
-put :: Blob.Blob -> MemStore -> MemStore
-put (Blob.Blob i dat) (MemStore m) =
-  MemStore $ Map.insert i dat m
+	set (Ref.Ref name ref) = do
+		(MemRefStore m) <- State.get
+		let newStore = MemRefStore $ Map.insert name ref m
+		State.put $ newStore
 
-delete :: Blob.Id -> MemStore -> MemStore
-delete i (MemStore m) =
-  MemStore $ Map.delete i m
+	delete key = do
+		(MemRefStore m) <- State.get
+		let newStore = MemRefStore $ Map.delete key m
+		State.put $ newStore
