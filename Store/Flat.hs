@@ -10,9 +10,10 @@ import qualified Store.Blob
 import qualified Data.ByteString as B
 import qualified Data.ByteString.Lazy as L
 
-import System.Directory (removeFile)
+import System.Directory as Directory
 import qualified Control.Monad.Trans.State as State
 import Control.Monad.Trans.Class (lift)
+import System.FilePath ( (</>) )
 
 newtype Store = Store FilePath
 
@@ -24,7 +25,13 @@ createStore path = Store path
 
 buildFilepath :: FilePath -> Blob.Id -> FilePath
 buildFilepath path key =
-  path ++ "/objects/" ++ prefix ++ "/" ++ postfix
+  parentDir </> name
+  where
+  	(parentDir, name) = buildFilepathParts path key
+
+buildFilepathParts :: FilePath -> Blob.Id -> (FilePath,FilePath)
+buildFilepathParts path key =
+  (path </> "objects" </> prefix, postfix)
   where
   	(prefix, postfix) = splitAt pathPrefixSize keystr
   	keystr = Blob.toString key
@@ -37,7 +44,9 @@ instance Store.Blob.BlobStore Store where
 
 	put (Blob.Blob key val) = do
 		(Store storePath) <- State.get
-		let path = buildFilepath storePath key
+		let (parentDir, name) = buildFilepathParts storePath key
+		let path = parentDir </> name
+		lift $ Directory.createDirectoryIfMissing True parentDir
 		lift $ writeToFile path val
 		where
 			writeToFile path (Blob.Bytes bytes) = B.writeFile path bytes
@@ -45,4 +54,4 @@ instance Store.Blob.BlobStore Store where
 
 	delete key = do
 		(Store storePath) <- State.get
-		lift $ removeFile $ buildFilepath storePath key
+		lift $ Directory.removeFile $ buildFilepath storePath key
