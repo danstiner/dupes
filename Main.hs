@@ -1,7 +1,6 @@
 
 import System.Environment
 
-import Traverser
 import qualified Plumbing
 import qualified Store.Mem as Mem
 import qualified Store.Flat as Flat

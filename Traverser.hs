@@ -39,7 +39,7 @@ pathToBlob path = do
   return $ Blob.create contents
 
 traverseAndStore :: FilePath -> MemStore -> IO ()
-traverseAndStore path store = 
+traverseAndStore path _ = 
   runProxy $ getRecursiveContents path
 --    >-> useD (\filepath -> putStrLn $ show $ pathToBlob path)
 --    >-> toListD
