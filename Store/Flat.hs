@@ -4,8 +4,8 @@ module Store.Flat (
   , Store
 ) where
 
+import Store.Blob
 import qualified Blob
-import qualified Store.Blob
 
 import qualified Data.ByteString as B
 import qualified Data.ByteString.Lazy as L
@@ -36,7 +36,7 @@ buildFilepathParts path key =
   	(prefix, postfix) = splitAt pathPrefixSize keystr
   	keystr = Blob.toString key
 
-instance Store.Blob.BlobStore Store where
+instance BlobStore Store where
 	get key = do
 		(Store storePath) <- State.get
 		v <- lift $ L.readFile $ buildFilepath storePath key
