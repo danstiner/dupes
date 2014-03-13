@@ -14,6 +14,7 @@ import qualified Data.ByteString as B
 import qualified Data.ByteString.Lazy as L
 import qualified Data.Binary as Binary
 import qualified Blob
+import Control.Monad ( forM_ )
 
 type HashDigest = B.ByteString
 
@@ -28,10 +29,27 @@ type Data = [TreeEntry]
 data Tree = Tree Id Data deriving (Show, Eq)
 
 instance Binary.Binary Tree where
-	put (Tree id dat) = do
-		Binary.put "arst"
+	put (Tree ident entries) = do
+		Binary.put ident
+		forM_ entries Binary.put
 	get = do
 		Binary.get
+
+instance Binary.Binary TreeEntry where
+	put (TreeEntry mode filename key) = do
+		Binary.put mode
+		Binary.put filename
+		Binary.put key
+	get = do
+		Binary.get
+
+instance Binary.Binary Id where
+	put None = do
+		Binary.put (0 :: Binary.Word8)
+	get = do
+		tag <- Binary.getWord8
+		case tag of
+			0 -> return None
 
 create :: Data -> Tree
 create dat = Tree None dat

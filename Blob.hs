@@ -9,6 +9,7 @@ module Blob (
   , toString
 ) where
 
+import Data.Binary as Binary
 import qualified Data.ByteString.Char8 as C
 import qualified Data.ByteString.Base16 as Base16
 import qualified Crypto.Hash.SHA3 as SHA3
@@ -26,6 +27,13 @@ data Data = Bytes B.ByteString | LazyBytes L.ByteString deriving (Show, Eq)
 
 data Blob = Blob Id Data deriving (Show, Eq)
 
+instance Binary.Binary Id where
+	put (Sha3 hash) = do
+		Binary.put hash
+	get = do
+		hash <- Binary.get
+		return $ Sha3 hash
+
 create :: B.ByteString -> Blob
 create s = Blob (Sha3 $ SHA3.hash hashLength s) (Bytes s)
 
@@ -35,3 +43,4 @@ recreateLazy i d = Blob i (LazyBytes d)
 toString :: Id -> String
 toString (Sha3 hash) =
   C.unpack $ Base16.encode hash
+
