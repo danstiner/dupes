@@ -41,9 +41,6 @@ pathToBlob path = do
 traverseAndStore :: FilePath -> MemStore -> IO ()
 traverseAndStore path _ = 
   runProxy $ getRecursiveContents path
---    >-> useD (\filepath -> putStrLn $ show $ pathToBlob path)
---    >-> toListD
---    >-> foldD 
 
 putHelper :: FilePath -> Flat.Store -> IO ()
 putHelper path store = do

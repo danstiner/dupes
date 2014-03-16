@@ -40,7 +40,7 @@ create s = Blob (Sha3 $ SHA3.hash hashLength s) (Bytes s)
 
 createIdFromHex :: String -> Blob.Id
 createIdFromHex s = 
-	let (x, xs) = Base16.decode (C.pack s) in
+	let (x, _) = Base16.decode (C.pack s) in
 	Sha3 x
 
 recreateLazy :: Blob.Id -> L.ByteString -> Blob

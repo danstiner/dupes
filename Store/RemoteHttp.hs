@@ -10,15 +10,10 @@ import Store.Ref
 import qualified Blob
 import qualified Ref
 
-import qualified Data.ByteString as B
-import qualified Data.ByteString.Lazy as L
-
 import Data.Aeson as Aeson
 import Data.Text (Text)
 import qualified Data.Text as Text
-import Data.ByteString.Lazy.Char8 (pack)
 
-import System.Directory as Directory
 import qualified Control.Monad.Trans.State as State
 import Control.Monad.Trans.Class (lift)
 
