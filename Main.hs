@@ -12,4 +12,4 @@ main = do
   [path] <- getArgs
   home <- Dir.getHomeDirectory
   Plumbing.writeTree path $ Mem.createStore
-  Plumbing.writeTree path $ Remote.createStore "http://localhost"
+  Plumbing.writeTree path $ Flat.createStore (home ++ "/.bitcloud")
