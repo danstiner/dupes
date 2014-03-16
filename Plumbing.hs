@@ -1,6 +1,7 @@
 
 module Plumbing (
 writeTree,
+setRef
 ) where
 
 import qualified Data.ByteString as B
@@ -10,13 +11,22 @@ import System.Directory ( doesDirectoryExist, getDirectoryContents )
 import System.FilePath ( (</>) )
 
 import Store.Blob as BlobStore
+import Store.Ref as RefStore
 import qualified Blob
 import qualified Tree
+import qualified Ref
 
-writeTree :: (BlobStore a) => FilePath -> a -> IO ()
+writeTree :: (BlobStore a) => FilePath -> a -> IO Blob.Id
 writeTree path store = do
   tree <- createTree path store
-  saveTree tree store
+  treeBlob <- saveTree tree store
+  let (Blob.Blob blobId _) = treeBlob
+  return blobId
+
+setRef :: (RefStore a) => String -> Blob.Id -> a -> IO ()
+setRef name value store = do
+  let ref = Ref.create (Ref.createId name) value
+  evalStateT (RefStore.set ref) store
   return ()
 
 createTree :: (BlobStore a) => FilePath -> a -> IO Tree.Tree
@@ -42,9 +52,7 @@ createTreeEntry parentPath name store = do
 	where
 		fullpath = parentPath </> name
 		createDirEntry = do
-			subTree <- createTree fullpath store
-			subTreeBlob <- saveTree subTree store
-			let (Blob.Blob blobId _) = subTreeBlob
+			blobId <- writeTree fullpath store
 			return $ Tree.createEntry name 0 blobId
 		createFileEntry = do
 			blob <- blobFromPath fullpath
