@@ -28,6 +28,7 @@ executable bitcloud
                      , directory
                      , filepath
                      , higher-leveldb
+                     , hslogger
                      , http-conduit
                      , pipes < 4.0
                      , text
