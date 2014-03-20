@@ -1,9 +1,10 @@
 /dist
-cabal-dev
+/cabal-dev
 *.o
 *.hi
 *.chi
 *.chs.h
+*.tmp
 .virthualenv
 .hsenv
 .cabal-sandbox/
