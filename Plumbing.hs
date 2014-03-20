@@ -4,17 +4,29 @@ writeTree,
 setRef
 ) where
 
+
+import qualified App
+
 import qualified Data.ByteString as B
 import Control.Monad ( filterM )
 import Control.Monad.Trans.State (evalStateT)
 import System.Directory ( doesDirectoryExist, getDirectoryContents )
 import System.FilePath ( (</>) )
+import System.Log.Logger
+import Control.Exception
+import Data.Maybe (catMaybes)
+import System.IO.Error
+import Control.Monad (guard)
 
 import Store.Blob as BlobStore
 import Store.Ref as RefStore
 import qualified Blob
 import qualified Tree
 import qualified Ref
+
+
+logTag :: String
+logTag = App.logTag ++ ".Plumbing"
 
 writeTree :: (BlobStore a) => FilePath -> a -> IO Blob.Id
 writeTree path store = do
@@ -33,7 +45,7 @@ createTree :: (BlobStore a) => FilePath -> a -> IO Tree.Tree
 createTree path store = do
   names <- listDirectory path
   entries <- mapM toEntry names
-  return $ Tree.create entries
+  return $ Tree.create (catMaybes entries)
   where
   	toEntry name = createTreeEntry path name store
 
@@ -42,7 +54,7 @@ listDirectory path = do
 	names <- getDirectoryContents path
 	return $ filter (`notElem` [".", ".."]) names
 
-createTreeEntry :: (BlobStore a) => FilePath -> FilePath -> a -> IO Tree.TreeEntry
+createTreeEntry :: (BlobStore a) => FilePath -> FilePath -> a -> IO (Maybe Tree.TreeEntry)
 createTreeEntry parentPath name store = do
 	let fullpath = parentPath </> name
 	isDir <- doesDirectoryExist fullpath
@@ -53,12 +65,17 @@ createTreeEntry parentPath name store = do
 		fullpath = parentPath </> name
 		createDirEntry = do
 			blobId <- writeTree fullpath store
-			return $ Tree.createEntry name 0 blobId
+			return $ Just $ Tree.createEntry name 0 blobId
 		createFileEntry = do
-			blob <- blobFromPath fullpath
-			evalStateT (BlobStore.put blob) store
-			let (Blob.Blob blobId _) = blob
-			return $ Tree.createEntry name 0 blobId
+			result <- tryJust (guard . isDoesNotExistError) (blobFromPath fullpath)
+			case result of
+				Left e -> do
+					noticeM logTag ("Problem reading file: " ++ fullpath ++", exception: " ++ (show e))
+					return Nothing
+				Right blob -> do
+					evalStateT (BlobStore.put blob) store
+					let (Blob.Blob blobId _) = blob
+					return $ Just $ Tree.createEntry name 0 blobId
 
 
 blobFromPath :: FilePath -> IO Blob.Blob
