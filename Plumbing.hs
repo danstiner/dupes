@@ -8,7 +8,6 @@ setRef
 import qualified App
 
 import qualified Data.ByteString as B
-import Control.Monad ( filterM )
 import Control.Monad.Trans.State (evalStateT)
 import System.Directory ( doesDirectoryExist, getDirectoryContents )
 import System.FilePath ( (</>) )
@@ -56,7 +55,6 @@ listDirectory path = do
 
 createTreeEntry :: (BlobStore a) => FilePath -> FilePath -> a -> IO (Maybe Tree.TreeEntry)
 createTreeEntry parentPath name store = do
-	let fullpath = parentPath </> name
 	isDir <- doesDirectoryExist fullpath
 	case isDir of
 		True -> createDirEntry

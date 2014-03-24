@@ -5,7 +5,7 @@ module Store.LevelDB (
 ) where
 
 import Ref
-import Store.Blob
+import Store.Blob ()
 import qualified Blob
 import Store.Ref
 import Data.ByteString
@@ -29,7 +29,7 @@ createStore path = Store path
 instance RefStore Store where
 	read name = do
 		(Store path) <- State.get
-		ref <- Level.runCreateLevelDB path keySpace $ do
+		Level.runCreateLevelDB path keySpace $ do
 			r <- Level.get $ toKey name
 			case r of
 				Just val -> return $ Just $ Ref name (Binary.decode (L.fromStrict val) :: Blob.Id)

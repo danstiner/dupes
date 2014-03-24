@@ -1,13 +1,10 @@
 
-import System.Environment
 
 import qualified App
 import qualified Logging
 import qualified Plumbing
-import qualified Store.Mem as Mem
 import qualified Store.Flat as Flat
 import qualified Store.LevelDB as LevelDB
-import qualified Store.RemoteHttp as Remote
 import qualified Telemetry
 import System.Directory as Dir
 import System.Log.Logger
@@ -49,7 +46,7 @@ runWithOptions options = do
   let logLevel = case ((quiet options), (verbose options)) of
   	(True, False) -> ERROR
   	(False, True) -> DEBUG
-  	otherwise -> WARNING
+  	(_, _) -> WARNING
 
   Logging.registerLogger appUserDir logLevel
   Telemetry.registerLogger appUserDir

@@ -25,8 +25,7 @@ type ParamValue = String
 
 newtype Store = Store Url
 
-data RefResponse = RefResponse { name :: Text, value :: Text }
-newtype SetResponse = SetResponse { result :: Text }
+data RefResponse = RefResponse Text Text
 
 instance BlobStore Store where
 	get key = do
@@ -35,16 +34,16 @@ instance BlobStore Store where
 		response <- lift $ simpleHttp url
 		return $ Just $ Blob.Blob key (Blob.LazyBytes response)
 
-	put (Blob.Blob key val) = do
+	put (Blob.Blob key _) = do
 		store <- State.get
 		let url = buildUrl store "blob" (Blob.toString key) 
-		response <- lift $ simpleHttp url -- val
+		lift $ simpleHttp url
 		return ()
 
 	delete key = do
 		store <- State.get
 		let url = buildUrl store "blob" (Blob.toString key)
-		response <- lift $ simpleHttp url
+		lift $ simpleHttp url
 		return ()
 
 instance RefStore Store where
@@ -54,16 +53,16 @@ instance RefStore Store where
 		response <- lift $ simpleHttp url
 		return $ makeRef name (Aeson.decode response)
 
-	set (Ref.Ref name value) = do
+	set (Ref.Ref name _) = do
 		store <- State.get
 		let url = buildUrl store "ref" (Ref.toString name)
-		response <- lift $ simpleHttp url -- value
+		lift $ simpleHttp url
 		return ()
 
 	delete name = do
 		store <- State.get
 		let url = buildUrl store "ref" (Ref.toString name)
-		response <- lift $ simpleHttp url
+		lift $ simpleHttp url
 		return ()
 
 instance Aeson.FromJSON RefResponse where
@@ -73,10 +72,10 @@ instance Aeson.FromJSON RefResponse where
 		return $ RefResponse name value
 
 makeRef :: Ref.Id -> Maybe RefResponse -> Maybe Ref.Ref
-makeRef id response = 
+makeRef key response = 
 	case response of
 		Nothing -> Nothing
-		Just (RefResponse name value) -> Just $ Ref.Ref id (Blob.createIdFromHex $ Text.unpack value)
+		Just (RefResponse _ value) -> Just $ Ref.Ref key (Blob.createIdFromHex $ Text.unpack value)
 
 buildUrl :: Store -> ParamName -> ParamValue -> Url
 buildUrl (Store base) name value =
