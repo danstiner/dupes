@@ -5,6 +5,7 @@ module Blob (
   , Id
   , Data (..)
   , create
+  , createId
   , createIdFromHex
   , recreateLazy
   , toString
@@ -37,6 +38,14 @@ instance Binary.Binary Id where
 
 create :: B.ByteString -> Blob
 create s = Blob (Sha3 $ SHA3.hash hashLength s) (Bytes s)
+
+
+createId :: Data -> Blob.Id
+createId d = case d of
+  Bytes bytes -> Sha3 $ hashBytes bytes
+  LazyBytes lazy -> Sha3 $ hashBytes (L.toStrict lazy)
+  where
+    hashBytes b = SHA3.hash hashLength b
 
 createIdFromHex :: String -> Blob.Id
 createIdFromHex s = 

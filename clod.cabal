@@ -27,7 +27,7 @@ executable clod
                      , higher-leveldb
                      , hslogger
                      , http-conduit
-                     , optparse-applicative
+                     , optparse-applicative > 0.8.0
                      , pipes < 4.0
                      , text
                      , transformers

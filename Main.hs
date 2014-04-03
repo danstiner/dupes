@@ -1,5 +1,4 @@
 
-
 import qualified App
 import qualified Logging
 import qualified Plumbing
@@ -10,28 +9,25 @@ import System.Directory as Dir
 import System.Log.Logger
 import System.FilePath ( (</>) )
 import System.Directory as Directory
+import System.Environment (getArgs)
 import Options.Applicative
 
+import Options
+import qualified Command.Commands as Commands
+
 data CommandOptions = CommandOptions
-  { verbose :: Bool
-  , quiet :: Bool
-  , path :: String }
+  { commandName :: String }
 
-sample :: Parser CommandOptions
-sample = CommandOptions
-  <$> switch
-      ( long "verbose"
-     <> help "Whether to be loud" )
-  <*> switch
-      ( long "quiet"
-     <> help "Whether to be quiet" )
-  <*> argument str (metavar "PATH")
-
+optionParser :: Parser CommandOptions
+optionParser = CommandOptions
+  <$> argument str (metavar "COMMAND")
 
 main :: IO ()
-main = execParser opts >>= runWithOptions
+main = do
+  args <- getArgs
+  execParserWithArgs opts (take 1 args) >>= runWithOptions
 	where
-		parser = (helper <*> sample)
+		parser = (helper <*> optionParser)
 		desc = ( fullDesc
 			<> progDesc "Print a greeting for TARGET"
 			<> header "hello - a test for optparse-applicative" )
@@ -43,16 +39,20 @@ runWithOptions options = do
   let appUserDir = home </> ".clod"
   Directory.createDirectoryIfMissing False appUserDir
 
-  let logLevel = case ((quiet options), (verbose options)) of
-  	(True, False) -> ERROR
-  	(False, True) -> DEBUG
-  	(_, _) -> WARNING
+  --let logLevel = case ((quiet options), (verbose options)) of
+  --	(True, False) -> ERROR
+  --	(False, True) -> DEBUG
+  --	(_, _) -> WARNING
 
-  Logging.registerLogger appUserDir logLevel
+  --Logging.registerLogger appUserDir logLevel
   Telemetry.registerLogger appUserDir
 
   infoM App.logTag "Application launching"
 
-  treeId <- Plumbing.writeTree (path options) $ Flat.createStore (appUserDir)
-  Plumbing.setRef "master" treeId $ LevelDB.createStore (appUserDir </> "leveldb")
+  args <- getArgs
+
+  Commands.run (commandName options) (drop 1 args)
+
+  --treeId <- Plumbing.writeTree (path options) $ Flat.createStore (appUserDir)
+  --Plumbing.setRef "master" treeId $ LevelDB.createStore (appUserDir </> "leveldb")
   return ()

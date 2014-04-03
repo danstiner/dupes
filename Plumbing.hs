@@ -1,7 +1,8 @@
 
 module Plumbing (
-writeTree,
-setRef
+    hashObject
+  , writeTree
+  , setRef
 ) where
 
 
@@ -26,6 +27,9 @@ import qualified Ref
 
 logTag :: String
 logTag = App.logTag ++ ".Plumbing"
+
+hashObject :: B.ByteString -> Blob.Id
+hashObject bytes = Blob.createId (Blob.Bytes bytes)
 
 writeTree :: (BlobStore a) => FilePath -> a -> IO Blob.Id
 writeTree path store = do
