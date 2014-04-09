@@ -1,14 +1,19 @@
 module Command.Commands (
-    run
+    Command (..)
+  , parser
+  , run
 ) where
 
-import Command.HashObject
+import qualified Command.HashObject as HashObject
 
-run :: String -> [String] -> IO ()
-run commandName args = case commandName of
-	"hash-object" -> hashObjectCommand args
-	name -> badSubCommand name
+import Options.Applicative
 
-badSubCommand :: String -> IO ()
-badSubCommand name = do
-	return ()
+data Command 
+	= HashObject HashObject.Options
+
+parser :: Parser Command
+parser = subparser
+  ( command "hash-object" (fmap HashObject HashObject.parserInfo) )
+
+run :: Command -> IO ()
+run (HashObject opt) = HashObject.run opt

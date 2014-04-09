@@ -1,31 +1,25 @@
 
 import qualified App
 import qualified Logging
-import qualified Plumbing
-import qualified Store.Flat as Flat
-import qualified Store.LevelDB as LevelDB
 import qualified Telemetry
 import System.Directory as Dir
 import System.Log.Logger
 import System.FilePath ( (</>) )
 import System.Directory as Directory
-import System.Environment (getArgs)
 import Options.Applicative
 
-import Options
 import qualified Command.Commands as Commands
 
-data CommandOptions = CommandOptions
-  { commandName :: String }
+data Options = Options
+  { optCommand :: Commands.Command }
 
-optionParser :: Parser CommandOptions
-optionParser = CommandOptions
-  <$> argument str (metavar "COMMAND")
+optionParser :: Parser Options
+optionParser = Options
+  <$> Commands.parser
 
 main :: IO ()
 main = do
-  args <- getArgs
-  execParserWithArgs opts (take 1 args) >>= runWithOptions
+  execParser opts >>= runWithOptions
 	where
 		parser = (helper <*> optionParser)
 		desc = ( fullDesc
@@ -33,7 +27,7 @@ main = do
 			<> header "hello - a test for optparse-applicative" )
 		opts = info parser desc
 
-runWithOptions :: CommandOptions -> IO ()
+runWithOptions :: Options -> IO ()
 runWithOptions options = do
   home <- Dir.getHomeDirectory
   let appUserDir = home </> ".clod"
@@ -49,10 +43,6 @@ runWithOptions options = do
 
   infoM App.logTag "Application launching"
 
-  args <- getArgs
+  Commands.run (optCommand options)
 
-  Commands.run (commandName options) (drop 1 args)
-
-  --treeId <- Plumbing.writeTree (path options) $ Flat.createStore (appUserDir)
-  --Plumbing.setRef "master" treeId $ LevelDB.createStore (appUserDir </> "leveldb")
   return ()

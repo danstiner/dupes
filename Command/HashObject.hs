@@ -1,28 +1,32 @@
 module Command.HashObject (
-	hashObjectCommand
+	Options
+  , parserInfo
+  , run
 ) where
 
 import qualified Data.ByteString as B
 import Options.Applicative
 
 import qualified Blob
-import Options
 import Plumbing
-
 
 data ObjectType = Blob | Tree
 
 instance Read ObjectType where
 
-data CommandOptions = CommandOptions
+data Options = Options
   { write :: Bool
   , readfromStdin :: Bool
   , readPathsFromStdin :: Bool
   , path :: FilePath
   , noFilters :: Bool }
 
-optionParser :: Parser CommandOptions
-optionParser = CommandOptions
+parserInfo :: ParserInfo Options
+parserInfo = info parser
+  (progDesc "Compute object ID and optionally creates a blob from a file")
+
+parser :: Parser Options
+parser = Options
   <$> switch
       ( short 'w'
      <> help "Actually write the object into the object database." )
@@ -37,17 +41,8 @@ optionParser = CommandOptions
       ( long "no-filters"
      <> help "Hash the contents as is, ignoring any input filter that would have been chosen by the attributes mechanism, including the end-of-line conversion. If the file is read from standard input then this is always implied, unless the --path option is given." )
 
-hashObjectCommand :: [String] -> IO ()
-hashObjectCommand args =
-	execParserWithArgs opts (take 1 args) >>= hashObjectWithOptions
-	where
-		parser = (helper <*> optionParser)
-		desc = ( fullDesc
-			<> progDesc "Compute object ID and optionally creates a blob from a file" )
-		opts = info parser desc
-
-hashObjectWithOptions :: CommandOptions -> IO ()
-hashObjectWithOptions options = do
+run :: Options -> IO ()
+run options = do
 	file <- B.readFile (path options)
 
 	let blobId = hashObject file
