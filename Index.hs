@@ -2,14 +2,14 @@
 {-# LANGUAGE MultiParamTypeClasses #-}
 
 module Index (
-    Index
-  , IndexT
+    Action (..)
   , FileMode
-  , MonadIndex (..)
-  , exec
+  , Entry
+  , Index
+  , RelativeFilePath
+  , set
+  , execIndex
 ) where
-
-import Data.Functor.Identity
 
 import qualified Blob
 
@@ -17,36 +17,27 @@ newtype FileMode = FileMode Int
 type RelativeFilePath = FilePath
 data Entry = Entry RelativeFilePath FileMode Blob.Id
 
-class Monad m => MonadIndex m where
-  read :: RelativeFilePath -> m Entry
-  set :: RelativeFilePath -> FileMode -> Blob.Id -> m ()
+data Action = Set RelativeFilePath Blob.Id | Read
 
-instance Monad m => MonadIndex (IndexT s m) where
-    read = iread
-    set = iset
+type Actions = [Action]
 
-iread :: (Monad m) => RelativeFilePath -> IndexT s m Entry
-iread = do fail "TODO"
+newtype Index a = Index { runIndex :: (a, Actions)}
 
-iset :: (Monad m) => RelativeFilePath -> FileMode -> Blob.Id -> IndexT s m ()
-iset = do fail "Blerg"
+instance Monad Index where
+  return a = Index (a, [])
+  m >>= k = let (a, w) = runIndex m
+                n      = k a
+                (b, x) = runIndex n
+            in Index (b, w ++ x)
 
-type Index s = IndexT s Identity
+set :: RelativeFilePath -> Blob.Id -> Index ()
+set path hash = Index ((), [Set path hash])
 
-newtype IndexT s m a = IndexT { runIndexT :: s -> m (a, s) }
-
-
-instance (Monad m) => Monad (IndexT s m) where
-    return a = state $ \s -> (a, s)
-    m >>= k  = IndexT $ \s -> do
-        ~(a, s') <- runIndexT m s
-        runIndexT (k a) s'
-    fail str = IndexT $ \_ -> fail str
-
-state :: Monad m
-      => (s -> (a, s))  -- ^pure state transformer
-      -> IndexT s m a   -- ^equivalent state-passing computation
-state f = IndexT (return . f)
-
-exec :: Index s a -> s -> (a, s)
-exec m = runIdentity . runIndexT m
+execIndex :: (Monad m) => Index a -> (Action -> m ()) -> m a
+execIndex m f = do
+  mapM f actions
+  return result
+  where
+    ran = runIndex m
+    result = fst ran
+    actions = snd ran

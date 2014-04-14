@@ -6,10 +6,24 @@ module Command.UpdateIndex (
 
 import qualified Data.ByteString as B
 import Options.Applicative
+import System.Directory (doesFileExist)
+import System.FilePath ( (</>) )
 
+import qualified Settings
+import Store.LevelDB as LevelDB
 import Index
 import qualified Blob
-import Plumbing
+import Text.Read (step, readPrec)
+
+data CacheInfoParams = NoCacheInfoParams | CacheInfoParams Int Blob.Id FilePath
+
+instance Read CacheInfoParams where
+  readPrec = do
+    m <- step readPrec
+    i <- step readPrec
+    path <- step readPrec
+    return $ CacheInfoParams m i path
+
 
 data Options = Options
   { optAdd :: Bool
@@ -20,9 +34,10 @@ data Options = Options
   --, optQuiet :: Bool
   --, optUnmerged :: Bool
   --, optIgnoreMissing :: Bool
-  --, optAssumUnchanged :: Bool
+  --, optAssumeUnchanged :: Bool
   --, optSkipWorkTree :: Bool
   --, optReallyRefresh :: Bool
+  , optCacheInfo :: CacheInfoParams
   --, optVerbose :: Bool
   , optPath :: [FilePath] }
 
@@ -41,17 +56,63 @@ parser = Options
   <*> switch
       ( long "refresh"
      <> help "Looks at the current index and checks to see if merges or updates are needed by checking stat() information." )
-  <*> many (argument str (metavar "PATH"))
+  <*> option
+      ( long "cacheinfo"
+     <> value NoCacheInfoParams
+     <> metavar "<mode> <object> <path>"
+     <> help "Looks at the current index and checks to see if merges or updates are needed by checking stat() information." )
+  <*> many
+      ( argument str (metavar "PATH"))
 
 run :: Options -> IO ()
-run opt = mapM_ (runSingle opt) (optPath opt)
+run opt = do
+  runCacheInfo (optCacheInfo opt)
+  runUpdateInfos opt (optPath opt)
 
-runSingle :: Options -> FilePath -> IO ()
-runSingle path opt = do
+runUpdateInfos :: Options -> [FilePath] -> IO ()
+runUpdateInfos opt paths = do
+  mapM_ (runSingleUpdateInfo opt) paths
+
+runSingleUpdateInfo :: Options -> FilePath -> IO ()
+runSingleUpdateInfo opt path = do
+  onDisk <- doesFileExist path
+  let inIndex = False
+
+  if onDisk
+    then if inIndex
+      then updateInfo path
+      else if (optAdd opt)
+        then updateInfo path
+        else return ()
+    else if inIndex
+      then return () -- TODO removeInfo path
+      else return ()
+
   return ()
 
-type RelativeFilePath = FilePath
+runCacheInfo :: CacheInfoParams -> IO ()
+runCacheInfo NoCacheInfoParams = do return ()
+runCacheInfo (CacheInfoParams _ hash path) = do
+  appDir <- Settings.getAppDir
+  let store = LevelDB.createStore (appDir </> "leveldb")
+  LevelDB.runLevelDBIndex (set path hash) store
+  return ()
 
-cacheInfo :: Monad m => FileMode -> Blob.Id -> RelativeFilePath -> IndexT s m ()
-cacheInfo fileMode blobId path = do
-  set path fileMode blobId
+updateInfo :: FilePath -> IO ()
+updateInfo path = do
+  putStrLn $ "Update info for " ++ path
+  exist <- doesFileExist path
+  if exist
+    then do
+      appDir <- Settings.getAppDir
+      bytes <- B.readFile path
+      let store = LevelDB.createStore (appDir </> "leveldb")
+      LevelDB.runLevelDBIndex (updateHash path bytes) store
+      return ()
+    else return ()
+
+updateHash :: FilePath -> B.ByteString -> Index ()
+updateHash path contents = do
+    set path hash
+  where
+    hash = Blob.createId $ Blob.Bytes contents
