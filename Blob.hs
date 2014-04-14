@@ -12,12 +12,14 @@ module Blob (
 ) where
 
 import Data.Binary as Binary
-import qualified Data.ByteString.Char8 as C
-import qualified Data.ByteString.Base16 as Base16
+import Data.Char (isHexDigit) 
 import qualified Crypto.Hash.SHA3 as SHA3
-
 import qualified Data.ByteString as B
+import qualified Data.ByteString.Base16 as Base16
+import qualified Data.ByteString.Char8 as C
 import qualified Data.ByteString.Lazy as L
+import qualified Text.ParserCombinators.ReadP  as ReadP
+import Text.Read as R
 
 type HashDigest = B.ByteString
 
@@ -28,6 +30,11 @@ data Id = Sha3 HashDigest deriving (Eq, Show, Ord)
 data Data = Bytes B.ByteString | LazyBytes L.ByteString deriving (Show, Eq)
 
 data Blob = Blob Id Data deriving (Show, Eq)
+
+instance Read Id where
+  readPrec = lift $ do
+    hex <- ReadP.munch1 isHexDigit
+    return $ createIdFromHex hex
 
 instance Binary.Binary Id where
 	put (Sha3 hash) = do
@@ -58,4 +65,3 @@ recreateLazy i d = Blob i (LazyBytes d)
 toString :: Id -> String
 toString (Sha3 hash) =
   C.unpack $ Base16.encode hash
-
