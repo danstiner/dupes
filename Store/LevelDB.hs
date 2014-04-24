@@ -1,5 +1,6 @@
 {-# LANGUAGE ConstraintKinds #-}
 {-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE FlexibleInstances #-}
 
 module Store.LevelDB (
 	  createStore
@@ -31,18 +32,21 @@ keySpace = C.pack "MyKeySpace"
 createStore :: FilePath -> Store
 createStore path = Store path
 
-runLevelDBIndex :: Index a -> Store -> IO a
-runLevelDBIndex m s = runLevelDBT s (transformIndex m)
+runLevelDBIndex :: (MonadResourceBase m) => Index (Level.LevelDBT m) a -> Store -> m a
+runLevelDBIndex m s = runLevelDB s (transformIndex m)
 
-transformIndex :: Index a -> Level.LevelDBT IO a
-transformIndex actions = execIndex actions tran
+transformIndex :: (MonadResourceBase m) => Index (Level.LevelDBT m) a -> (Level.LevelDBT m) a
+transformIndex actions = execIndex actions
 
-tran :: Action -> Level.LevelDBT IO ()
-tran (Set name blobId) = Level.put (toKeyIndex name) $ L.toStrict $ Binary.encode blobId
-
-runLevelDBT :: (MonadResourceBase m) => Store -> Level.LevelDBT m a -> m a
-runLevelDBT store dbt = Level.runCreateLevelDB path keySpace dbt
+runLevelDB :: (MonadResourceBase m) => Store -> Level.LevelDBT m a -> m a
+runLevelDB store dbt = Level.runCreateLevelDB path keySpace dbt
 	where (Store path) = store
+
+instance (IndexMonad (Level.LevelDBT IO)) where
+	set key value = lift $
+		Level.put
+			(toKeyIndex key)
+			(L.toStrict $ Binary.encode value)
 
 instance RefStore Store where
 	read name = do

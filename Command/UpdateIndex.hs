@@ -111,7 +111,7 @@ updateInfo path = do
       return ()
     else return ()
 
-updateHash :: FilePath -> B.ByteString -> Index ()
+updateHash :: (IndexMonad m) => FilePath -> B.ByteString -> Index m ()
 updateHash path contents = do
     set path hash
   where
