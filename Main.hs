@@ -1,14 +1,13 @@
 
-import qualified App
-import qualified Logging
-import qualified Telemetry
-import System.Directory as Dir
-import System.Log.Logger
-import System.FilePath ( (</>) )
-import System.Directory as Directory
 import Options.Applicative
+import System.Directory as Directory
+import System.Log.Logger
 
+import qualified App
 import qualified Command.Commands as Commands
+import qualified Logging
+import qualified Settings
+import qualified Telemetry
 
 data Options = Options
   { optCommand :: Commands.Command }
@@ -29,8 +28,7 @@ main = do
 
 runWithOptions :: Options -> IO ()
 runWithOptions options = do
-  home <- Dir.getHomeDirectory
-  let appUserDir = home </> ".clod"
+  appUserDir <- Settings.getAppDir
   Directory.createDirectoryIfMissing False appUserDir
 
   --let logLevel = case ((quiet options), (verbose options)) of
@@ -38,11 +36,9 @@ runWithOptions options = do
   --	(False, True) -> DEBUG
   --	(_, _) -> WARNING
 
-  --Logging.registerLogger appUserDir logLevel
+  Logging.registerLogger appUserDir ERROR
   Telemetry.registerLogger appUserDir
 
   infoM App.logTag "Application launching"
 
   Commands.run (optCommand options)
-
-  return ()
