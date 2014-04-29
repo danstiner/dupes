@@ -4,19 +4,13 @@ module Command.LsDupes (
   , run
 ) where
 
-import Data.Binary as Binary
-import Data.ByteString
 import Data.List as List
-import Data.String.Utils as StrUtils
 import Options.Applicative
-import qualified Data.ByteString as B
-import qualified Data.ByteString.Char8 as C
-import qualified Data.ByteString.Lazy as L
-import qualified Database.LevelDB.Higher as Level
 import System.FilePath ( (</>) )
 
-import qualified Blob
+import Dupes
 import qualified Settings
+import Store.LevelDB as LevelDB
 
 data Options = Options
   { optDupeOnly :: Bool }
@@ -31,31 +25,28 @@ parser = Options
       ( long "dupe-only"
      <> help "Show only duplicate files." )
 
-keySpace :: ByteString
-keySpace = C.pack "Dupes"
-
 run :: Options -> IO ()
 run opt = do
 
   appDir <- Settings.getAppDir
-  let path = appDir </> "leveldb"
-  let f = if (optDupeOnly opt) then dupe else tru
-  
-  items <- Level.runLevelDB path Level.def (Level.def, Level.def) keySpace $ do
-    Level.scan (C.pack "") Level.queryItems
 
-  mapM (\i -> Prelude.putStrLn $ showItem i) (List.filter f items)
+  let store = LevelDB.createStore (appDir </> "leveldb")
+  files <- LevelDB.runLevelDBDupes (ls opt) store
+  mapM Prelude.putStrLn files
 
   return ()
+
+ls :: (DupesMonad m) => Options -> Dupes m [FilePath]
+ls opt = do
+    buckets <- list CRC32
+    let bs = List.filter f buckets
+    let nestedEntries = List.map (getEntries) bs
+    let entries = List.concat nestedEntries
+    return $ List.map getPaths entries
+
   where
+    f = if (optDupeOnly opt) then isDupe else tru
     tru _ = True
-    dupe item = (1 < (List.length $ decodeValue $ snd item) )
-
-decodeValue :: B.ByteString -> [FilePath]
-decodeValue b = Binary.decode $ L.fromStrict b
-
-showItem :: Level.Item -> String
-showItem item =
-  (Blob.toString $ Binary.decode $ L.fromStrict $ fst item)
-  ++ " " ++
-  (StrUtils.join ":" (decodeValue $ snd item))
+    isDupe bucket = (1 < (List.length $ getEntries bucket) )
+    getEntries (Bucket _ e) = e
+    getPaths (Entry p) = p

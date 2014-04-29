@@ -1,5 +1,5 @@
 name:                clod
-version:             0.0.1.0
+version:             0.0.2.0
 -- synopsis:            
 -- description:         
 license:             MIT
@@ -13,6 +13,7 @@ cabal-version:       >=1.8
 
 executable clod
   main-is:             Main.hs
+  GHC-Options:         -Wall
   -- other-modules:       
   build-depends:       base >= 4.5 && < 4.9
 
@@ -22,9 +23,10 @@ executable clod
                      , bytestring
                      , containers
                      , cryptohash
+                     , digest
                      , directory
                      , filepath
-                     , higher-leveldb
+                     , higher-leveldb >= 0.1.0.3
                      , hslogger
                      , http-conduit
                      , MissingH
@@ -34,3 +36,7 @@ executable clod
                      , resourcet
                      , text
                      , transformers
+
+source-repository head
+  type: git
+  location: git://github.com:danstiner/clod.git

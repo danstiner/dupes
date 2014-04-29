@@ -4,23 +4,22 @@ module Command.AddDupe (
   , run
 ) where
 
-import Control.Monad.Trans.Class (lift)
-import Data.ByteString
-import Data.List as List
+import Control.Exception
+import Control.Monad
+import System.IO
+import Data.Maybe ( catMaybes )
 import Options.Applicative
-import qualified Data.Binary as Binary
-import qualified Data.ByteString as B
-import qualified Data.ByteString.Char8 as C
 import qualified Data.ByteString.Lazy as L
-import qualified Database.LevelDB.Higher as Level
-import System.Directory (doesFileExist)
+import System.Directory ( canonicalizePath, doesFileExist )
 import System.FilePath ( (</>) )
 
-import qualified Blob
+import Dupes
 import qualified Settings
+import Store.LevelDB as LevelDB
 
 data Options = Options
-  { optPaths :: [FilePath]  }
+  { optStdin :: Bool
+  , optPaths :: [FilePath]  }
 
 parserInfo :: ParserInfo Options
 parserInfo = info parser
@@ -28,34 +27,65 @@ parserInfo = info parser
 
 parser :: Parser Options
 parser = Options
-  <$> many
+  <$> switch
+      ( long "stdin"
+     <> help "Read file names from STDIN" )
+  <*> many
       ( argument str (metavar "PATH") )
-
-keySpace :: ByteString
-keySpace = C.pack "Dupes"
 
 run :: Options -> IO ()
 run opt = do
   appDir <- Settings.getAppDir
-  let path = appDir </> "leveldb"
-  
-  items <- Level.runLevelDB path Level.def (Level.def, Level.def) keySpace $
-    mapM put (optPaths opt)
+  let store = LevelDB.createStore (appDir </> "leveldb")
 
-  return ()
+  paths <- getPaths
+  cPaths <- mapM canonicalize paths
+  let justPaths = catMaybes cPaths
+  toAdd <- filterM shouldAdd justPaths
+  pairs <- mapM keyPair toAdd
+  let justPairs = catMaybes pairs
 
-put :: FilePath -> Level.LevelDBT IO ()
-put path = do
-  onDisk <- lift $ doesFileExist path
-  if onDisk
-   then do
-    bytes <- lift $ B.readFile path
-    let key = hash bytes
-    prev <- Level.get key
-    lift $ Prelude.putStrLn path
-    case prev of
-      Just v -> Level.put key (L.toStrict $ Binary.encode $ List.nub $ (path : (Binary.decode $ L.fromStrict v :: [FilePath]) ))
-      Nothing -> Level.put key (L.toStrict $ Binary.encode $ [path])
-   else return ()
+  LevelDB.runLevelDBDupes (addAll justPairs) store
   where
-    hash bytes = L.toStrict $ Binary.encode $ Blob.createId $ Blob.Bytes bytes
+    getPaths = if (optStdin opt)
+      then readPaths
+      else return (optPaths opt)
+    readPaths = liftM lines getContents
+
+canonicalize :: FilePath -> IO (Maybe FilePath)
+canonicalize p = (liftM Just (canonicalizePath p)) `catch` errorMessage
+  where
+    errorMessage :: IOException -> IO (Maybe FilePath)
+    errorMessage ex = do
+      putStrLn . ("error: " ++) $ show ex
+      return Nothing
+
+keyPair :: FilePath -> IO (Maybe (FilePath, BucketKey))
+keyPair path = do
+  bucketKey <- calcBucketKey path
+  case bucketKey of
+    Nothing -> return Nothing
+    Just key -> return $ Just (path, key)
+
+calcBucketKey :: FilePath -> IO (Maybe BucketKey)
+calcBucketKey path = calc `catch` errorMessage
+  where
+    calc = withFile path ReadMode $ \hnd -> do
+      c <- (L.hGetContents hnd)
+      key <- evaluate $ createBucketKey MD5 c
+      return $ Just key
+    errorMessage :: IOException -> IO (Maybe BucketKey)
+    errorMessage ex = do
+      putStrLn . ("error: " ++) $ show ex
+      return Nothing
+
+shouldAdd :: FilePath -> IO Bool
+shouldAdd = doesFileExist
+
+addAll :: (DupesMonad m) => [(FilePath, BucketKey)] -> Dupes m ()
+addAll = mapM_ (\(path, key) -> addDupe path key)
+
+addDupe :: (DupesMonad m) => FilePath -> BucketKey -> Dupes m ()
+addDupe = add
+
+
