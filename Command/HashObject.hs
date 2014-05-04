@@ -10,9 +10,8 @@ import Options.Applicative
 import qualified Blob
 import Plumbing
 
-data ObjectType = Blob | Tree
-
-instance Read ObjectType where
+--data ObjectType = Blob | Tree
+--instance Read ObjectType where
 
 data Options = Options
   { write :: Bool

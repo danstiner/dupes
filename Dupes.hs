@@ -70,6 +70,7 @@ instance Binary.Binary BucketType where
       1 -> return CRC32
       2 -> return MD5
       3 -> return SHA3
+      _ -> fail "Unrecognized"
 
 instance Binary.Binary BucketKey where
   put (BucketKey t v) = do
