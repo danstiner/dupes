@@ -4,6 +4,7 @@ module Command.AddDupe (
   , run
 ) where
 
+import Data.Maybe
 import Control.Exception
 import Control.Monad
 import System.IO
@@ -70,10 +71,10 @@ keyPair path = do
 calcBucketKey :: FilePath -> IO (Maybe BucketKey)
 calcBucketKey path = calc `catch` errorMessage
   where
-    calc = withFile path ReadMode $ \hnd -> do
-      c <- (L.hGetContents hnd)
-      key <- evaluate $ createBucketKey MD5 c
-      return $ Just key
+    calc = withBinaryFile path ReadMode $ \hnd -> do
+      c <- L.hGetContents hnd
+      let key = createBucketKeyLazy CRC32 c
+      return . Just $! key
     errorMessage :: IOException -> IO (Maybe BucketKey)
     errorMessage ex = do
       putStrLn . ("error: " ++) $ show ex

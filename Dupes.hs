@@ -11,6 +11,7 @@ module Dupes (
   , Dupes (..)
   , execDupes
   , createBucketKey
+  , createBucketKeyLazy
 ) where
 
 import Control.Monad.Trans
@@ -22,6 +23,7 @@ import GHC.Generics (Generic)
 import qualified Crypto.Hash.MD5 as MD5
 import qualified Crypto.Hash.SHA3 as SHA3
 import qualified Data.ByteString.Lazy as L
+import qualified Data.ByteString as B
 
 --newtype FileMode = FileMode Int
 
@@ -46,13 +48,23 @@ class (Monad m) => DupesMonad m where
 execDupes :: (Monad m) => Dupes m a -> m a
 execDupes = runDupes
 
-createBucketKey :: BucketType -> L.ByteString -> BucketKey
-createBucketKey bType contents = BucketKey bType (createBucketName bType contents)
+createBucketKey :: BucketType -> B.ByteString -> BucketKey
+createBucketKey bType contents = BucketKey bType $! (createBucketName bType contents)
 
-createBucketName :: BucketType -> L.ByteString -> BucketName
-createBucketName MD5 = MD5.hashlazy
-createBucketName SHA3 = SHA3.hashlazy hashLength
+createBucketKeyLazy :: BucketType -> L.ByteString -> BucketKey
+createBucketKeyLazy bType contents = BucketKey bType $! (createBucketNameLazy bType contents)
+
+
+createBucketNameLazy :: BucketType -> L.ByteString -> BucketName
+createBucketNameLazy MD5 = MD5.hashlazy
+createBucketNameLazy SHA3 = SHA3.hashlazy hashLength
+createBucketNameLazy CRC32 = L.toStrict . toLazyByteString . word32BE . crc32
+
+createBucketName :: BucketType -> B.ByteString -> BucketName
+createBucketName MD5 = MD5.hash
+createBucketName SHA3 = SHA3.hash hashLength
 createBucketName CRC32 = L.toStrict . toLazyByteString . word32BE . crc32
+
 
 instance MonadTrans Dupes where
   lift = Dupes
