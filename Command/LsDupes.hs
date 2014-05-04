@@ -31,18 +31,19 @@ run opt = do
   appDir <- Settings.getAppDir
 
   let store = LevelDB.createStore (appDir </> "leveldb")
-  files <- LevelDB.runLevelDBDupes (ls opt) store
-  mapM Prelude.putStrLn files
+  fileSets <- LevelDB.runLevelDBDupes (ls opt) store
+  let fileLines = map (foldr combine "") fileSets
+  mapM_ Prelude.putStrLn fileLines
 
-  return ()
+  where
+    combine l r = l ++ "," ++ r
 
-ls :: (DupesMonad m) => Options -> Dupes m [FilePath]
+ls :: (DupesMonad m) => Options -> Dupes m [[FilePath]]
 ls opt = do
     buckets <- list CRC32
     let bs = List.filter f buckets
     let nestedEntries = List.map (getEntries) bs
-    let entries = List.concat nestedEntries
-    return $ List.map getPaths entries
+    return $ List.map (List.map getPaths) nestedEntries
 
   where
     f = if (optDupeOnly opt) then isDupe else tru
