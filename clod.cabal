@@ -1,7 +1,7 @@
 name:                clod
 version:             0.0.2.0
 synopsis:            git-inspired command line utilities
--- description:         
+description:         Command line utility for managing files inspired by git
 license:             MIT
 license-file:        LICENSE
 author:              Daniel Stiner
