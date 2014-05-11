@@ -1,6 +1,6 @@
 name:                clod
 version:             0.0.2.0
--- synopsis:            
+synopsis:            git-inspired command line utilities
 -- description:         
 license:             MIT
 license-file:        LICENSE
