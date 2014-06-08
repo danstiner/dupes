@@ -3,7 +3,7 @@ import Options.Applicative
 import System.Directory as Directory
 import System.Log.Logger
 
-import qualified App
+import qualified App ()
 import qualified Command.Commands as Commands
 import qualified Logging
 import qualified Settings

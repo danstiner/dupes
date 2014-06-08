@@ -57,7 +57,7 @@ listDirectory path = do
 	names <- getDirectoryContents path
 	return $ filter (`notElem` [".", ".."]) names
 
-createTreeEntry :: (BlobStore a) => FilePath -> FilePath -> a -> IO (Maybe Tree.TreeEntry)
+createTreeEntry :: (BlobStore a) => FilePath -> FilePath -> a -> IO (Maybe Tree.Entry)
 createTreeEntry parentPath name store = do
 	isDir <- doesDirectoryExist fullpath
 	case isDir of
@@ -67,7 +67,7 @@ createTreeEntry parentPath name store = do
 		fullpath = parentPath </> name
 		createDirEntry = do
 			blobId <- writeTree fullpath store
-			return $ Just $ Tree.createEntry name 0 blobId
+			return . Just $ Tree.createEntry name 0 blobId
 		createFileEntry = do
 			result <- tryJust (guard . isDoesNotExistError) (blobFromPath fullpath)
 			case result of
@@ -77,7 +77,7 @@ createTreeEntry parentPath name store = do
 				Right blob -> do
 					evalStateT (BlobStore.put blob) store
 					let (Blob.Blob blobId _) = blob
-					return $ Just $ Tree.createEntry name 0 blobId
+					return . Just $ Tree.createEntry name 0 blobId
 
 
 blobFromPath :: FilePath -> IO Blob.Blob
@@ -87,6 +87,6 @@ blobFromPath path = do
 
 saveTree :: (BlobStore a) => Tree.Tree -> a -> IO Blob.Blob
 saveTree tree store = do
-  let tblob = Tree.toBlob tree
-  evalStateT (BlobStore.put tblob) store
-  return tblob
+  let treeBlob = Tree.toBlob tree
+  evalStateT (BlobStore.put treeBlob) store
+  return treeBlob

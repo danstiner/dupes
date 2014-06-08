@@ -1,20 +1,20 @@
 
 -- Listing of directory
 module Tree (
-    Tree(Tree)
-  , TreeEntry(TreeEntry)
+    Tree ( Tree )
+  , Entry ( Entry )
   , Id
   , create
   , createEntry
   , toBlob
 ) where
 
+import Control.Monad ( forM_ )
 import Crypto.Hash.SHA3 ()
+import qualified Blob
+import qualified Data.Binary as Binary
 import qualified Data.ByteString as B
 import qualified Data.ByteString.Lazy as L
-import qualified Data.Binary as Binary
-import qualified Blob
-import Control.Monad ( forM_ )
 
 type HashDigest = B.ByteString
 
@@ -22,11 +22,11 @@ data Id = None | Sha3 HashDigest deriving (Eq, Show, Ord)
 
 type Mode = Int
 type Filename = String
-data TreeEntry = TreeEntry Mode Filename Blob.Id deriving (Eq, Show)
+data Entry = Entry Mode Filename Blob.Id deriving (Eq, Show)
 
-type Data = [TreeEntry]
+type Entries = [Entry]
 
-data Tree = Tree Id Data deriving (Show, Eq)
+data Tree = Tree Id Entries deriving (Show, Eq)
 
 instance Binary.Binary Tree where
 	put (Tree ident entries) = do
@@ -35,8 +35,8 @@ instance Binary.Binary Tree where
 	get = do
 		Binary.get
 
-instance Binary.Binary TreeEntry where
-	put (TreeEntry mode filename key) = do
+instance Binary.Binary Entry where
+	put (Entry mode filename key) = do
 		Binary.put mode
 		Binary.put filename
 		Binary.put key
@@ -51,11 +51,11 @@ instance Binary.Binary Id where
 		case tag of
 			0 -> return None
 
-create :: Data -> Tree
-create dat = Tree None dat
+create :: Entries -> Tree
+create = Tree None
 
-createEntry :: Filename -> Mode -> Blob.Id -> TreeEntry
-createEntry name mode ident = TreeEntry mode name ident
+createEntry :: Filename -> Mode -> Blob.Id -> Entry
+createEntry name mode ident = Entry mode name ident
 
 toBlob :: Tree -> Blob.Blob
 toBlob tree =

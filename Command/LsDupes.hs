@@ -13,7 +13,7 @@ import qualified Settings
 import Store.LevelDB as LevelDB
 
 data Options = Options
-  { optDupeOnly :: Bool }
+  { optShowDupesOnly :: Bool }
 
 parserInfo :: ParserInfo Options
 parserInfo = info parser
@@ -31,7 +31,7 @@ run opt = do
   appDir <- Settings.getAppDir
 
   let store = LevelDB.createStore (appDir </> "leveldb")
-  fileSets <- LevelDB.runLevelDBDupes (ls opt) store
+  fileSets <- LevelDB.runDupes store (ls opt)
   let fileLines = map (foldr combine "") fileSets
   mapM_ Prelude.putStrLn fileLines
 
@@ -41,12 +41,12 @@ run opt = do
 ls :: (DupesMonad m) => Options -> Dupes m [[FilePath]]
 ls opt = do
     buckets <- list CRC32
-    let bs = List.filter f buckets
+    let bs = List.filter bucketFilter buckets
     let nestedEntries = List.map (getEntries) bs
     return $ List.map (List.map getPaths) nestedEntries
 
   where
-    f = if (optDupeOnly opt) then isDupe else tru
+    bucketFilter = if (optShowDupesOnly opt) then isDupe else tru
     tru _ = True
     isDupe bucket = (1 < (List.length $ getEntries bucket) )
     getEntries (Bucket _ e) = e

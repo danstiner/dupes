@@ -46,7 +46,7 @@ run opt = do
   pairs <- mapM keyPair toAdd
   let justPairs = catMaybes pairs
 
-  LevelDB.runLevelDBDupes (addAll justPairs) store
+  LevelDB.runDupes store (addAll justPairs)
   where
     getPaths = if (optStdin opt)
       then readPaths

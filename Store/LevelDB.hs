@@ -6,44 +6,53 @@ module Store.LevelDB (
     createStore
   , Store
   , runLevelDBIndex
-  , runLevelDBDupes
+  , runDupes
 ) where
 
 import Dupes
+import qualified Dupes
 import Index
+import qualified Blob
 import qualified Ref
 import Store.Blob ()
-import qualified Blob
 import Store.Ref
+
+import Control.Monad.Trans.Class (lift)
+import Control.Monad.Trans.Resource (MonadResourceBase)
 import Data.ByteString
+import Data.List (nub)
+import qualified Control.Monad.Trans.State as State
 import qualified Data.Binary as Binary
 import qualified Data.ByteString.Char8 as C
 import qualified Data.ByteString.Lazy as L
-import Data.List (nub)
-
-import qualified Control.Monad.Trans.State as State
-import Control.Monad.Trans.Class (lift)
-import Control.Monad.Trans.Resource (MonadResourceBase)
-
 import qualified Database.LevelDB.Higher as Level
 
 newtype Store = Store FilePath
+type KeySpace = ByteString
 
-keySpace :: ByteString
+keySpace :: KeySpace
 keySpace = C.pack "MyKeySpace"
+
+indexKeySpace :: KeySpace
+indexKeySpace = C.pack "Index"
+
+dupesKeySpace :: KeySpace
+dupesKeySpace = C.pack "Dupes"
 
 createStore :: FilePath -> Store
 createStore path = Store path
 
 runLevelDBIndex :: (MonadResourceBase m) => Index (Level.LevelDBT m) a -> Store -> m a
-runLevelDBIndex m s = runLevelDB s (execIndex m)
+runLevelDBIndex m s = runLevelDB s indexKeySpace (execIndex m)
 
-runLevelDBDupes :: (MonadResourceBase m) => Dupes (Level.LevelDBT m) a -> Store -> m a
-runLevelDBDupes m s = runLevelDB s (execDupes m)
+runDupes :: (MonadResourceBase m) => Store -> Dupes (Level.LevelDBT m) a -> m a
+runDupes s m = runLevelDB s dupesKeySpace (execDupes m)
 
-runLevelDB :: (MonadResourceBase m) => Store -> Level.LevelDBT m a -> m a
-runLevelDB store dbt = Level.runCreateLevelDB path keySpace dbt
-	where (Store path) = store
+runLevelDB :: (MonadResourceBase m) => Store -> KeySpace -> Level.LevelDBT m a -> m a
+runLevelDB store keySpace dbt =
+	Level.runCreateLevelDB path keySpace dbt
+	where
+		(Store path) = store
 
 instance (IndexMonad (Level.LevelDBT IO)) where
 	set key value = lift $
@@ -62,10 +71,10 @@ decode = Binary.decode . L.fromStrict
 
 instance (DupesMonad (Level.LevelDBT IO)) where
 	list bType = lift $ do
-		items <- Level.scan (toKeyBucketType bType) Level.queryItems
+		items <- Level.scan (toLeveKeyPrefixDupes bType) Level.queryItems
 		return $ Prelude.map decodeDupBucket items
 	add path bKey = lift $ do
-		let key = toKeyBucket bKey
+		let key = toLevelKeyDupes bKey
 		existing <- Level.get key
 		case existing of
 			Just val -> do
@@ -107,12 +116,8 @@ toKey name = C.pack ("ref/" ++ (Ref.toString name))
 toKeyIndex :: RelativeFilePath -> Level.Key
 toKeyIndex path = C.pack ("index/" ++ path)
 
-toKeyBucket :: BucketKey -> Level.Key
-toKeyBucket (BucketKey t v) = (toKeyBucketType t) `append` v
+toLevelKeyDupes :: Dupes.Key -> Level.Key
+toLevelKeyDupes = L.toStrict . Binary.encode
 
-toKeyBucketType :: BucketType -> Level.Key
-toKeyBucketType = C.pack . toStrBucketType
-
-toStrBucketType :: BucketType -> String
-toStrBucketType MD5 = "dupes/bMD5/"
-toStrBucketType CRC32 = "dupes/bCRC32/"
+toLeveKeyPrefixDupes :: Dupes.BucketType -> Level.Key
+toLeveKeyPrefixDupes = L.toStrict . Binary.encode
