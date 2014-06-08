@@ -1,22 +1,59 @@
 module Telemetry (
-	  logTag
-	, registerLogger
-	, telemetryM
+    recordLaunch
+  , recordExit
+  , recordLsDupes
+  , register
+  , telemetryM
 ) where
 
 import System.Log.Handler.Log4jXML as Log4j
 import System.Log.Logger
 import System.FilePath ( (</>) )
 
+data Event =
+    Boot
+  | Exit
+  | LsDupes { dupeBucketCount :: Int }
+  deriving ( Show )
+
 type Datapoint = String
 
-registerLogger :: FilePath -> IO ()
-registerLogger outfolder = do
-  s <- Log4j.log4jFileHandler' (outfolder </> "telemetry.xml") INFO
-  updateGlobalLogger logTag (setLevel INFO . setHandlers [s])
+level :: Priority
+level = INFO
 
-logTag :: String
-logTag = "Telemetry"
+tag :: String
+tag = "Telemetry"
+
+register :: FilePath -> IO ()
+register folder = do
+  s <- Log4j.log4jFileHandler' filePath level
+  updateGlobalLogger tag (setLevel level . setHandlers [s])
+  where
+    filePath = folder </> "telemetry.xml"
+
+recordEvent :: Event -> IO ()
+recordEvent = infoM tag . show
+
+recordLaunch :: IO ()
+recordLaunch = recordEvent Boot
+
+recordExit :: IO ()
+recordExit = recordEvent Exit
+
+recordLsDupes :: Int -> IO ()
+recordLsDupes = recordEvent . LsDupes
 
 telemetryM :: (Show v) => Datapoint -> v -> IO ()
-telemetryM n v = infoM logTag $ n ++ ": " ++ (show v)
+telemetryM n v = infoM tag $ n ++ ": " ++ (show v)
+
+
+
+
+
+newtype Telemetry m a = Telemetry { runTelemetry :: m a}
+
+class (Monad m) => TelemetryMonad m where
+  record :: (Show v) => Datapoint -> v -> Telemetry m ()
+
+execTelemetry :: (Monad m) => Telemetry m a -> m a
+execTelemetry = runTelemetry

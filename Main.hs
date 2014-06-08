@@ -31,14 +31,11 @@ runWithOptions options = do
   appUserDir <- Settings.getAppDir
   Directory.createDirectoryIfMissing False appUserDir
 
-  --let logLevel = case ((quiet options), (verbose options)) of
-  --	(True, False) -> ERROR
-  --	(False, True) -> DEBUG
-  --	(_, _) -> WARNING
+  Logging.register appUserDir ERROR
+  Telemetry.register appUserDir
 
-  Logging.registerLogger appUserDir ERROR
-  Telemetry.registerLogger appUserDir
-
-  infoM App.logTag "Application launching"
+  Telemetry.recordLaunch
 
   Commands.run (optCommand options)
+
+  Telemetry.recordExit

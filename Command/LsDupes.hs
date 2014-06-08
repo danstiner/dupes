@@ -10,6 +10,7 @@ import System.FilePath ( (</>) )
 
 import Dupes
 import qualified Settings
+import qualified Telemetry
 import Store.LevelDB as LevelDB
 
 data Options = Options
@@ -34,6 +35,8 @@ run opt = do
   fileSets <- LevelDB.runDupes store (ls opt)
   let fileLines = map (foldr combine "") fileSets
   mapM_ Prelude.putStrLn fileLines
+
+  Telemetry.recordLsDupes (length fileSets)
 
   where
     combine l r = l ++ "," ++ r
