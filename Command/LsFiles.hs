@@ -49,4 +49,4 @@ showItem :: Level.Item -> String
 showItem item =
   (C.unpack $ fst item)
   ++ " " ++
-  (Blob.toString $ Binary.decode $ L.fromStrict $ snd item)
+  (Blob.toHexString $ Binary.decode $ L.fromStrict $ snd item)

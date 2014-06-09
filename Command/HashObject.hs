@@ -46,6 +46,6 @@ run options = do
 
 	let blobId = hashObject file
 
-	putStrLn (Blob.toString blobId)
+	putStrLn (Blob.toHexString blobId)
 
 	return ()
