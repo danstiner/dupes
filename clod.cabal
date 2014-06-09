@@ -13,11 +13,9 @@ cabal-version:       >=1.8
 
 executable clod
   main-is:             Main.hs
-  GHC-Options:         -Wall
-  -- other-modules:       
-  build-depends:       base >= 4.5 && < 4.9
-
-  build-depends:       aeson
+  GHC-Options:         -Wall -threaded -O3
+  build-depends:       base >= 4.5 && < 5
+                     , aeson
                      , base16-bytestring
                      , binary
                      , bytestring
@@ -36,6 +34,38 @@ executable clod
                      , resourcet
                      , text
                      , transformers
+
+Test-suite testsuite
+  Type:                exitcode-stdio-1.0
+  Hs-Source-Dirs:      . test
+  Main-Is:             TestSuite.hs
+  GHC-Options:         -Wall -fwarn-tabs -threaded -O0
+
+  Build-Depends:      base >= 4 && < 5
+                     , aeson
+                     , base16-bytestring
+                     , binary
+                     , bytestring
+                     , containers
+                     , cryptohash
+                     , digest
+                     , directory
+                     , filepath
+                     , higher-leveldb >= 0.1.0.3
+                     , hslogger
+                     , http-conduit
+                     , MissingH
+                     , mtl
+                     , optparse-applicative > 0.8.0
+                     , pipes < 4.0
+                     , resourcet
+                     , text
+                     , transformers
+                     , HUnit
+                     , QuickCheck
+                     , test-framework
+                     , test-framework-hunit
+                     , test-framework-quickcheck2
 
 source-repository head
   type: git
