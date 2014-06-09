@@ -10,7 +10,6 @@ module Store.LevelDB (
 ) where
 
 import Dupes
-import qualified Dupes
 import Index
 import qualified Blob
 import qualified Ref
@@ -81,7 +80,7 @@ instance (DupesMonad (Level.LevelDBT IO)) where
 				let prev = decode val :: [Dupes.Entry]
 				Level.put key $ enc $ nub ((Entry path) : prev)
 			Nothing  -> Level.put key $ enc [(Entry path)]
-	rm path = lift $ do
+	rm _ = lift $ do
 		fail "TODO"
 
 decodeDupBucket :: (Level.Key, Level.Value) -> Bucket
@@ -96,7 +95,7 @@ instance RefStore Store where
 			r <- Level.get $ toKey name
 			case r of
 				Just val -> return $ Just $ Ref.Ref name (Binary.decode (L.fromStrict val) :: Blob.Id)
-		return Nothing
+				Nothing -> return Nothing
 
 	set (Ref.Ref name blobId) = do
 		(Store path) <- State.get

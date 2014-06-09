@@ -27,8 +27,8 @@ instance Read CacheInfoParams where
 
 data Options = Options
   { optAdd :: Bool
-  , optRemove :: Bool
-  , optRefresh :: Bool
+  --, optRemove :: Bool
+  --, optRefresh :: Bool
   --, optForceRemove :: Bool
   --, optReplace :: Bool
   --, optQuiet :: Bool
@@ -50,12 +50,12 @@ parser = Options
   <$> switch
       ( long "add"
      <> help "If a specified file isn't in the index already then it's added. Default behaviour is to ignore new files." )
-  <*> switch
-      ( long "remove"
-     <> help "If a specified file is in the index but is missing then it's removed. Default behavior is to ignore removed file." )
-  <*> switch
-      ( long "refresh"
-     <> help "Looks at the current index and checks to see if merges or updates are needed by checking stat() information." )
+  -- <*> switch
+  --    ( long "remove"
+  --   <> help "If a specified file is in the index but is missing then it's removed. Default behavior is to ignore removed file." )
+  -- <*> switch
+  --    ( long "refresh"
+  --   <> help "Looks at the current index and checks to see if merges or updates are needed by checking stat() information." )
   <*> option
       ( long "cacheinfo"
      <> value NoCacheInfoParams

@@ -1,10 +1,10 @@
 {-# LANGUAGE DeriveGeneric #-}
 
 module ContentIdentifier (
-	create
+  create
   , createLazy
   , Algro (..)
-  ,	Type
+  , Type
   , Id
   , Value
     )
@@ -27,13 +27,13 @@ import Data.Char (isHexDigit)
 data Algro = CRC32 | MD5 | SHA3_256 deriving (Generic)
 type Digest = B.ByteString
 type HashSize = Int
-data Id = CRC32_Id Digest | MD5_Id Digest | SHA3 Int Digest deriving (Eq, Ord, Generic)
+data Id = CRC32_Id Digest | MD5_Id Digest | SHA3 HashSize Digest deriving (Eq, Ord, Generic)
 
 type IdString = String
 type Type = Algro
 type Value = Digest
 
-sha3_256HashLength :: Int
+sha3_256HashLength :: HashSize
 sha3_256HashLength = 256
 
 create :: Algro -> B.ByteString -> Id
@@ -88,7 +88,7 @@ instance Binary.Binary Id where
     Binary.put d
 
   get = do
-    a <- Binary.get
+    a <- Binary.get :: Get Algro
     case a of
       CRC32 -> Binary.get >>= return . CRC32_Id
       MD5   -> Binary.get >>= return . MD5_Id

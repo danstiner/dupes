@@ -6,9 +6,10 @@ module Telemetry (
   , telemetryM
 ) where
 
+import Control.Monad.Trans
+import System.FilePath ( (</>) )
 import System.Log.Handler.Log4jXML as Log4j
 import System.Log.Logger
-import System.FilePath ( (</>) )
 
 data Event =
     Boot
@@ -32,7 +33,7 @@ register folder = do
     filePath = folder </> "telemetry.xml"
 
 recordEvent :: Event -> IO ()
-recordEvent = infoM tag . show
+recordEvent = execTelemetry . record
 
 recordLaunch :: IO ()
 recordLaunch = recordEvent Boot
@@ -46,14 +47,16 @@ recordLsDupes = recordEvent . LsDupes
 telemetryM :: (Show v) => Datapoint -> v -> IO ()
 telemetryM n v = infoM tag $ n ++ ": " ++ (show v)
 
-
-
-
-
 newtype Telemetry m a = Telemetry { runTelemetry :: m a}
 
 class (Monad m) => TelemetryMonad m where
-  record :: (Show v) => Datapoint -> v -> Telemetry m ()
+  record :: Event -> Telemetry m ()
 
 execTelemetry :: (Monad m) => Telemetry m a -> m a
 execTelemetry = runTelemetry
+
+instance TelemetryMonad IO where
+  record = lift . (infoM tag) . show
+
+instance MonadTrans Telemetry where
+  lift = Telemetry

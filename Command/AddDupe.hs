@@ -4,7 +4,7 @@ module Command.AddDupe (
   , run
 ) where
 
-import Data.Maybe
+import Data.Maybe ()
 import Control.Exception
 import Control.Monad
 import System.IO
