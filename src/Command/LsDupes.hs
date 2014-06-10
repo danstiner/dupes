@@ -18,7 +18,7 @@ data Options = Options
 
 parserInfo :: ParserInfo Options
 parserInfo = info parser
-  (progDesc "Show information about files in the index and the working tree")
+  (progDesc "Show information about files in the duplicate index")
 
 parser :: Parser Options
 parser = Options
@@ -33,7 +33,7 @@ run opt = do
 
   let store = LevelDB.createStore (appDir </> "leveldb")
   fileSets <- LevelDB.runDupes store (ls opt)
-  let fileLines = map (foldr combine "") fileSets
+  let fileLines = map (foldr1 combine) fileSets
   mapM_ Prelude.putStrLn fileLines
 
   Telemetry.recordLsDupes (length fileSets)

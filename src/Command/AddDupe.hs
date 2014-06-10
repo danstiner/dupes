@@ -24,7 +24,7 @@ data Options = Options
 
 parserInfo :: ParserInfo Options
 parserInfo = info parser
-  (progDesc "Show information about files in the index and the working tree")
+  (progDesc "Add or update entries in the duplicate file index")
 
 parser :: Parser Options
 parser = Options
@@ -66,7 +66,7 @@ keyPair path = do
   bucketKey <- calcBucketKey path
   case bucketKey of
     Nothing -> return Nothing
-    Just key -> return $ Just (path, key)
+    Just key -> return $! Just (path, key)
 
 calcBucketKey :: FilePath -> IO (Maybe BucketKey)
 calcBucketKey path = calc `catch` errorMessage

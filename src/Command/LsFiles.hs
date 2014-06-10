@@ -33,14 +33,14 @@ keySpace :: ByteString
 keySpace = C.pack "MyKeySpace"
 
 run :: Options -> IO ()
-run opt = do
+run _ = do
   appDir <- Settings.getAppDir
   let path = appDir </> "leveldb"
   
   items <- Level.runLevelDB path Level.def (Level.def, Level.def) keySpace $ do
     Level.scan (C.pack ("index/")) (Level.queryItems)
 
-  mapM (Prelude.putStrLn . showItem) items
+  mapM_ (Prelude.putStrLn . showItem) items
 
   return ()
 

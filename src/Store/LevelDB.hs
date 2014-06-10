@@ -59,9 +59,6 @@ instance (IndexMonad (Level.LevelDBT IO)) where
 			(toKeyIndex key)
 			(enc value)
 
---put :: (Monad m, Binary.Binary a) => String-> a -> m ()
---put k v = lift $ Level.put (C.pack k) (enc v)
-
 enc :: (Binary.Binary a) => a -> C.ByteString
 enc = L.toStrict . Binary.encode
 
@@ -100,7 +97,7 @@ instance RefStore Store where
 	set (Ref.Ref name blobId) = do
 		(Store path) <- State.get
 		lift $ Level.runCreateLevelDB path keySpace $ do
-			Level.put (toKey name) $ L.toStrict $ Binary.encode blobId
+			Level.put (toKey name) $ encodeStrict blobId
 		return ()
 
 	delete name = do
@@ -117,6 +114,9 @@ toKeyIndex path = C.pack ("index/" ++ path)
 
 toLevelKeyDupes :: Dupes.Key -> Level.Key
 toLevelKeyDupes = L.toStrict . Binary.encode
+
+encodeStrict :: (Binary.Binary a) => a -> Level.Key
+encodeStrict = L.toStrict . Binary.encode
 
 toLeveKeyPrefixDupes :: Dupes.BucketType -> Level.Key
 toLeveKeyPrefixDupes = L.toStrict . Binary.encode

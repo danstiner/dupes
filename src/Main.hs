@@ -22,8 +22,7 @@ main = do
 	where
 		parser = (helper <*> optionParser)
 		desc = ( fullDesc
-			<> progDesc "Print a greeting for TARGET"
-			<> header "hello - a test for optparse-applicative" )
+			<> progDesc "Git-inspired content-address storage commands" )
 		opts = info parser desc
 
 runWithOptions :: Options -> IO ()
