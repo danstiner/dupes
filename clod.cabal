@@ -23,6 +23,8 @@ executable clod
                      , base16-bytestring
                      , binary
                      , bytestring
+                     , deepseq
+                     , deepseq-generics
                      , containers
                      , cryptohash
                      , digest
@@ -43,8 +45,7 @@ Test-suite testsuite
   Type:                exitcode-stdio-1.0
   Hs-Source-Dirs:      src test
   Main-Is:             TestSuite.hs
-  GHC-Options:         -Wall -fwarn-tabs -threaded -O0
-
+  GHC-Options:         -Wall -fwarn-tabs -threaded -O
   Build-Depends:      base >= 4 && < 5
                      , aeson
                      , base16-bytestring
@@ -53,6 +54,8 @@ Test-suite testsuite
                      , containers
                      , cryptohash
                      , digest
+                     , deepseq
+                     , deepseq-generics
                      , directory
                      , filepath
                      , higher-leveldb >= 0.1.0.3

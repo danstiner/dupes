@@ -22,7 +22,7 @@ main = do
 	where
 		parser = (helper <*> optionParser)
 		desc = ( fullDesc
-			<> progDesc "Git-inspired content-address storage commands" )
+			<> progDesc "Collection of utilities for content-addressed storage inspired by git" )
 		opts = info parser desc
 
 runWithOptions :: Options -> IO ()

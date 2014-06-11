@@ -10,6 +10,8 @@ module ContentIdentifier (
     )
 where
 
+import Control.DeepSeq
+import Control.DeepSeq.Generics (genericRnf)
 import Data.Binary as Binary
 import Data.ByteString.Lazy.Builder
 import Data.Digest.CRC32
@@ -92,3 +94,5 @@ instance Binary.Binary Id where
     case a of
       CRC32 -> Binary.get >>= return . CRC32_Id
       MD5   -> Binary.get >>= return . MD5_Id
+
+instance NFData Id where rnf = genericRnf

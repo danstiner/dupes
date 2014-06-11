@@ -67,18 +67,18 @@ decode = Binary.decode . L.fromStrict
 
 instance (DupesMonad (Level.LevelDBT IO)) where
 	list bType = lift $ do
-		items <- Level.scan (toLeveKeyPrefixDupes bType) Level.queryItems
+		items <- Level.scan (toLevelKey bType) Level.queryItems
 		return $ Prelude.map decodeDupBucket items
-	add path bKey = lift $ do
-		let key = toLevelKeyDupes bKey
+	add path bucketKey = lift $ do
+		let key = toLevelKey bucketKey
 		existing <- Level.get key
 		case existing of
 			Just val -> do
 				let prev = decode val :: [Dupes.Entry]
 				Level.put key $ enc $ nub ((Entry path) : prev)
 			Nothing  -> Level.put key $ enc [(Entry path)]
-	rm _ = lift $ do
-		fail "TODO"
+	remove path = lift $ do
+		fail ("TODO, don't know how to remove path " ++ path)
 
 decodeDupBucket :: (Level.Key, Level.Value) -> Bucket
 decodeDupBucket (key, val) = Bucket
@@ -112,11 +112,9 @@ toKey name = C.pack ("ref/" ++ (Ref.toString name))
 toKeyIndex :: RelativeFilePath -> Level.Key
 toKeyIndex path = C.pack ("index/" ++ path)
 
-toLevelKeyDupes :: Dupes.Key -> Level.Key
-toLevelKeyDupes = L.toStrict . Binary.encode
+toLevelKey :: (Binary.Binary a) => a -> Level.Key
+toLevelKey = encodeStrict
 
 encodeStrict :: (Binary.Binary a) => a -> Level.Key
 encodeStrict = L.toStrict . Binary.encode
 
-toLeveKeyPrefixDupes :: Dupes.BucketType -> Level.Key
-toLeveKeyPrefixDupes = L.toStrict . Binary.encode

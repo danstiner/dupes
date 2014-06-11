@@ -36,9 +36,9 @@ data Bucket = Bucket Key [Entry] deriving (Generic)
 
 class (Monad m) => DupesMonad m where
   list :: CI.Type -> Dupes m [Bucket]
-  add :: FilePath -> Key -> Dupes m ()
-  get :: FilePath -> Dupes m [Key]
-  rm :: FilePath -> Dupes m [Key]
+  add  :: FilePath -> Key -> Dupes m ()
+  get  :: FilePath -> Dupes m [Key]
+  remove :: FilePath -> Dupes m [Key]
 
 execDupes :: (Monad m) => Dupes m a -> m a
 execDupes = runDupes
