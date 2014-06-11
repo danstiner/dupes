@@ -1,5 +1,5 @@
 
--- Listing of directory
+-- Listing of a directory
 module Tree (
     Tree ( Tree )
   , Entry ( Entry )
@@ -16,9 +16,11 @@ import qualified Data.Binary as Binary
 import qualified Data.ByteString as B
 import qualified Data.ByteString.Lazy as L
 
+import qualified ContentIdentifier as CI
+
 type HashDigest = B.ByteString
 
-data Id = None | Sha3 HashDigest deriving (Eq, Show, Ord)
+type Id = CI.Id
 
 type Mode = Int
 type Filename = String
@@ -43,20 +45,13 @@ instance Binary.Binary Entry where
 	get = do
 		Binary.get
 
-instance Binary.Binary Id where
-	put None = do
-		Binary.put (0 :: Binary.Word8)
-	get = do
-		tag <- Binary.getWord8
-		case tag of
-			0 -> return None
-
 create :: Entries -> Tree
-create = Tree None
+create entries = Tree hash entries
+	where
+		hash = CI.create CI.SHA3_256 $ L.toStrict $ Binary.encode entries
 
 createEntry :: Filename -> Mode -> Blob.Id -> Entry
-createEntry name mode ident = Entry mode name ident
+createEntry f m i = Entry m f i
 
 toBlob :: Tree -> Blob.Blob
-toBlob tree =
-  Blob.create $ L.toStrict $ Binary.encode tree
+toBlob = Blob.create . L.toStrict . Binary.encode
