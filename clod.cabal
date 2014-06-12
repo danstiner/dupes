@@ -30,6 +30,7 @@ executable clod
                      , digest
                      , directory
                      , filepath
+                     , machines
                      , higher-leveldb >= 0.1.0.3
                      , hslogger
                      , http-conduit
