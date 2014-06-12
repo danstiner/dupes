@@ -19,37 +19,37 @@ createStore :: MemStore
 createStore = MemStore Map.empty
 
 instance Store.Blob.BlobStore MemStore where
-	get key = do
-		(MemStore m) <- State.get
-		let v = Map.lookup key m
-		case v of
-			Just val -> return $ Just (Blob.Blob key val)
-			Nothing -> return Nothing
+  get key = do
+    (MemStore m) <- State.get
+    let v = Map.lookup key m
+    case v of
+      Just val -> return $ Just (Blob.Blob key val)
+      Nothing -> return Nothing
 
-	put (Blob.Blob key dat) = do
-		(MemStore m) <- State.get
-		let newStore = MemStore $ Map.insert key dat m
-		State.put $ newStore
+  put (Blob.Blob key dat) = do
+    (MemStore m) <- State.get
+    let newStore = MemStore $ Map.insert key dat m
+    State.put $ newStore
 
-	delete key = do
-		(MemStore m) <- State.get
-		let newStore = MemStore $ Map.delete key m
-		State.put $ newStore
+  delete key = do
+    (MemStore m) <- State.get
+    let newStore = MemStore $ Map.delete key m
+    State.put $ newStore
 
 instance Store.Ref.RefStore MemRefStore where
-	read name = do
-		(MemRefStore m) <- State.get
-		let v = Map.lookup name m
-		case v of
-			Just val -> return $ Just (Ref.Ref name val)
-			Nothing -> return Nothing
+  read name = do
+    (MemRefStore m) <- State.get
+    let v = Map.lookup name m
+    case v of
+      Just val -> return $ Just (Ref.Ref name val)
+      Nothing -> return Nothing
 
-	set (Ref.Ref name ref) = do
-		(MemRefStore m) <- State.get
-		let newStore = MemRefStore $ Map.insert name ref m
-		State.put $ newStore
+  set (Ref.Ref name ref) = do
+    (MemRefStore m) <- State.get
+    let newStore = MemRefStore $ Map.insert name ref m
+    State.put $ newStore
 
-	delete key = do
-		(MemRefStore m) <- State.get
-		let newStore = MemRefStore $ Map.delete key m
-		State.put $ newStore
+  delete key = do
+    (MemRefStore m) <- State.get
+    let newStore = MemRefStore $ Map.delete key m
+    State.put $ newStore
