@@ -1,3 +1,5 @@
+{-# LANGUAGE Rank2Types #-}
+
 module Command.AddDupe (
 	Options
   , parserInfo
@@ -15,6 +17,7 @@ import System.Directory ( canonicalizePath, doesFileExist )
 import System.FilePath ( (</>) )
 import Control.DeepSeq
 import Control.Monad.Trans.Class ( lift )
+import qualified Database.LevelDB.Higher as Level
 
 import Dupes
 import qualified Settings
@@ -38,16 +41,23 @@ parser = Options
   <*> many
       ( argument str (metavar "PATH") )
 
+instance DupesMonad IO
+
 run :: Options -> IO ()
 run opt = do
   appDir <- Settings.getAppDir
   let store = LevelDB.createStore (appDir </> "leveldb")
-  runT_ machine
+  runMachineIO machine store
   where
-    machine = pathSource ~> checkPathP ~> processPath
+    machine = (fitM ioToDupes ioPart) ~> storePath
+    ioToDupes = lift . lift
+    ioPart = pathSource ~> checkPathP ~> processPath ~> catMaybesP
     pathSource = if (optStdin opt)
       then repeatedly $ lift getLine
       else source (optPaths opt)
+
+runMachineIO :: SourceT (Dupes (Level.LevelDBT IO)) () -> Store -> IO ()
+runMachineIO machine store = LevelDB.runDupes store $ runT_ machine
 
 processPaths :: Options -> Store -> [CanonicalPath] -> IO ()
 processPaths opt store checkedPaths = do
@@ -102,23 +112,29 @@ removeAll = mapM_ remove
 addAll :: (DupesMonad m) => [(FilePath, BucketKey)] -> Dupes m ()
 addAll = mapM_ (\(path, key) -> add path key)
 
-
-
-machine :: [FilePath] -> MachineT IO k ()
-machine paths = (source paths) ~> checkPathP ~> processPath
-
 checkPathP :: ProcessT IO FilePath CanonicalPath
 checkPathP = repeatedly $ do
   await >>= lift . checkPath >>= yield
 
-processPath :: ProcessT IO CanonicalPath ()
+processPath :: ProcessT IO CanonicalPath (Maybe (FilePath, BucketKey))
 processPath = repeatedly $ do
   path <- await
   case path of
-    (Canonical p) -> lift $ putStrLn p
+    (Canonical p) -> yield =<< (lift $ keyPair p)
     otherwise -> return ()
+
+catMaybesP :: Process (Maybe a) a
+catMaybesP = repeatedly $ do
+  m <- await
+  case m of
+    Just a -> yield a
+    Nothing -> return () 
 
 processBucket :: (DupesMonad m) => ProcessT (Dupes m) Bucket ()
 processBucket = repeatedly $ do
   (Bucket key [(Entry path)]) <- await
   lift $ add path key
+
+storePath :: (DupesMonad m) => ProcessT (Dupes m) (FilePath, BucketKey) ()
+storePath = repeatedly $ do
+  await >>= \(path, key) -> lift $ add path key
