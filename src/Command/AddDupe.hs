@@ -13,7 +13,7 @@ import System.IO
 import Data.Maybe ( catMaybes )
 import Options.Applicative
 import qualified Data.ByteString.Lazy as L
-import System.Directory ( canonicalizePath, doesFileExist )
+import System.Directory ( canonicalizePath, doesFileExist, doesDirectoryExist )
 import System.FilePath ( (</>) )
 import Control.DeepSeq
 import Control.Monad.Trans.Class ( lift )
@@ -23,7 +23,7 @@ import Dupes
 import qualified Settings
 import Store.LevelDB as LevelDB
 
-data CanonicalPath = Canonical FilePath | NonExistant FilePath
+data CanonicalPath = CanonicalFilePath FilePath | CanonicalDirectoryPath FilePath | NonExistant FilePath
 
 data Options = Options
   { optStdin :: Bool
@@ -41,8 +41,6 @@ parser = Options
   <*> many
       ( argument str (metavar "PATH") )
 
-instance DupesMonad IO
-
 run :: Options -> IO ()
 run opt = do
   appDir <- Settings.getAppDir
@@ -59,33 +57,24 @@ run opt = do
 runMachineIO :: SourceT (Dupes (Level.LevelDBT IO)) () -> Store -> IO ()
 runMachineIO machine store = LevelDB.runDupes store $ runT_ machine
 
-processPaths :: Options -> Store -> [CanonicalPath] -> IO ()
-processPaths opt store checkedPaths = do
-  toAdd <- mapM keyPair $ catCanonicals checkedPaths
-  let toRemove = catNonExistants checkedPaths
-  
-  LevelDB.runDupes store $ do
-    addAll $ catMaybes toAdd
-    removeAll toRemove
-
 checkPath :: FilePath -> IO CanonicalPath
 checkPath path = do
-  exists <- doesFileExist path
-  if exists
-    then (liftM Canonical (canonicalizePath path)) `catch` errorMessage
-    else return nonExistant
+  isFile <- doesFileExist path
+  isDirectory <- doesDirectoryExist path
+  checkPathHelper path isFile isDirectory
+
+checkPathHelper :: FilePath -> Bool -> Bool -> IO CanonicalPath
+checkPathHelper path isFile isDirectory
+  | isFile && isDirectory = fail "Not possible"
+  | isFile = (liftM CanonicalFilePath (canonicalizePath path)) `catch` ioException
+  | isDirectory = (liftM CanonicalDirectoryPath (canonicalizePath path)) `catch` ioException
+  | otherwise = return nonExistant
   where
-    errorMessage :: IOException -> IO CanonicalPath
-    errorMessage ex = do
+    ioException :: IOException -> IO CanonicalPath
+    ioException ex = do
       putStrLn . ("error: " ++) $ show ex -- TODO Should be a logging statement
       return nonExistant
     nonExistant = NonExistant path
-
-catCanonicals :: [CanonicalPath] -> [FilePath]
-catCanonicals ps = [p | Canonical p <- ps]
-
-catNonExistants :: [CanonicalPath] -> [FilePath]
-catNonExistants ps = [p | NonExistant p <- ps]
 
 keyPair :: FilePath -> IO (Maybe (FilePath, BucketKey))
 keyPair path = do
@@ -106,12 +95,6 @@ calcBucketKey path = calc `catch` errorMessage
       putStrLn . ("error: " ++) $ show ex
       return Nothing
 
-removeAll :: (DupesMonad m) => [FilePath] -> Dupes m ()
-removeAll = mapM_ remove
-
-addAll :: (DupesMonad m) => [(FilePath, BucketKey)] -> Dupes m ()
-addAll = mapM_ (\(path, key) -> add path key)
-
 checkPathP :: ProcessT IO FilePath CanonicalPath
 checkPathP = repeatedly $ do
   await >>= lift . checkPath >>= yield
@@ -120,7 +103,7 @@ processPath :: ProcessT IO CanonicalPath (Maybe (FilePath, BucketKey))
 processPath = repeatedly $ do
   path <- await
   case path of
-    (Canonical p) -> yield =<< (lift $ keyPair p)
+    (CanonicalFilePath p) -> yield =<< (lift $ keyPair p)
     otherwise -> return ()
 
 catMaybesP :: Process (Maybe a) a
@@ -129,11 +112,6 @@ catMaybesP = repeatedly $ do
   case m of
     Just a -> yield a
     Nothing -> return () 
-
-processBucket :: (DupesMonad m) => ProcessT (Dupes m) Bucket ()
-processBucket = repeatedly $ do
-  (Bucket key [(Entry path)]) <- await
-  lift $ add path key
 
 storePath :: (DupesMonad m) => ProcessT (Dupes m) (FilePath, BucketKey) ()
 storePath = repeatedly $ do
