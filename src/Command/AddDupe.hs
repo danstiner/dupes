@@ -97,8 +97,8 @@ calcBucketKey path = calc `catch` errorMessage
       putStrLn . ("error: " ++) $ show ex
       return Nothing
 
-removeAll :: (DupesMonad m) => [FilePath] -> Dupes m ()
+removeAll :: (DupesMonad m) => [FilePath] -> DupesT m ()
 removeAll = mapM_ remove
 
-addAll :: (DupesMonad m) => [(FilePath, BucketKey)] -> Dupes m ()
+addAll :: (DupesMonad m) => [(FilePath, BucketKey)] -> DupesT m ()
 addAll = mapM_ (\(path, key) -> add path key)

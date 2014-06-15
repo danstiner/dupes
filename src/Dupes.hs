@@ -9,15 +9,17 @@ module Dupes (
   , BucketKey
   , Entry (..)
   , Dupes
+  , DupesT
   , Key
   , CI.Algro (..)
-  , execDupes
+  , execDupesT
   , createBucketKey
   , createBucketKeyLazy
 ) where
 
 import ContentIdentifier as CI
 
+import Data.Functor.Identity
 import Control.Monad.Trans
 import Data.Binary as Binary
 import GHC.Generics (Generic)
@@ -27,7 +29,8 @@ import qualified Data.ByteString as B
 
 data Entry = Entry FilePath deriving (Generic)
 
-newtype Dupes m a = Dupes { runDupes :: m a}
+newtype DupesT m a = DupesT { runDupesT :: m a}
+type Dupes a = DupesT Identity a
 
 type Key = CI.Id
 type BucketType = CI.Type
@@ -35,13 +38,13 @@ type BucketKey = Key
 data Bucket = Bucket Key [Entry] deriving (Generic)
 
 class (Monad m) => DupesMonad m where
-  list :: CI.Type -> Dupes m [Bucket]
-  add  :: FilePath -> Key -> Dupes m ()
-  get  :: FilePath -> Dupes m [Key]
-  remove :: FilePath -> Dupes m [Key]
+  list :: CI.Type -> DupesT m [Bucket]
+  add  :: FilePath -> Key -> DupesT m ()
+  get  :: FilePath -> DupesT m [Key]
+  remove :: FilePath -> DupesT m [Key]
 
-execDupes :: (Monad m) => Dupes m a -> m a
-execDupes = runDupes
+execDupesT :: (Monad m) => DupesT m a -> m a
+execDupesT = runDupesT
 
 createBucketKey :: BucketType -> B.ByteString -> BucketKey
 createBucketKey = CI.create
@@ -49,8 +52,8 @@ createBucketKey = CI.create
 createBucketKeyLazy :: BucketType -> L.ByteString -> BucketKey
 createBucketKeyLazy = CI.createLazy
 
-instance MonadTrans Dupes where
-  lift = Dupes
+instance MonadTrans DupesT where
+  lift = DupesT
 
 instance Eq Entry where
   (Entry a) == (Entry b) = a == b
@@ -62,9 +65,9 @@ instance Binary.Binary Entry where
     path <- Binary.get
     return (Entry path)
 
-instance (DupesMonad m) => Monad (Dupes m) where
-  fail str = Dupes $ fail str
-  return a = Dupes $ do return a
-  m >>= k  = Dupes $ do
-      a <- runDupes m
-      runDupes (k a)
+instance (DupesMonad m) => Monad (DupesT m) where
+  fail str = DupesT $ fail str
+  return a = DupesT $ do return a
+  m >>= k  = DupesT $ do
+      a <- runDupesT m
+      runDupesT (k a)

@@ -44,8 +44,8 @@ createStore path = Store path
 runLevelDBIndex :: (MonadResourceBase m) => Index (Level.LevelDBT m) a -> Store -> m a
 runLevelDBIndex m s = runLevelDB s indexKeySpace (execIndex m)
 
-runDupes :: (MonadResourceBase m) => Store -> Dupes (Level.LevelDBT m) a -> m a
-runDupes s m = runLevelDB s dupesKeySpace (execDupes m)
+runDupes :: (MonadResourceBase m) => Store -> DupesT (Level.LevelDBT m) a -> m a
+runDupes s m = runLevelDB s dupesKeySpace (execDupesT m)
 
 runLevelDB :: (MonadResourceBase m) => Store -> KeySpace -> Level.LevelDBT m a -> m a
 runLevelDB store keySpace dbt =
