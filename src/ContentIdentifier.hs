@@ -1,8 +1,9 @@
 {-# LANGUAGE DeriveGeneric #-}
 
 module ContentIdentifier (
-  create
+    create
   , createLazy
+  , createNil
   , Algro (..)
   , Type
   , Id
@@ -29,7 +30,7 @@ import Data.Char (isHexDigit)
 data Algro = CRC32 | MD5 | SHA3_256 deriving (Generic)
 type Digest = B.ByteString
 type HashSize = Int
-data Id = CRC32_Id Digest | MD5_Id Digest | SHA3 HashSize Digest deriving (Eq, Ord, Generic)
+data Id = CRC32_Id Digest | MD5_Id Digest | SHA3 HashSize Digest | Nil deriving (Eq, Ord, Generic)
 
 type IdString = String
 type Type = Algro
@@ -43,6 +44,9 @@ create = hash
 
 createLazy :: Algro -> L.ByteString -> Id
 createLazy = hashLazy
+
+createNil :: Id
+createNil = Nil
 
 hashLazy :: Algro -> L.ByteString -> Id
 hashLazy MD5 = MD5_Id . MD5.hashlazy

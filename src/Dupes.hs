@@ -14,6 +14,7 @@ module Dupes (
   , execDupes
   , createBucketKey
   , createBucketKeyLazy
+  , nilBucketKey
 ) where
 
 import ContentIdentifier as CI
@@ -35,10 +36,12 @@ type BucketKey = Key
 data Bucket = Bucket Key [Entry] deriving (Generic)
 
 class (Monad m) => DupesMonad m where
-  list :: CI.Type -> Dupes m [Bucket]
+  list :: FilePath -> Dupes m [FilePath]
+  buckets :: CI.Type -> Dupes m [Bucket]
   add  :: FilePath -> Key -> Dupes m ()
   get  :: FilePath -> Dupes m [Key]
   remove :: FilePath -> Dupes m [Key]
+  removeDir :: FilePath -> Dupes m [Key]
 
 execDupes :: (Monad m) => Dupes m a -> m a
 execDupes = runDupes
@@ -48,6 +51,9 @@ createBucketKey = CI.create
 
 createBucketKeyLazy :: BucketType -> L.ByteString -> BucketKey
 createBucketKeyLazy = CI.createLazy
+
+nilBucketKey :: BucketKey
+nilBucketKey = CI.createNil
 
 instance MonadTrans Dupes where
   lift = Dupes

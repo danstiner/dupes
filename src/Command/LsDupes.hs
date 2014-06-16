@@ -43,7 +43,7 @@ run opt = do
 
 ls :: (DupesMonad m) => Options -> Dupes m [[FilePath]]
 ls opt = do
-    buckets <- list CRC32
+    buckets <- buckets CRC32
     let bs = List.filter bucketFilter buckets
     let nestedEntries = List.map (getEntries) bs
     return $ List.map (List.map getPaths) nestedEntries

@@ -32,14 +32,12 @@ type KeySpace = ByteString
 keySpace :: KeySpace
 keySpace = C.pack "MyKeySpace"
 
-indexKeySpace :: KeySpace
+indexKeySpace,dupesKeySpace :: KeySpace
 indexKeySpace = C.pack "Index"
-
-dupesKeySpace :: KeySpace
 dupesKeySpace = C.pack "Dupes"
 
 createStore :: FilePath -> Store
-createStore path = Store path
+createStore = Store
 
 runLevelDBIndex :: (MonadResourceBase m) => Index (Level.LevelDBT m) a -> Store -> m a
 runLevelDBIndex m s = runLevelDB s indexKeySpace (execIndex m)
@@ -48,8 +46,8 @@ runDupes :: (MonadResourceBase m) => Store -> Dupes (Level.LevelDBT m) a -> m a
 runDupes s m = runLevelDB s dupesKeySpace (execDupes m)
 
 runLevelDB :: (MonadResourceBase m) => Store -> KeySpace -> Level.LevelDBT m a -> m a
-runLevelDB store keySpace dbt =
-	Level.runCreateLevelDB path keySpace dbt
+runLevelDB store =
+	Level.runCreateLevelDB path
 	where
 		(Store path) = store
 
@@ -66,7 +64,7 @@ decode :: (Binary.Binary a) => C.ByteString -> a
 decode = Binary.decode . L.fromStrict
 
 instance (DupesMonad (Level.LevelDBT IO)) where
-	list bType = lift $ do
+	buckets bType = lift $ do
 		items <- Level.scan (toLevelKey bType) Level.queryItems
 		return $ Prelude.map decodeDupBucket items
 	add path bucketKey = lift $ do
@@ -78,6 +76,8 @@ instance (DupesMonad (Level.LevelDBT IO)) where
 				Level.put key $ enc $ nub ((Entry path) : prev)
 			Nothing  -> Level.put key $ enc [(Entry path)]
 	remove path = lift $ do
+		fail ("TODO, don't know how to remove path " ++ path)
+	removeDir path = lift $ do
 		fail ("TODO, don't know how to remove path " ++ path)
 
 decodeDupBucket :: (Level.Key, Level.Value) -> Bucket
@@ -117,4 +117,3 @@ toLevelKey = encodeStrict
 
 encodeStrict :: (Binary.Binary a) => a -> Level.Key
 encodeStrict = L.toStrict . Binary.encode
-
