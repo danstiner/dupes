@@ -1,11 +1,19 @@
+
+
 env:
  - GHCVER=7.6.3
  - GHCVER=7.8.2
  - GHCVER=head
 
 matrix:
+  fast_finish: true
   allow_failures:
-    - env: GHCVER=head
+   - env: GHCVER=head
+
+cache:
+  directories:
+   - $HOME/.cabal
+   - $HOME/.ghc
 
 before_install:
  - travis_retry sudo add-apt-repository -y ppa:hvr/ghc
@@ -18,7 +26,7 @@ before_install:
 install:
  - cabal --version
  - cabal update
- - cabal install --enable-tests --enable-benchmarks --only-dependencies
+ - cabal install -j --enable-tests --enable-benchmarks --only-dependencies
 
 script:
  - cabal configure --enable-tests --enable-benchmarks -v2
