@@ -18,7 +18,7 @@ before_install:
 install:
  - cabal --version
  - cabal update
- - cabal install --enable-tests --enable-benchmarks --only-dependencies
+ - cabal install -j --enable-tests --enable-benchmarks --only-dependencies
 
 script:
  - cabal configure --enable-tests --enable-benchmarks -v2
