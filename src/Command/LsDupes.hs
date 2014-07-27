@@ -41,7 +41,7 @@ run opt = do
   where
     combine l r = l ++ "," ++ r
 
-ls :: (DupesMonad m) => Options -> Dupes m [[FilePath]]
+ls :: (DupesMonad m) => Options -> DupesT m [[FilePath]]
 ls opt = do
     buckets <- buckets CRC32
     let bs = List.filter bucketFilter buckets

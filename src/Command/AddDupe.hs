@@ -100,7 +100,7 @@ hashDir = repeatedly $ do
     hash (CanonicalDirectoryPath _) = return $ Just nilBucketKey
     hash (NonExistant _) = return $ Just nilBucketKey
 
-storeDirectory :: (DupesMonad m) => ProcessT (Dupes m) HashedDirectoryContents ()
+storeDirectory :: (DupesMonad m) => ProcessT (DupesT m) HashedDirectoryContents ()
 storeDirectory = repeatedly $ do
   (path, entries) <- await
   process path entries
@@ -115,7 +115,7 @@ storeDirectory = repeatedly $ do
     addC (CanonicalFilePath path) key = add path key
     addC _ _ = return ()
 
-runMachineIO :: SourceT (Dupes (Level.LevelDBT IO)) () -> Store -> IO ()
+runMachineIO :: SourceT (DupesT (Level.LevelDBT IO)) () -> Store -> IO ()
 runMachineIO machine store = LevelDB.runDupes store $ runT_ machine
 
 checkPath :: FilePath -> IO CanonicalPath
@@ -155,25 +155,3 @@ calcBucketKey path = calc `catch` errorMessage
     errorMessage ex = do
       putStrLn . ("errorc: " ++) $ show ex
       return Nothing
-
-checkPathP :: ProcessT IO FilePath CanonicalPath
-checkPathP = repeatedly $ do
-  await >>= lift . checkPath >>= yield
-
-processPath :: ProcessT IO CanonicalPath (Maybe (FilePath, BucketKey))
-processPath = repeatedly $ do
-  path <- await
-  case path of
-    (CanonicalFilePath p) -> yield =<< (lift $ keyPair p)
-    otherwise -> return ()
-
-catMaybesP :: Process (Maybe a) a
-catMaybesP = repeatedly $ do
-  m <- await
-  case m of
-    Just a -> yield a
-    Nothing -> return ()
-
-storePath :: (DupesMonad m) => ProcessT (Dupes m) (FilePath, BucketKey) ()
-storePath = repeatedly $ do
-  await >>= \(path, key) -> lift $ add path key
