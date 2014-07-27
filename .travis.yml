@@ -21,6 +21,7 @@ install:
  - cabal install --enable-tests --enable-benchmarks --only-dependencies
 
 script:
+ - export PATH=/opt/ghc/$GHCVER/bin:/opt/cabal/1.20/bin:$PATH
  - cabal configure --enable-tests --enable-benchmarks -v2
  - cabal build
  - cabal test
