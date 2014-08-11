@@ -24,11 +24,11 @@ executable clod
                      , binary
                      , bytestring
                      , cereal
-                     , deepseq
-                     , deepseq-generics
                      , containers
                      , cryptohash
                      , data-ordlist
+                     , deepseq
+                     , deepseq-generics
                      , digest
                      , directory
                      , filepath
@@ -57,9 +57,9 @@ Test-suite testsuite
                      , containers
                      , cryptohash
                      , data-ordlist
-                     , digest
                      , deepseq
                      , deepseq-generics
+                     , digest
                      , directory
                      , filepath
                      , higher-leveldb >= 0.1.0.3
