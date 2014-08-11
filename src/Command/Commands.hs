@@ -13,11 +13,11 @@ import qualified Command.UpdateIndex as UpdateIndex
 import Options.Applicative
 
 data Command 
-	= AddDupe AddDupe.Options
-	| HashObject HashObject.Options
-	| UpdateIndex UpdateIndex.Options
-	| LsDupes LsDupes.Options
-	| LsFiles LsFiles.Options
+  = AddDupe AddDupe.Options
+  | HashObject HashObject.Options
+  | UpdateIndex UpdateIndex.Options
+  | LsDupes LsDupes.Options
+  | LsFiles LsFiles.Options
 
 parser :: Parser Command
 parser = subparser (

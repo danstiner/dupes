@@ -50,34 +50,34 @@ createTree path store = do
   entries <- mapM toEntry names
   return $ Tree.create (catMaybes entries)
   where
-  	toEntry name = createTreeEntry path name store
+    toEntry name = createTreeEntry path name store
 
 listDirectory :: FilePath -> IO [FilePath]
 listDirectory path = do
-	names <- getDirectoryContents path
-	return $ filter (`notElem` [".", ".."]) names
+    names <- getDirectoryContents path
+    return $ filter (`notElem` [".", ".."]) names
 
 createTreeEntry :: (BlobStore a) => FilePath -> FilePath -> a -> IO (Maybe Tree.Entry)
 createTreeEntry parentPath name store = do
-	isDir <- doesDirectoryExist fullpath
-	case isDir of
-		True -> createDirEntry
-		False -> createFileEntry
-	where
-		fullpath = parentPath </> name
-		createDirEntry = do
-			blobId <- writeTree fullpath store
-			return . Just $ Tree.createEntry name 0 blobId
-		createFileEntry = do
-			result <- tryJust (guard . isDoesNotExistError) (blobFromPath fullpath)
-			case result of
-				Left e -> do
-					noticeM logTag ("Problem reading file: " ++ fullpath ++", exception: " ++ (show e))
-					return Nothing
-				Right blob -> do
-					evalStateT (BlobStore.put blob) store
-					let (Blob.Blob blobId _) = blob
-					return . Just $ Tree.createEntry name 0 blobId
+    isDir <- doesDirectoryExist fullpath
+    case isDir of
+        True -> createDirEntry
+        False -> createFileEntry
+    where
+        fullpath = parentPath </> name
+        createDirEntry = do
+            blobId <- writeTree fullpath store
+            return . Just $ Tree.createEntry name 0 blobId
+        createFileEntry = do
+            result <- tryJust (guard . isDoesNotExistError) (blobFromPath fullpath)
+            case result of
+                Left e -> do
+                    noticeM logTag ("Problem reading file: " ++ fullpath ++", exception: " ++ (show e))
+                    return Nothing
+                Right blob -> do
+                    evalStateT (BlobStore.put blob) store
+                    let (Blob.Blob blobId _) = blob
+                    return . Just $ Tree.createEntry name 0 blobId
 
 
 blobFromPath :: FilePath -> IO Blob.Blob

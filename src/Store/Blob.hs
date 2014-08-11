@@ -1,5 +1,5 @@
 module Store.Blob (
-    BlobStore (..)
+  BlobStore (..)
 ) where
 
 import qualified Blob

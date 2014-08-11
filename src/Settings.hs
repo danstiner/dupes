@@ -7,5 +7,5 @@ import System.FilePath ( (</>) )
 
 getAppDir :: IO FilePath
 getAppDir = do
-	home <- Dir.getHomeDirectory
-	return $ home </> ".clod"
+    home <- Dir.getHomeDirectory
+    return $ home </> ".clod"

@@ -1,5 +1,5 @@
 module Command.LsFiles (
-	Options
+    Options
   , parserInfo
   , run
 ) where

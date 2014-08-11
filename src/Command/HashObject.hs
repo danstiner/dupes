@@ -1,5 +1,5 @@
 module Command.HashObject (
-	Options
+    Options
   , parserInfo
   , run
 ) where
@@ -42,10 +42,10 @@ parser = Options
 
 run :: Options -> IO ()
 run options = do
-	file <- B.readFile (path options)
+  file <- B.readFile (path options)
 
-	let blobId = hashObject file
+  let blobId = hashObject file
 
-	putStrLn (Blob.toHexString blobId)
+  putStrLn (Blob.toHexString blobId)
 
-	return ()
+  return ()

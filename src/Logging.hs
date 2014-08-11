@@ -1,5 +1,5 @@
 module Logging (
-	register
+    register
 ) where
 
 import System.FilePath ( (</>) )
