@@ -13,12 +13,9 @@ import Control.Monad ( forM_ )
 import Crypto.Hash.SHA3 ()
 import qualified Blob
 import qualified Data.Binary as Binary
-import qualified Data.ByteString as B
 import qualified Data.ByteString.Lazy as L
 
 import qualified ContentIdentifier as CI
-
-type HashDigest = B.ByteString
 
 type Id = CI.Id
 
