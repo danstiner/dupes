@@ -1,5 +1,5 @@
 module Command.LsDupes (
-	Options
+    Options
   , parserInfo
   , run
 ) where

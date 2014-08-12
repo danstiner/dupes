@@ -1,5 +1,5 @@
 module Command.UpdateIndex (
-	Options
+    Options
   , parserInfo
   , run
 ) where

@@ -19,11 +19,11 @@ optionParser = Options
 main :: IO ()
 main = do
   execParser opts >>= runWithOptions
-	where
-		parser = (helper <*> optionParser)
-		desc = ( fullDesc
-			<> progDesc "Collection of utilities for content-addressed storage inspired by git" )
-		opts = info parser desc
+  where
+    parser = (helper <*> optionParser)
+    desc = ( fullDesc
+      <> progDesc "Collection of utilities for content-addressed storage inspired by git" )
+    opts = info parser desc
 
 runWithOptions :: Options -> IO ()
 runWithOptions options = do

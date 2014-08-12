@@ -28,24 +28,24 @@ type Entries = [Entry]
 data Tree = Tree Id Entries deriving (Show, Eq)
 
 instance Binary.Binary Tree where
-	put (Tree ident entries) = do
-		Binary.put ident
-		forM_ entries Binary.put
-	get = do
-		Binary.get
+    put (Tree ident entries) = do
+        Binary.put ident
+        forM_ entries Binary.put
+    get = do
+        Binary.get
 
 instance Binary.Binary Entry where
-	put (Entry mode filename key) = do
-		Binary.put mode
-		Binary.put filename
-		Binary.put key
-	get = do
-		Binary.get
+    put (Entry mode filename key) = do
+        Binary.put mode
+        Binary.put filename
+        Binary.put key
+    get = do
+        Binary.get
 
 create :: Entries -> Tree
 create entries = Tree hash entries
-	where
-		hash = CI.create CI.SHA3_256 $ L.toStrict $ Binary.encode entries
+    where
+        hash = CI.create CI.SHA3_256 $ L.toStrict $ Binary.encode entries
 
 createEntry :: Filename -> Mode -> Blob.Id -> Entry
 createEntry f m i = Entry m f i

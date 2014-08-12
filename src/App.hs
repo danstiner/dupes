@@ -1,5 +1,5 @@
 module App (
-	logTag
+    logTag
 ) where
 
 logTag :: String

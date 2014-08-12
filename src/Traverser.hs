@@ -1,8 +1,8 @@
 
 module Traverser (
-traverseAndStore,
-traverseAndStoreFlat,
-traverseAndPrint
+  traverseAndStore,
+  traverseAndStoreFlat,
+  traverseAndPrint
 ) where
 
 import Store.Mem as InMem

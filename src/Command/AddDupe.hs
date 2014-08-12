@@ -1,5 +1,5 @@
 module Command.AddDupe (
-	Options
+    Options
   , parserInfo
   , run
 ) where
