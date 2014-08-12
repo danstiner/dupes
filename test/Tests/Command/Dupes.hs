@@ -2,20 +2,20 @@
 
 module Tests.Command.Dupes (tests) where
 
-import Data.List
-import Data.Int
-import Data.ByteString.Char8 as C (pack, unpack)
+import Dupes
+
 import Control.Monad
-import Data.Serialize
-import Data.List.Ordered
 import Data.Either (rights)
-import System.FilePath ( (</>), pathSeparator )
+import Data.List
+import Data.List.Ordered
+import Data.Serialize
+import Data.Word
 
 import Test.Framework
 import Test.Framework.Providers.HUnit
 import Test.Framework.Providers.QuickCheck2 (testProperty)
-import Test.QuickCheck
 import Test.HUnit hiding (Test, path)
+import Test.QuickCheck
 
 tests :: [Test]
 tests = [ testStringEquality
@@ -44,7 +44,7 @@ prop_rebuiltArray = testProperty "prop_rebuiltArray" $ \(xs, ys) ->
   where
     ident xs ys = rebuild $ combine xs ys
 
-rebuild :: [Op a] -> ([a], [a])
+rebuild :: [MergedOperation a] -> ([a], [a])
 rebuild = r
   where
     r [] = ([], [])
@@ -54,23 +54,6 @@ rebuild = r
     left x (xs, ys) = (x : xs, ys)
     right y (xs, ys) = (xs, y : ys)
 
-data Op a = LeftOnly a | RightOnly a | Both a deriving (Show, Eq)
-
-combine :: (Ord a, Eq a) => [a] -> [a] -> [Op a]
-combine xs [] = map LeftOnly xs
-combine [] ys = map RightOnly ys
-combine xa@(x:xs) ya@(y:ys)
-  | x == y = Both x : combine xs ys
-  | x <  y = LeftOnly x : combine xs ya
-  | x >  y = RightOnly y : combine xa ys
-
-
-type Name = String
-
-data DirTree a = File Name a | Dir Name a [DirTree a] deriving (Show, Ord, Eq)
-
-data PathKey = PathKey { depth :: Positive Int16, path :: FilePath } deriving (Show, Ord, Eq)
-
 instance (Arbitrary a) => Arbitrary (DirTree a) where
   arbitrary = sized $ \s -> frequency
      [(s, (liftM2 File arbitrary arbitrary)),
@@ -78,22 +61,6 @@ instance (Arbitrary a) => Arbitrary (DirTree a) where
 
 instance Arbitrary PathKey where
   arbitrary = liftM2 PathKey arbitrary arbitrary
-
-instance Serialize PathKey where
-  put p = do
-    put (depth p)
-    putByteString . C.pack $ path p
-  get = liftM2 PathKey get (fmap unpack $ remaining >>= getByteString)
-
-instance (Serialize a) => Serialize (Positive a) where
-  put (Positive a) = put a
-  get = fmap Positive get
-
-flatten :: DirTree a -> [(FilePath, a)]
-flatten = f [pathSeparator]
-  where
-    f prefix (File name a) = [(prefix </> name, a)]
-    f prefix (Dir name a xs) = (prefix </> name </> "", a) : concatMap (f (prefix </> name)) xs
 
 prop_serializePathKey :: PathKey -> Bool
 prop_serializePathKey a = case decode (encode a) of
@@ -106,7 +73,7 @@ prop_orderedSerialization = isSorted . endecode
     endecode :: (Serialize b) => [b] -> [b]
     endecode xs = rights (map decode (sort (map encode xs)))
 
-prop_orderedNumbers :: [Positive Int] -> Bool
+prop_orderedNumbers :: [Word] -> Bool
 prop_orderedNumbers = prop_orderedSerialization
 
 prop_orderedPathKeys :: [PathKey] -> Bool
