@@ -4,16 +4,16 @@ module Command.UpdateIndex (
   , run
 ) where
 
-import qualified Data.ByteString as B
 import Options.Applicative
+import qualified Data.ByteString as B
 import System.Directory (doesFileExist)
 import System.FilePath ( (</>) )
+import Text.Read (step, readPrec)
 
-import qualified Settings
-import Store.LevelDB as LevelDB
 import Index
 import qualified Blob
-import Text.Read (step, readPrec)
+import qualified Settings
+import Store.LevelDB as LevelDB
 
 data CacheInfoParams = NoCacheInfoParams | CacheInfoParams Int Blob.Id FilePath
 
