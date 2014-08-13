@@ -1,19 +1,20 @@
 module Command.UpdateIndex (
-	Options
+    Options
   , parserInfo
   , run
 ) where
 
-import qualified Data.ByteString as B
 import Options.Applicative
+import qualified Data.ByteString as B
 import System.Directory (doesFileExist)
 import System.FilePath ( (</>) )
+import Text.Read (step, readPrec)
 
-import qualified Settings
-import Store.LevelDB as LevelDB
 import Index
 import qualified Blob
-import Text.Read (step, readPrec)
+import qualified Settings
+import Store.LevelDB as LevelDB
+import Util
 
 data CacheInfoParams = NoCacheInfoParams | CacheInfoParams Int Blob.Id FilePath
 
@@ -104,9 +105,8 @@ updateInfo path = do
   exist <- doesFileExist path
   if exist
     then do
-      appDir <- Settings.getAppDir
+      store <- getStore
       bytes <- B.readFile path
-      let store = LevelDB.createStore (appDir </> "leveldb")
       LevelDB.runLevelDBIndex (updateHash path bytes) store
       return ()
     else return ()

@@ -1,7 +1,7 @@
 {-# LANGUAGE Rank2Types #-}
 
 module Command.AddDupe (
-	Options
+    Options
   , parserInfo
   , run
 ) where
@@ -13,7 +13,6 @@ import System.IO
 import Options.Applicative
 import qualified Data.ByteString.Lazy as L
 import System.Directory ( canonicalizePath, doesFileExist, doesDirectoryExist, getDirectoryContents )
-import System.FilePath ( (</>) )
 import Control.DeepSeq
 import Control.Monad.Trans.Class ( lift )
 import qualified Database.LevelDB.Higher as Level
@@ -21,7 +20,7 @@ import Data.Maybe (catMaybes)
 import System.Log.Logger
 
 import Dupes
-import qualified Settings
+import Util
 import Store.LevelDB as LevelDB
 
 data CanonicalPath =
@@ -51,8 +50,7 @@ parser = Options
 
 run :: Options -> IO ()
 run opt = do
-  appDir <- Settings.getAppDir
-  let store = LevelDB.createStore (appDir </> "leveldb")
+  store <- getStore
   runMachineIO machine store
   where
     machine = (fitM ioToDupes ioMachine) ~> storeDirectory
