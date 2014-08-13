@@ -14,6 +14,7 @@ import Index
 import qualified Blob
 import qualified Settings
 import Store.LevelDB as LevelDB
+import Util
 
 data CacheInfoParams = NoCacheInfoParams | CacheInfoParams Int Blob.Id FilePath
 
@@ -104,9 +105,8 @@ updateInfo path = do
   exist <- doesFileExist path
   if exist
     then do
-      appDir <- Settings.getAppDir
+      store <- getStore
       bytes <- B.readFile path
-      let store = LevelDB.createStore (appDir </> "leveldb")
       LevelDB.runLevelDBIndex (updateHash path bytes) store
       return ()
     else return ()

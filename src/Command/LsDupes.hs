@@ -6,12 +6,11 @@ module Command.LsDupes (
 
 import Data.List as List
 import Options.Applicative
-import System.FilePath ( (</>) )
 
 import Dupes
-import qualified Settings
 import qualified Telemetry
 import Store.LevelDB as LevelDB
+import Util
 
 data Options = Options
   { optShowDupesOnly :: Bool }
@@ -28,10 +27,7 @@ parser = Options
 
 run :: Options -> IO ()
 run opt = do
-
-  appDir <- Settings.getAppDir
-
-  let store = LevelDB.createStore (appDir </> "leveldb")
+  store <- getStore
   fileSets <- LevelDB.runDupes store (ls opt)
   let fileLines = map (foldr1 combine) fileSets
   mapM_ Prelude.putStrLn fileLines
