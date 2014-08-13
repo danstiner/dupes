@@ -31,8 +31,6 @@ import GHC.Generics (Generic)
 import qualified Data.ByteString.Lazy as L
 import qualified Data.ByteString as B
 
-
-
 import Control.Monad
 import Data.ByteString.Char8 as C (pack, unpack)
 import Data.Serialize

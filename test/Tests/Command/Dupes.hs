@@ -12,37 +12,16 @@ import Data.Serialize
 import Data.Word
 
 import Test.Framework
-import Test.Framework.Providers.HUnit
 import Test.Framework.Providers.QuickCheck2 (testProperty)
-import Test.HUnit hiding (Test, path)
 import Test.QuickCheck
 
 tests :: [Test]
-tests = [ testStringEquality
-        , prop_stringEquals
-        , prop_rebuiltArray
-        , (testProperty "path key serialization" prop_serializePathKey)
-        , (testProperty "path key ordering" prop_orderedPathKeys)
-        , (testProperty "dirtree merging" prop_dirTreeMergeUnMerge)
-        , (testProperty "ordered numbers" prop_orderedNumbers)
-        , (testProperty "files merging" prop_filesMergeUnMerge)
-        , (testProperty "dirtree serialized ordering" prop_dirTreeSerializedSortCombine)]
-
-testStringEquality :: Test
-testStringEquality = testCase "string equality" $ do
-  assertEqual "string equality" "string1" "string1"
-
-prop_stringEquals :: Test
-prop_stringEquals = testProperty "prop_stringEquals " $ \s ->
-  s == (s :: String)
-
-prop_rebuiltArray :: Test
-prop_rebuiltArray = testProperty "prop_rebuiltArray" $ \(xs, ys) ->
-  let sxs = sort xs :: [Int] in
-  let sys = sort ys :: [Int] in
-  (ident sxs sys) == (sxs, sys)
-  where
-    ident xs ys = rebuild $ combine xs ys
+tests = [ (testProperty "Rebuilding combined lists is identity" prop_combineAndRebuildIntList)
+        , (testProperty "Encode decode PathKey is identity" prop_serializePathKey)
+        , (testProperty "Encoded Words are orderable" prop_serializedNumbersOrderable)
+        , (testProperty "Encoded PathKeys are orderable" prop_serializedPathKeysOrderable)
+        , (testProperty "Rebuilding combined flattened DirTrees is identity" prop_combineAndRebuildFlattenedDirTrees)
+        , (testProperty "Combine two DirTrees, one sorted while serialized" prop_SerializedDirTreeCombineDirTree)]
 
 rebuild :: [MergedOperation a] -> ([a], [a])
 rebuild = r
@@ -62,6 +41,14 @@ instance (Arbitrary a) => Arbitrary (DirTree a) where
 instance Arbitrary PathKey where
   arbitrary = liftM2 PathKey arbitrary arbitrary
 
+prop_combineAndRebuildIntList :: OrderedList Int -> OrderedList Int -> Bool
+prop_combineAndRebuildIntList olx oly =
+  (ident xs ys) == (xs, ys)
+  where
+    xs = getOrdered olx
+    ys = getOrdered oly
+    ident x y = rebuild $ combine x y
+
 prop_serializePathKey :: PathKey -> Bool
 prop_serializePathKey a = case decode (encode a) of
   Left _ -> False
@@ -73,30 +60,23 @@ prop_orderedSerialization = isSorted . endecode
     endecode :: (Serialize b) => [b] -> [b]
     endecode xs = rights (map decode (sort (map encode xs)))
 
-prop_orderedNumbers :: [Word] -> Bool
-prop_orderedNumbers = prop_orderedSerialization
+prop_serializedNumbersOrderable :: [Word] -> Bool
+prop_serializedNumbersOrderable = prop_orderedSerialization
 
-prop_orderedPathKeys :: [PathKey] -> Bool
-prop_orderedPathKeys = prop_orderedSerialization
+prop_serializedPathKeysOrderable :: [PathKey] -> Bool
+prop_serializedPathKeysOrderable = prop_orderedSerialization
 
-prop_filesMergeUnMerge :: OrderedList (PathKey, Int) -> OrderedList (PathKey, Int) -> Bool
-prop_filesMergeUnMerge xo yo =
-    (ident xs ys) == (xs, ys)
-  where
-    xs = getOrdered xo
-    ys = getOrdered yo
-    ident a b = rebuild $ combine a b
-
-prop_dirTreeMergeUnMerge :: DirTree Int -> DirTree Int -> Bool
-prop_dirTreeMergeUnMerge base new =
+prop_combineAndRebuildFlattenedDirTrees :: DirTree Int -> DirTree Int -> Bool
+prop_combineAndRebuildFlattenedDirTrees base new =
     (ident xs ys) == (xs, ys)
   where
     xs = sort $ flatten base
     ys = sort $ flatten new
     ident a b = rebuild $ combine a b
 
-prop_dirTreeSerializedSortCombine :: DirTree Int -> DirTree Int -> Bool
-prop_dirTreeSerializedSortCombine base new =
+-- requires prop_serializedPathKeysOrderable
+prop_SerializedDirTreeCombineDirTree :: DirTree Int -> DirTree Int -> Bool
+prop_SerializedDirTreeCombineDirTree base new =
     (ident xs ys) == (xs, ys)
   where
     xs = sort $ flatten base

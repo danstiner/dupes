@@ -12,11 +12,10 @@ import Data.Maybe ( catMaybes )
 import Options.Applicative
 import qualified Data.ByteString.Lazy as L
 import System.Directory ( canonicalizePath, doesFileExist )
-import System.FilePath ( (</>) )
 import Control.DeepSeq
 
 import Dupes
-import qualified Settings
+import Util
 import Store.LevelDB as LevelDB
 
 data CheckedPath = Canonical FilePath | NonExistant FilePath
@@ -39,8 +38,7 @@ parser = Options
 
 run :: Options -> IO ()
 run opt = do
-  appDir <- Settings.getAppDir
-  let store = LevelDB.createStore (appDir </> "leveldb")
+  store <- getStore
 
   processPaths opt store =<< mapM checkPath =<< getPaths
 
