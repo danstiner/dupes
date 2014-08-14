@@ -33,14 +33,15 @@ executable clod
                      , directory
                      , directory-tree
                      , filepath
-                     , machines
                      , higher-leveldb >= 0.1.0.3
                      , hslogger
                      , http-conduit
+                     , machines
                      , MissingH
                      , mtl
                      , optparse-applicative >= 0.9.0
                      , pipes < 4.0
+                     , QuickCheck
                      , resourcet
                      , text
                      , transformers

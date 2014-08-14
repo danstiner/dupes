@@ -18,9 +18,10 @@ module Dupes (
   , nilBucketKey
   , DirTree (..)
   , MergedOperation (..)
-  , PathKey (..)
+  , PathKey
   , flatten
   , combine
+  , toPathKey
 ) where
 
 import ContentIdentifier as CI
@@ -37,7 +38,8 @@ import Data.ByteString.Char8 as C (pack, unpack)
 import Data.Serialize
 import Data.Serialize as Serial
 import Data.Word
-import System.FilePath ( (</>), pathSeparator )
+import System.FilePath ( (</>), pathSeparator, splitDirectories )
+import Test.QuickCheck
 
 data MergedOperation a = LeftOnly a | RightOnly a | Both a deriving (Show, Eq)
 
@@ -47,13 +49,19 @@ data DirTree a = File Name a | Dir Name a [DirTree a] deriving (Show, Ord, Eq)
 
 data PathKey = PathKey { depth :: Word16, path :: FilePath } deriving (Show, Ord, Eq)
 
-
 instance Serialize PathKey where
   put p = do
     put (depth p)
     putByteString . C.pack $ path p
   get = liftM2 PathKey Serial.get (fmap C.unpack $ remaining >>= getByteString)
 
+instance Arbitrary PathKey where
+  arbitrary = liftM2 PathKey arbitrary arbitrary
+
+toPathKey :: FilePath -> PathKey
+toPathKey p = PathKey (fromIntegral $ dirCount p) p
+  where
+    dirCount = length . splitDirectories
 
 flatten :: DirTree a -> [(FilePath, a)]
 flatten = f [pathSeparator]

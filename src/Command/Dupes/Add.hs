@@ -6,11 +6,14 @@ module Command.Dupes.Add (
   , run
 ) where
 
+import Dupes
+
 import Control.Monad.Trans ( lift )
 import Data.Foldable ( Foldable, traverse_ )
 import Data.List ( delete )
 import Data.Machine hiding ( run )
 import Options.Applicative
+import System.Directory.Tree
 
 data Options = Options
   { optStdin :: Bool
@@ -31,10 +34,10 @@ parser = Options
 run :: Options -> IO ()
 run opt = runT_ machine
   where
-     machine = pathSource opt ~> printPath
+     machine = pathSource opt ~> toDirTree ~> traverseTree ~> printPathKey
 
-printPath :: ProcessT IO FilePath ()
-printPath = repeatedly $ await >>= \a -> lift (putStrLn a)
+printPathKey :: ProcessT IO PathKey ()
+printPathKey = repeatedly $ await >>= \a -> lift (putStrLn $ show a)
 
 pathSource :: Options -> SourceT IO FilePath
 pathSource opt =
@@ -49,6 +52,17 @@ pathSource opt =
     stdinPathSource = sourceT $ do
       c <- getContents
       return (lines c)
+
+toDirTree :: ProcessT IO FilePath (AnchoredDirTree PathKey)
+toDirTree = repeatedly $ do
+  path <- await
+  dir <- lift $ readDirectoryWithL (return . toPathKey) path
+  yield dir
+
+traverseTree :: ProcessT IO (AnchoredDirTree PathKey) PathKey
+traverseTree = repeatedly $ do
+  atree <- await
+  traverse_ yield (dirTree atree)
 
 sourceT :: Monad m => Foldable f => m (f b) -> SourceT m b
 sourceT mxs = construct $ do

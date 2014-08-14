@@ -38,9 +38,6 @@ instance (Arbitrary a) => Arbitrary (DirTree a) where
      [(s, (liftM2 File arbitrary arbitrary)),
       (1, (liftM3 Dir arbitrary arbitrary arbitrary))]
 
-instance Arbitrary PathKey where
-  arbitrary = liftM2 PathKey arbitrary arbitrary
-
 prop_combineAndRebuildIntList :: OrderedList Int -> OrderedList Int -> Bool
 prop_combineAndRebuildIntList olx oly =
   (ident xs ys) == (xs, ys)
