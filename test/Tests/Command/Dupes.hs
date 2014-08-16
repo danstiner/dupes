@@ -4,7 +4,6 @@ module Tests.Command.Dupes (tests) where
 
 import Dupes
 
-import Control.Monad
 import Data.Either (rights)
 import Data.List
 import Data.List.Ordered
@@ -19,9 +18,8 @@ tests :: [Test]
 tests = [ (testProperty "Rebuilding combined lists is identity" prop_combineAndRebuildIntList)
         , (testProperty "Encode decode PathKey is identity" prop_serializePathKey)
         , (testProperty "Encoded Words are orderable" prop_serializedNumbersOrderable)
-        , (testProperty "Encoded PathKeys are orderable" prop_serializedPathKeysOrderable)
-        , (testProperty "Rebuilding combined flattened DirTrees is identity" prop_combineAndRebuildFlattenedDirTrees)
-        , (testProperty "Combine two DirTrees, one sorted while serialized" prop_SerializedDirTreeCombineDirTree)]
+        , (testProperty "Encoded SimplePathKeys order as normal" prop_serializedSimplePathKeysOrder)
+        , (testProperty "Rebuilding combined path keys is identity" prop_combineAndRebuildSimplePathKeys)]
 
 rebuild :: [MergedOperation a] -> ([a], [a])
 rebuild = r
@@ -32,11 +30,6 @@ rebuild = r
     r (Both x : xs) = left x $ right x (rebuild xs)
     left x (xs, ys) = (x : xs, ys)
     right y (xs, ys) = (xs, y : ys)
-
-instance (Arbitrary a) => Arbitrary (DirTree a) where
-  arbitrary = sized $ \s -> frequency
-     [(s, (liftM2 File arbitrary arbitrary)),
-      (1, (liftM3 Dir arbitrary arbitrary arbitrary))]
 
 prop_combineAndRebuildIntList :: OrderedList Int -> OrderedList Int -> Bool
 prop_combineAndRebuildIntList olx oly =
@@ -60,22 +53,12 @@ prop_orderedSerialization = isSorted . endecode
 prop_serializedNumbersOrderable :: [Word] -> Bool
 prop_serializedNumbersOrderable = prop_orderedSerialization
 
-prop_serializedPathKeysOrderable :: [PathKey] -> Bool
-prop_serializedPathKeysOrderable = prop_orderedSerialization
+prop_serializedSimplePathKeysOrder :: [PathKey] -> Bool
+prop_serializedSimplePathKeysOrder = prop_orderedSerialization
 
-prop_combineAndRebuildFlattenedDirTrees :: DirTree Int -> DirTree Int -> Bool
-prop_combineAndRebuildFlattenedDirTrees base new =
-    (ident xs ys) == (xs, ys)
-  where
-    xs = sort $ flatten base
-    ys = sort $ flatten new
-    ident a b = rebuild $ combine a b
+prop_combineAndRebuildSimplePathKeys :: [PathKey] -> [PathKey] -> Bool
+prop_combineAndRebuildSimplePathKeys = prop_combineAndRebuild
 
--- requires prop_serializedPathKeysOrderable
-prop_SerializedDirTreeCombineDirTree :: DirTree Int -> DirTree Int -> Bool
-prop_SerializedDirTreeCombineDirTree base new =
-    (ident xs ys) == (xs, ys)
-  where
-    xs = sort $ flatten base
-    ys = rights . (map decode) . sort . (map encode) $ flatten new
-    ident a b = rebuild $ combine a b
+prop_combineAndRebuild :: (Ord a) => [a] -> [a] -> Bool
+prop_combineAndRebuild xs ys =
+    (rebuild $ combine xs ys) == (xs, ys)

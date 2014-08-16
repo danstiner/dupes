@@ -4,70 +4,51 @@
 
 module Dupes (
     DupesMonad (..)
-  , BucketType
   , Bucket (..)
   , BucketKey
-  , Entry (..)
+  , BucketType
+  , CI.Algro (..)
   , Dupes
   , DupesT
+  , Entry (..)
   , Key
-  , CI.Algro (..)
-  , execDupesT
   , createBucketKey
   , createBucketKeyLazy
+  , execDupesT
   , nilBucketKey
-  , DirTree (..)
   , MergedOperation (..)
   , PathKey
-  , flatten
   , combine
   , toPathKey
 ) where
 
 import ContentIdentifier as CI
 
-import Data.Functor.Identity
-import Control.Monad.Trans
-import qualified Data.Binary as Binary
-import GHC.Generics (Generic)
-import qualified Data.ByteString.Lazy as L
-import qualified Data.ByteString as B
-
+import Control.Applicative
 import Control.Monad
+import Control.Monad.Trans
 import Data.ByteString.Char8 as C (pack, unpack)
+import Data.Functor.Identity
 import Data.Serialize
-import Data.Serialize as Serial
-import Data.Word
-import System.FilePath ( (</>), pathSeparator, splitDirectories )
+import GHC.Generics (Generic)
+import qualified Data.Binary as Binary
+import qualified Data.ByteString as B
+import qualified Data.ByteString.Lazy as L
 import Test.QuickCheck
 
 data MergedOperation a = LeftOnly a | RightOnly a | Both a deriving (Show, Eq)
 
-type Name = String
-
-data DirTree a = File Name a | Dir Name a [DirTree a] deriving (Show, Ord, Eq)
-
-data PathKey = PathKey { depth :: Word16, path :: FilePath } deriving (Show, Ord, Eq)
+newtype PathKey = PathKey { unSimplePathKey :: FilePath } deriving (Eq, Ord, Show)
 
 instance Serialize PathKey where
-  put p = do
-    put (depth p)
-    putByteString . C.pack $ path p
-  get = liftM2 PathKey Serial.get (fmap C.unpack $ remaining >>= getByteString)
+  put = putByteString . C.pack . unSimplePathKey
+  get = liftM PathKey (fmap C.unpack $ remaining >>= getByteString)
 
 instance Arbitrary PathKey where
-  arbitrary = liftM2 PathKey arbitrary arbitrary
+  arbitrary = PathKey <$> arbitrary
 
 toPathKey :: FilePath -> PathKey
-toPathKey p = PathKey (fromIntegral $ dirCount p) p
-  where
-    dirCount = length . splitDirectories
-
-flatten :: DirTree a -> [(FilePath, a)]
-flatten = f [pathSeparator]
-  where
-    f prefix (File name a) = [(prefix </> name, a)]
-    f prefix (Dir name a xs) = (prefix </> name </> "", a) : concatMap (f (prefix </> name)) xs
+toPathKey = PathKey
 
 combine :: (Ord a, Eq a) => [a] -> [a] -> [MergedOperation a]
 combine [] [] = []
@@ -77,9 +58,6 @@ combine xa@(x:xs) ya@(y:ys)
   | x == y = Both x : combine xs ys
   | x <  y = LeftOnly x : combine xs ya
   | x >  y = RightOnly y : combine xa ys
-
-
-
 
 data Entry = Entry FilePath deriving (Generic)
 

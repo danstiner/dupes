@@ -10,10 +10,11 @@ import Dupes
 
 import Control.Monad.Trans ( lift )
 import Data.Foldable ( Foldable, traverse_ )
-import Data.List ( delete )
+import Data.List ( delete, (\\), sort )
 import Data.Machine hiding ( run )
 import Options.Applicative
-import System.Directory.Tree
+import System.FilePath ( (</>) )
+import System.Directory
 
 data Options = Options
   { optStdin :: Bool
@@ -34,7 +35,7 @@ parser = Options
 run :: Options -> IO ()
 run opt = runT_ machine
   where
-     machine = pathSource opt ~> toDirTree ~> traverseTree ~> printPathKey
+    machine = pathSource opt ~> traversePath ~> toPathKeyP ~> printPathKey
 
 printPathKey :: ProcessT IO PathKey ()
 printPathKey = repeatedly $ await >>= \a -> lift (putStrLn $ show a)
@@ -53,16 +54,25 @@ pathSource opt =
       c <- getContents
       return (lines c)
 
-toDirTree :: ProcessT IO FilePath (AnchoredDirTree PathKey)
-toDirTree = repeatedly $ do
+toPathKeyP :: ProcessT IO FilePath PathKey
+toPathKeyP = repeatedly $ do
   path <- await
-  dir <- lift $ readDirectoryWithL (return . toPathKey) path
-  yield dir
+  yield $ toPathKey path
 
-traverseTree :: ProcessT IO (AnchoredDirTree PathKey) PathKey
-traverseTree = repeatedly $ do
-  atree <- await
-  traverse_ yield (dirTree atree)
+traversePath :: ProcessT IO FilePath FilePath
+traversePath = repeatedly $ do
+  path <- await
+  traversePath' path
+
+traversePath' path = do
+  yield path
+  isDir <- lift $ doesDirectoryExist path
+  if isDir
+    then do
+      contents <- lift $ getDirectoryContents path
+      let actual = sort . map (path </>) $ contents \\ [".", ".."]
+      mapM_ traversePath' actual
+    else return ()
 
 sourceT :: Monad m => Foldable f => m (f b) -> SourceT m b
 sourceT mxs = construct $ do
