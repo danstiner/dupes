@@ -3,4 +3,4 @@ clod
 
 Re-implementation of git using Haskell and general playground for content-addressed storage.
 
-[![Build Status](https://magnum.travis-ci.com/danstiner/clod.svg?token=FyFJSqQLubdz7GESQUgc)](https://magnum.travis-ci.com/danstiner/clod)
+[![Build Status](https://api.travis-ci.org/danstiner/clod.svg)](https://travis-ci.org/danstiner/clod)
