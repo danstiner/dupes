@@ -80,7 +80,7 @@ sourceT mxs = construct $ do
   traverse_ yield xs
 
 joinSources :: Monad m => SourceT m a -> SourceT m a -> SourceT m a
-joinSources a b = (capX a w)  <~  b
+joinSources a b = capX a w <~ b
   where
     w = repeatedly $ do
       z <- awaits Z

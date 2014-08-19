@@ -38,10 +38,10 @@ import Test.QuickCheck
 
 data MergedOperation a = LeftOnly a | RightOnly a | Both a deriving (Show, Eq)
 
-newtype PathKey = PathKey { unSimplePathKey :: FilePath } deriving (Eq, Ord, Show)
+newtype PathKey = PathKey { unPathKey :: FilePath } deriving (Eq, Ord, Show)
 
 instance Serialize PathKey where
-  put = putByteString . C.pack . unSimplePathKey
+  put = putByteString . C.pack . unPathKey
   get = liftM PathKey (fmap C.unpack $ remaining >>= getByteString)
 
 instance Arbitrary PathKey where

@@ -48,7 +48,7 @@ prop_orderedSerialization :: (Serialize a, Ord a) => [a] -> Bool
 prop_orderedSerialization = isSorted . endecode
   where
     endecode :: (Serialize b) => [b] -> [b]
-    endecode xs = rights (map decode (sort (map encode xs)))
+    endecode xs = rights . map decode . sort . map encode $ xs
 
 prop_serializedNumbersOrderable :: [Word] -> Bool
 prop_serializedNumbersOrderable = prop_orderedSerialization
