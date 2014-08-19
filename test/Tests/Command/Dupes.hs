@@ -4,6 +4,7 @@ module Tests.Command.Dupes (tests) where
 
 import Dupes
 
+import Data.Machine
 import Data.Either (rights)
 import Data.List
 import Data.List.Ordered
@@ -19,7 +20,8 @@ tests = [ (testProperty "Rebuilding combined lists is identity" prop_combineAndR
         , (testProperty "Encode decode PathKey is identity" prop_serializePathKey)
         , (testProperty "Encoded Words are orderable" prop_serializedNumbersOrderable)
         , (testProperty "Encoded SimplePathKeys order as normal" prop_serializedSimplePathKeysOrder)
-        , (testProperty "Rebuilding combined path keys is identity" prop_combineAndRebuildSimplePathKeys)]
+        , (testProperty "Rebuilding combined path keys is identity" prop_combineAndRebuildSimplePathKeys)
+        , (testProperty "Rebuild merged streams in identity" prop_rebuildMergedStreamsInt)]
 
 rebuild :: [MergedOperation a] -> ([a], [a])
 rebuild = r
@@ -62,3 +64,14 @@ prop_combineAndRebuildSimplePathKeys = prop_combineAndRebuild
 prop_combineAndRebuild :: (Ord a) => [a] -> [a] -> Bool
 prop_combineAndRebuild xs ys =
     (rebuild $ combine xs ys) == (xs, ys)
+
+prop_rebuildMergedStreamsInt :: [Int] -> [Int] -> Bool
+prop_rebuildMergedStreamsInt = prop_rebuildMergedStreams
+
+prop_rebuildMergedStreams :: (Ord a) => [a] -> [a] -> Bool
+prop_rebuildMergedStreams xs ys =
+  (rebuild . run $ mergeOrderedStreams sourceX sourceY) == (xs, ys)
+  where
+    sourceX = source xs
+    sourceY = source ys
+

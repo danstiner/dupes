@@ -1,6 +1,7 @@
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE DeriveGeneric #-}
+{-# LANGUAGE Rank2Types #-}
 
 module Dupes (
     DupesMonad (..)
@@ -20,10 +21,13 @@ module Dupes (
   , PathKey
   , combine
   , toPathKey
+  , mergeOrderedStreams
 ) where
 
 import ContentIdentifier as CI
 
+import Data.Machine.Interleave
+import Data.Machine hiding ( run )
 import Control.Applicative
 import Control.Monad
 import Control.Monad.Trans
@@ -58,6 +62,49 @@ combine xa@(x:xs) ya@(y:ys)
   | x == y = Both x : combine xs ys
   | x <  y = LeftOnly x : combine xs ya
   | x >  y = RightOnly y : combine xa ys
+
+
+mergeOrderedStreams :: (Ord a, Monad m) => SourceT m a -> SourceT m a -> SourceT m (MergedOperation a)
+mergeOrderedStreams a b = capped <~ b
+  where
+    capped = capXM a w
+
+    w :: (Monad m, Ord a) => MachineT m (MY a a) (MergedOperation a)
+    w = repeatedly start
+
+    start :: (Ord a) => PlanT (MY a a) (MergedOperation a) m ()
+    start = do
+      x <- awaits MaybeX
+      case x of
+        Just l -> right l
+        Nothing -> awaits JustY >>= yield . RightOnly
+
+    left :: (Ord a) => a -> PlanT (MY a a) (MergedOperation a) m ()
+    left r = do
+      x <- awaits MaybeX
+      case x of
+        Just l -> mergeStep l r
+        Nothing -> yield (RightOnly r) >> awaits JustY >>= yield . RightOnly
+
+    right :: (Ord a) => a -> PlanT (MY a a) (MergedOperation a) m ()
+    right l = do
+      y <- awaits MaybeY
+      case y of
+        Just r -> mergeStep l r
+        Nothing -> yield (LeftOnly l) >> awaits JustX >>= yield . LeftOnly
+
+    mergeStep :: (Ord a) => a -> a -> PlanT (MY a a) (MergedOperation a) m ()
+    mergeStep l r =
+      if l == r
+        then yield (Both l)
+        else if l < r
+          then do
+            yield (LeftOnly l)
+            left r
+          else do
+            yield (RightOnly r)
+            right l
+
 
 data Entry = Entry FilePath deriving (Generic)
 
