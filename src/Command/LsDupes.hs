@@ -29,19 +29,19 @@ run :: Options -> IO ()
 run opt = do
   store <- getStore
   fileSets <- LevelDB.runDupes store (ls opt)
-  let fileLines = map (foldr1 combine) fileSets
+  let fileLines = map (foldr1 commaJoin) fileSets
   mapM_ Prelude.putStrLn fileLines
 
   Telemetry.recordLsDupes (length fileSets)
 
   where
-    combine l r = l ++ "," ++ r
+    commaJoin l r = l ++ "," ++ r
 
 ls :: (DupesMonad m) => Options -> DupesT m [[FilePath]]
 ls opt = do
-    buckets <- buckets CRC32
-    let bs = List.filter bucketFilter buckets
-    let nestedEntries = List.map (getEntries) bs
+    bs <- buckets CRC32
+    let filteredBuckets = List.filter bucketFilter bs
+    let nestedEntries = List.map (getEntries) filteredBuckets
     return $ List.map (List.map getPaths) nestedEntries
 
   where

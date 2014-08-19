@@ -16,7 +16,6 @@ import Data.Machine hiding ( run )
 import Data.Serialize (encode,decode)
 import Options.Applicative
 import qualified Data.ByteString.Char8 as C
-import qualified Database.LevelDB as LDB
 import qualified Database.LevelDB.Higher as Level
 import System.Directory
 import System.FilePath ( (</>) )
@@ -41,9 +40,6 @@ run :: Options -> IO ()
 run opt = runT_ machine
   where
     machine = pathSource opt ~> processPath
-
-printPathKey :: ProcessT IO PathKey ()
-printPathKey = repeatedly $ await >>= \a -> lift (putStrLn $ show a)
 
 pathSource :: Options -> SourceT IO FilePath
 pathSource opt =

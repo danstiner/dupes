@@ -74,4 +74,3 @@ prop_rebuildMergedStreams xs ys =
   where
     sourceX = source xs
     sourceY = source ys
-

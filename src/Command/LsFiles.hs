@@ -16,7 +16,7 @@ import qualified Blob
 import qualified Settings
 
 data Options = Options
-  { cached :: Bool }
+  { _cached :: Bool }
 
 parserInfo :: ParserInfo Options
 parserInfo = info parser

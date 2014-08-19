@@ -10,15 +10,12 @@ import Options.Applicative
 import qualified Blob
 import Plumbing
 
---data ObjectType = Blob | Tree
---instance Read ObjectType where
-
 data Options = Options
-  { write :: Bool
-  , readfromStdin :: Bool
-  , readPathsFromStdin :: Bool
+  { _write :: Bool
+  , _readfromStdin :: Bool
+  , _readPathsFromStdin :: Bool
   , path :: FilePath
-  , noFilters :: Bool }
+  , _noFilters :: Bool }
 
 parserInfo :: ParserInfo Options
 parserInfo = info parser

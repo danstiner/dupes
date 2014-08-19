@@ -14,7 +14,7 @@ import System.Log.Logger
 data Event =
     Boot
   | Exit
-  | LsDupes { dupeBucketCount :: Int }
+  | LsDupes { _dupeBucketCount :: Int }
   deriving ( Show )
 
 type Datapoint = String
