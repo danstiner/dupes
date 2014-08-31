@@ -25,19 +25,18 @@ module Dupes (
   , StoreOp
   , StoreOpF (..)
   , getOp, putOp, rmOp, listOp
-  , runStoreOpDebug
 ) where
 
 import ContentIdentifier as CI
 
-import Data.Machine.Interleave
-import Data.Machine hiding ( run )
 import Control.Applicative
 import Control.Monad
 import Control.Monad.Free
 import Control.Monad.Trans
 import Data.ByteString.Char8 as C (pack, unpack)
 import Data.Functor.Identity
+import Data.Machine hiding ( run )
+import Data.Machine.Interleave
 import Data.Serialize
 import GHC.Generics (Generic)
 import qualified Data.Binary as Binary
@@ -168,10 +167,3 @@ rmOp key = liftF $ RmOp key ()
 
 listOp :: PathKey -> StoreOp [PathKey]
 listOp prefix = liftF $ ListOp prefix id
-
-runStoreOpDebug :: StoreOp r -> IO r
-runStoreOpDebug (Pure r) = return r
-runStoreOpDebug (Free (GetOp key g)) = putStr "Get: " >> putStrLn (unPathKey key) >> (runStoreOpDebug $ g $ Just (toPathKey "test"))
-runStoreOpDebug (Free (PutOp key t)) = putStr "Add: " >> putStrLn (unPathKey key) >> runStoreOpDebug t
-runStoreOpDebug (Free (RmOp key t)) = putStr "Remove: " >> putStrLn (unPathKey key) >> runStoreOpDebug t
-runStoreOpDebug (Free (ListOp prefix g)) = putStr "Listing: " >> putStrLn (unPathKey prefix) >> (runStoreOpDebug $ g [(toPathKey "."), (toPathKey "./prevAddedFile")])

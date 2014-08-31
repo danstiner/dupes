@@ -33,7 +33,7 @@ import qualified Data.ByteString.Lazy as L
 import qualified Database.LevelDB.Higher as Level
 import System.FilePath ( (</>) )
 
-newtype Store = Store FilePath
+newtype Store = Store { getStorePath :: FilePath }
 type KeySpace = ByteString
 
 keySpace,indexKeySpace,dupesKeySpace :: KeySpace
@@ -51,10 +51,7 @@ runDupes :: (MonadResourceBase m) => Store -> DupesT (Level.LevelDBT m) a -> m a
 runDupes s m = runLevelDB s dupesKeySpace (execDupesT m)
 
 runLevelDB :: (MonadResourceBase m) => Store -> KeySpace -> Level.LevelDBT m a -> m a
-runLevelDB store =
-  Level.runCreateLevelDB path
-  where
-    (Store path) = store
+runLevelDB = Level.runCreateLevelDB . getStorePath
 
 instance RefStore Store where
   read name = do

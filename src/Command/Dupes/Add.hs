@@ -58,9 +58,7 @@ pathSource opt =
         stdinLinesPlan
 
 processPaths :: ProcessT IO FilePath ()
-processPaths = repeatedly $ do
-  path <- await
-  lift $ processPath path
+processPaths = repeatedly $ await >>= lift . processPath
 
 processPath :: FilePath -> IO ()
 processPath path = runT_ $ runDBActions (traverse ~> mergeAndStore)
@@ -73,9 +71,7 @@ mergeProcess :: FilePath -> ProcessT StoreOp PathKey (MergedOperation PathKey)
 mergeProcess path = cappedMerge (listChildren path)
 
 listChildren :: FilePath -> SourceT StoreOp PathKey
-listChildren path = construct $ do
-  items <- lift $ listOp (toPathKey path)
-  mapM_ yield items
+listChildren path = construct $ (lift . listOp . toPathKey) path >>= mapM_ yield
 
 cappedMerge :: (Ord a) => SourceT StoreOp a -> ProcessT StoreOp a (MergedOperation a)
 cappedMerge src = capYM src mergeOrderedStreamsWye
@@ -111,6 +107,4 @@ traversePath = construct . plan
       else return path
 
 toPathKeyP :: ProcessT IO FilePath PathKey
-toPathKeyP = repeatedly $ do
-  path <- await
-  yield $ toPathKey path
+toPathKeyP = repeatedly $ await >>= yield . toPathKey
