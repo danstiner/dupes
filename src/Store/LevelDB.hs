@@ -8,6 +8,8 @@ module Store.LevelDB (
   , runLevelDBIndex
   , runDupes
   , runStoreOp
+  , storeOpToDBAction
+  , runDupesDBT
 ) where
 
 import Dupes
@@ -82,16 +84,19 @@ encodeStrict :: (Binary.Binary a) => a -> Level.Key
 encodeStrict = L.toStrict . Binary.encode
 
 runStoreOp :: StoreOp r -> IO r
-runStoreOp = createDB dupesKeySpace . runStoreOp'
+runStoreOp = createDB dupesKeySpace . storeOpToDBAction
 
-runStoreOp' :: StoreOp r -> Level.LevelDBT IO r
-runStoreOp' (Pure r) = return r
-runStoreOp' (Free (GetOp key g)) = fmap (emApply decode) (Level.get (encode key)) >>= runStoreOp' . g
-runStoreOp' (Free (PutOp key t)) = lift (putStr "Add: ") >> lift (putStrLn (show key)) >> (Level.put (encode key) (encode key)) >> runStoreOp' t
-runStoreOp' (Free (RmOp key t)) = (Level.delete (encode key)) >> runStoreOp' t
-runStoreOp' (Free (ListOp prefix g)) = do
+storeOpToDBAction :: StoreOp r -> Level.LevelDBT IO r
+storeOpToDBAction (Pure r) = return r
+storeOpToDBAction (Free (GetOp key g)) = fmap (emApply decode) (Level.get (encode key)) >>= storeOpToDBAction . g
+storeOpToDBAction (Free (PutOp key t)) = (Level.put (encode key) (encode key)) >> storeOpToDBAction t
+storeOpToDBAction (Free (RmOp key t)) = (Level.delete (encode key)) >> storeOpToDBAction t
+storeOpToDBAction (Free (ListOp prefix g)) = do
   items <- Level.withSnapshot $ Level.scan (encode prefix) Level.queryItems
-  runStoreOp' . g . rights $ map (decode . fst) items
+  storeOpToDBAction . g . rights $ map (decode . fst) items
+
+runDupesDBT :: Level.LevelDBT IO r -> IO r
+runDupesDBT = createDB dupesKeySpace
 
 createDB :: KeySpace -> Level.LevelDBT IO a -> IO a
 createDB space actions = do

@@ -63,11 +63,11 @@ processPaths = repeatedly $ do
   lift $ processPath path
 
 processPath :: FilePath -> IO ()
-processPath path = runT_ $ traverse ~> mergeAndStore
+processPath path = runT_ $ runDBActions (traverse ~> mergeAndStore)
   where
-    traverse = traversePath path ~> toPathKeyP
-    mergeAndStore :: ProcessT IO PathKey ()
-    mergeAndStore = fitM runStoreOp (mergeProcess path ~> storeFree)
+    runDBActions = fitM runDupesDBT
+    traverse = fitM lift (traversePath path ~> toPathKeyP)
+    mergeAndStore = fitM storeOpToDBAction (mergeProcess path ~> storeFree)
 
 mergeProcess :: FilePath -> ProcessT StoreOp PathKey (MergedOperation PathKey)
 mergeProcess path = cappedMerge (listChildren path)
