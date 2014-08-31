@@ -4,16 +4,10 @@ module Command.LsDupes (
   , run
 ) where
 
-import Data.List as List
 import Options.Applicative
 
-import Dupes
-import qualified Telemetry
-import Store.LevelDB as LevelDB
-import Util
-
 data Options = Options
-  { optShowDupesOnly :: Bool }
+  { _optShowDupesOnly :: Bool }
 
 parserInfo :: ParserInfo Options
 parserInfo = info parser
@@ -26,27 +20,4 @@ parser = Options
      <> help "Show only duplicate files." )
 
 run :: Options -> IO ()
-run opt = do
-  store <- getStore
-  fileSets <- LevelDB.runDupes store (ls opt)
-  let fileLines = map (foldr1 commaJoin) fileSets
-  mapM_ Prelude.putStrLn fileLines
-
-  Telemetry.recordLsDupes (length fileSets)
-
-  where
-    commaJoin l r = l ++ "," ++ r
-
-ls :: (DupesMonad m) => Options -> DupesT m [[FilePath]]
-ls opt = do
-    bs <- buckets CRC32
-    let filteredBuckets = List.filter bucketFilter bs
-    let nestedEntries = List.map (getEntries) filteredBuckets
-    return $ List.map (List.map getPaths) nestedEntries
-
-  where
-    bucketFilter = if (optShowDupesOnly opt) then isDupe else tru
-    tru _ = True
-    isDupe bucket = (1 < (List.length $ getEntries bucket) )
-    getEntries (Bucket _ e) = e
-    getPaths (Entry p) = p
+run _ = undefined

@@ -19,7 +19,6 @@ import Store.Ref
 import Control.Monad.Trans.Class (lift)
 import Control.Monad.Trans.Resource (MonadResourceBase)
 import Data.ByteString
-import Data.List (nub)
 import qualified Control.Monad.Trans.State as State
 import qualified Data.Binary as Binary
 import qualified Data.ByteString.Char8 as C
@@ -29,10 +28,8 @@ import qualified Database.LevelDB.Higher as Level
 newtype Store = Store FilePath
 type KeySpace = ByteString
 
-keySpace :: KeySpace
+keySpace,indexKeySpace,dupesKeySpace :: KeySpace
 keySpace = C.pack "MyKeySpace"
-
-indexKeySpace,dupesKeySpace :: KeySpace
 indexKeySpace = C.pack "Index"
 dupesKeySpace = C.pack "Dupes"
 
@@ -50,40 +47,6 @@ runLevelDB store =
   Level.runCreateLevelDB path
   where
     (Store path) = store
-
-instance (IndexMonad (Level.LevelDBT IO)) where
-  set key value = lift $
-    Level.put
-      (toKeyIndex key)
-      (enc value)
-
-enc :: (Binary.Binary a) => a -> C.ByteString
-enc = L.toStrict . Binary.encode
-
-decode :: (Binary.Binary a) => C.ByteString -> a
-decode = Binary.decode . L.fromStrict
-
-instance (DupesMonad (Level.LevelDBT IO)) where
-  buckets bType = lift $ do
-    items <- Level.scan (toLevelKey bType) Level.queryItems
-    return $ Prelude.map decodeDupBucket items
-  add path bucketKey = lift $ do
-    let key = toLevelKey bucketKey
-    existing <- Level.get key
-    case existing of
-      Just val -> do
-        let prev = decode val :: [Dupes.Entry]
-        Level.put key $ enc $ nub ((Entry path) : prev)
-      Nothing  -> Level.put key $ enc [(Entry path)]
-  remove path = lift $ do
-    fail ("TODO, don't know how to remove path " ++ path)
-  removeDir path = lift $ do
-    fail ("TODO, don't know how to remove path " ++ path)
-
-decodeDupBucket :: (Level.Key, Level.Value) -> Bucket
-decodeDupBucket (key, val) = Bucket
-  (decode key)
-  (Binary.decode ( L.fromStrict val) :: [Dupes.Entry])
 
 instance RefStore Store where
   read name = do
@@ -108,12 +71,6 @@ instance RefStore Store where
 
 toKey :: Ref.Id -> Level.Key
 toKey name = C.pack ("ref/" ++ (Ref.toString name))
-
-toKeyIndex :: RelativeFilePath -> Level.Key
-toKeyIndex path = C.pack ("index/" ++ path)
-
-toLevelKey :: (Binary.Binary a) => a -> Level.Key
-toLevelKey = encodeStrict
 
 encodeStrict :: (Binary.Binary a) => a -> Level.Key
 encodeStrict = L.toStrict . Binary.encode

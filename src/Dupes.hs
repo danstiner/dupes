@@ -4,8 +4,7 @@
 {-# LANGUAGE Rank2Types #-}
 
 module Dupes (
-    DupesMonad (..)
-  , Bucket (..)
+    Bucket (..)
   , BucketKey
   , BucketType
   , CI.Algro (..)
@@ -116,13 +115,6 @@ type BucketType = CI.Type
 type BucketKey = Key
 data Bucket = Bucket Key [Entry] deriving (Generic)
 
-class (Monad m) => DupesMonad m where
-  list :: FilePath -> DupesT m [FilePath]
-  buckets :: CI.Type -> DupesT m [Bucket]
-  add  :: FilePath -> Key -> DupesT m ()
-  get  :: FilePath -> DupesT m [Key]
-  remove :: FilePath -> DupesT m [Key]
-  removeDir :: FilePath -> DupesT m [Key]
 
 execDupesT :: (Monad m) => DupesT m a -> m a
 execDupesT = runDupesT
@@ -149,9 +141,3 @@ instance Binary.Binary Entry where
     path <- Binary.get
     return (Entry path)
 
-instance (DupesMonad m) => Monad (DupesT m) where
-  fail str = DupesT $ fail str
-  return a = DupesT $ do return a
-  m >>= k  = DupesT $ do
-      a <- runDupesT m
-      runDupesT (k a)
