@@ -21,6 +21,10 @@ module Dupes (
   , combine
   , toPathKey
   , mergeOrderedStreams
+  , mergeOrderedStreamsWye
+  , StoreOp
+  , getOp, putOp, rmOp, listOp
+  , runStoreOpDebug
 ) where
 
 import ContentIdentifier as CI
@@ -29,6 +33,7 @@ import Data.Machine.Interleave
 import Data.Machine hiding ( run )
 import Control.Applicative
 import Control.Monad
+import Control.Monad.Free
 import Control.Monad.Trans
 import Data.ByteString.Char8 as C (pack, unpack)
 import Data.Functor.Identity
@@ -60,17 +65,16 @@ combine [] ys = map RightOnly ys
 combine xa@(x:xs) ya@(y:ys)
   | x == y = Both x : combine xs ys
   | x <  y = LeftOnly x : combine xs ya
-  | x >  y = RightOnly y : combine xa ys
-
+  | otherwise = RightOnly y : combine xa ys
 
 mergeOrderedStreams :: (Ord a, Monad m) => SourceT m a -> SourceT m a -> SourceT m (MergedOperation a)
 mergeOrderedStreams a b = capped <~ b
   where
-    capped = capXM a w
+    capped = capXM a mergeOrderedStreamsWye
 
-    w :: (Monad m, Ord a) => MachineT m (MY a a) (MergedOperation a)
-    w = repeatedly start
-
+mergeOrderedStreamsWye :: (Monad m, Ord a) => MachineT m (MY a a) (MergedOperation a)
+mergeOrderedStreamsWye= repeatedly start
+  where
     start :: (Ord a) => PlanT (MY a a) (MergedOperation a) m ()
     start = do
       x <- awaits MaybeX
@@ -141,3 +145,32 @@ instance Binary.Binary Entry where
     path <- Binary.get
     return (Entry path)
 
+
+data StoreOpF x = GetOp PathKey (Maybe PathKey -> x) | PutOp PathKey x | RmOp PathKey x | ListOp PathKey ([PathKey] -> x)
+
+instance Functor StoreOpF where
+  fmap f (GetOp key g) = GetOp key (f . g)
+  fmap f (PutOp key x) = PutOp key (f x)
+  fmap f (RmOp key x) = RmOp key (f x)
+  fmap f (ListOp prefix g) = ListOp prefix (f . g)
+
+type StoreOp = Free StoreOpF
+
+getOp :: PathKey -> StoreOp (Maybe PathKey)
+getOp key = liftF $ GetOp key id
+
+putOp :: PathKey -> StoreOp ()
+putOp key = liftF $ PutOp key ()
+
+rmOp :: PathKey -> StoreOp ()
+rmOp key = liftF $ RmOp key ()
+
+listOp :: PathKey -> StoreOp [PathKey]
+listOp prefix = liftF $ ListOp prefix id
+
+runStoreOpDebug :: StoreOp r -> IO r
+runStoreOpDebug (Pure r) = return r
+runStoreOpDebug (Free (GetOp key g)) = putStr "Get: " >> putStrLn (unPathKey key) >> (runStoreOpDebug $ g $ Just (toPathKey "test"))
+runStoreOpDebug (Free (PutOp key t)) = putStr "Add: " >> putStrLn (unPathKey key) >> runStoreOpDebug t
+runStoreOpDebug (Free (RmOp key t)) = putStr "Remove: " >> putStrLn (unPathKey key) >> runStoreOpDebug t
+runStoreOpDebug (Free (ListOp prefix g)) = putStr "Listing: " >> putStrLn (unPathKey prefix) >> (runStoreOpDebug $ g [(toPathKey "."), (toPathKey "./prevAddedFile")])

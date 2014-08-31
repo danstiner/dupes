@@ -7,18 +7,16 @@ module Command.Dupes.Add (
 ) where
 
 import Dupes
-import Settings
 
+import Control.Monad ( unless )
 import Control.Monad.Trans ( lift )
-import Data.Foldable ( Foldable, traverse_ )
 import Data.List ( delete, (\\), sort )
 import Data.Machine hiding ( run )
-import Data.Serialize (encode,decode)
+import Data.Machine.Interleave
 import Options.Applicative
-import qualified Data.ByteString.Char8 as C
-import qualified Database.LevelDB.Higher as Level
 import System.Directory
 import System.FilePath ( (</>) )
+import System.IO ( isEOF )
 
 data Options = Options
   { optStdin :: Bool
@@ -39,59 +37,55 @@ parser = Options
 run :: Options -> IO ()
 run opt = runT_ machine
   where
-    machine = pathSource opt ~> processPath
+    machine = pathSource opt ~> processPaths
 
 pathSource :: Options -> SourceT IO FilePath
 pathSource opt =
-  if (optStdin opt || elem stdinFilename opaths)
-    then optPathSource `joinSources` stdinPathSource
-    else optPathSource
+  if (optStdin opt || elem stdinFilename (optPaths opt))
+    then stdinLines ~> prepended actualOptPaths
+    else source actualOptPaths
   where
-    opaths = optPaths opt
-    optPathSource = source (delete stdinFilename opaths)
+    actualOptPaths = delete stdinFilename (optPaths opt)
     stdinFilename = "-"
-    stdinPathSource :: SourceT IO FilePath
-    stdinPathSource = sourceT $ do
-      c <- getContents
-      return (lines c)
+    stdinLines :: SourceT IO FilePath
+    stdinLines = construct $ stdinLinesPlan
+    stdinLinesPlan = do
+      eof <- lift isEOF
+      unless eof $ do
+        line <- lift getLine
+        yield line
+        stdinLinesPlan
 
-processPath :: ProcessT IO FilePath ()
-processPath = repeatedly $ do
+processPaths :: ProcessT IO FilePath ()
+processPaths = repeatedly $ do
   path <- await
-  appDir <- lift $ Settings.getAppDir
-  items <- lift $ Level.runCreateLevelDB (appDir </> "leveldb") (C.pack "Dupes") $ Level.withSnapshot $ Level.scan (encode $ toPathKey path) Level.queryItems
+  lift $ processPath path
 
-  let merged = (traversePath path ~> toPathKeyP) `mergeOrderedStreams` (source items ~> levelToPathKey) in
-    lift $ runT_ (merged ~> store)
-
-store :: ProcessT IO (MergedOperation PathKey) ()
-store = repeatedly $ do
-  key <- await
-
-  lift $ case key of
-    LeftOnly a -> putStr "Add " >> putStrLn (show a) >> put a
-    RightOnly a -> putStr "Del " >> putStrLn (show a) >> rm a
-    Both _ -> return ()
-
+processPath :: FilePath -> IO ()
+processPath path = runT_ $ traverse ~> mergeAndStore
   where
-    put key = do
-      appDir <- Settings.getAppDir
-      Level.runCreateLevelDB (appDir </> "leveldb") (C.pack "Dupes") $ Level.put (encode key) (encode key)
-    rm key = do
-      appDir <- Settings.getAppDir
-      Level.runCreateLevelDB (appDir </> "leveldb") (C.pack "Dupes") $ Level.delete (encode key)
+    traverse = traversePath path ~> toPathKeyP
+    mergeAndStore :: ProcessT IO PathKey ()
+    mergeAndStore = fitM runStoreOpDebug (mergeProcess path ~> storeFree)
 
-levelToPathKey :: ProcessT IO (Level.Key, Level.Value) PathKey
-levelToPathKey = repeatedly $ do
-  (key, _) <- await
-  case decode key of
-    Left _ -> return ()
-    Right k -> yield k
+mergeProcess :: FilePath -> ProcessT StoreOp PathKey (MergedOperation PathKey)
+mergeProcess path = cappedMerge (listChildren path)
 
-toPathKeyP :: ProcessT IO FilePath PathKey
-toPathKeyP = repeatedly $ do
-  path <- await
-  yield $ toPathKey path
+listChildren :: FilePath -> SourceT StoreOp PathKey
+listChildren path = construct $ do
+  items <- lift $ listOp (toPathKey path)
+  mapM_ yield items
+
+cappedMerge :: (Ord a) => SourceT StoreOp a -> ProcessT StoreOp a (MergedOperation a)
+cappedMerge src = capYM src mergeOrderedStreamsWye
+
+storeFree :: ProcessT StoreOp (MergedOperation PathKey) ()
+storeFree = repeatedly $ do
+  key <- await
+  lift $ case key of
+    LeftOnly a -> putOp a
+    RightOnly a -> rmOp a
+    Both _ -> return ()
 
 traversePath :: FilePath -> SourceT IO FilePath
 traversePath = construct . plan
@@ -115,15 +109,7 @@ traversePath = construct . plan
       then return (path ++ "/")
       else return path
 
-sourceT :: Monad m => Foldable f => m (f b) -> SourceT m b
-sourceT mxs = construct $ do
-  xs <- lift mxs
-  traverse_ yield xs
-
-joinSources :: Monad m => SourceT m a -> SourceT m a -> SourceT m a
-joinSources a b = capX a w <~ b
-  where
-    w = repeatedly $ do
-      z <- awaits Z
-      let e = either id id z
-      yield e
+toPathKeyP :: ProcessT IO FilePath PathKey
+toPathKeyP = repeatedly $ do
+  path <- await
+  yield $ toPathKey path
