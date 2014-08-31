@@ -7,6 +7,7 @@ module Command.Dupes.Add (
 ) where
 
 import Dupes
+import Store.LevelDB
 
 import Control.Monad ( unless )
 import Control.Monad.Trans ( lift )
@@ -66,7 +67,7 @@ processPath path = runT_ $ traverse ~> mergeAndStore
   where
     traverse = traversePath path ~> toPathKeyP
     mergeAndStore :: ProcessT IO PathKey ()
-    mergeAndStore = fitM runStoreOpDebug (mergeProcess path ~> storeFree)
+    mergeAndStore = fitM runStoreOp (mergeProcess path ~> storeFree)
 
 mergeProcess :: FilePath -> ProcessT StoreOp PathKey (MergedOperation PathKey)
 mergeProcess path = cappedMerge (listChildren path)

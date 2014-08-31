@@ -23,6 +23,7 @@ module Dupes (
   , mergeOrderedStreams
   , mergeOrderedStreamsWye
   , StoreOp
+  , StoreOpF (..)
   , getOp, putOp, rmOp, listOp
   , runStoreOpDebug
 ) where
