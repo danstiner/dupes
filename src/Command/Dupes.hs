@@ -5,7 +5,7 @@ module Command.Dupes (
 ) where
 
 import qualified Command.Dupes.Add as AddDupe
-import qualified Command.LsDupes as LsDupes
+import qualified Command.Dupes.Ls as LsDupes
 
 import Options.Applicative
 

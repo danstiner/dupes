@@ -1,8 +1,11 @@
-module Command.LsDupes (
+module Command.Dupes.Ls (
     Options
   , parserInfo
   , run
 ) where
+
+import Dupes
+import Store.LevelDB
 
 import Options.Applicative
 
@@ -20,4 +23,7 @@ parser = Options
      <> help "Show only duplicate files." )
 
 run :: Options -> IO ()
-run _ = undefined
+run _ = runStoreOp listAll >>= mapM_ putStrLn . map show
+  where
+    listAll = listOp root
+    root = toPathKey ""
