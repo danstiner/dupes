@@ -112,7 +112,7 @@ type Dupes a = DupesT Identity a
 type Key = CI.Id
 type BucketType = CI.Type
 type BucketKey = Key
-data Bucket = Bucket Key [PathKey] deriving (Generic, Show)
+data Bucket = Bucket Key [PathKey] deriving (Generic, Show, Eq)
 
 
 execDupesT :: (Monad m) => DupesT m a -> m a
@@ -125,7 +125,7 @@ createBucketKeyLazy :: BucketType -> L.ByteString -> BucketKey
 createBucketKeyLazy = CI.createLazy
 
 nilBucketKey :: BucketKey
-nilBucketKey = CI.createNil
+nilBucketKey = CI.nil
 
 instance MonadTrans DupesT where
   lift = DupesT

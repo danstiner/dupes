@@ -3,7 +3,7 @@
 module ContentIdentifier (
     create
   , createLazy
-  , createNil
+  , nil
   , Algro (..)
   , Type
   , Id
@@ -46,8 +46,8 @@ create = hash
 createLazy :: Algro -> L.ByteString -> Id
 createLazy = hashLazy
 
-createNil :: Id
-createNil = Nil
+nil :: Id
+nil = Nil
 
 hashLazy :: Algro -> L.ByteString -> Id
 hashLazy MD5 = MD5_Id . MD5.hashlazy
