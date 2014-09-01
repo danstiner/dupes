@@ -14,7 +14,6 @@ module Store.LevelDB (
 
 import Dupes
 import Index
-import qualified Blob
 import qualified Ref
 import qualified Settings
 import Store.Blob ()
@@ -27,9 +26,7 @@ import Data.ByteString (ByteString)
 import Data.Either (rights)
 import Data.Serialize (encode,decode)
 import qualified Control.Monad.Trans.State as State
-import qualified Data.Binary as Binary
 import qualified Data.ByteString.Char8 as C
-import qualified Data.ByteString.Lazy as L
 import qualified Database.LevelDB.Higher as Level
 import System.FilePath ( (</>) )
 
@@ -59,13 +56,16 @@ instance RefStore Store where
     Level.runCreateLevelDB path keySpace $ do
       r <- Level.get $ toKey name
       case r of
-        Just val -> return $ Just $ Ref.Ref name (Binary.decode (L.fromStrict val) :: Blob.Id)
+        Just val -> let decoded = decode val in
+          case decoded of
+            Left _ -> return Nothing
+            Right key -> return $ Just $ Ref.Ref name key
         Nothing -> return Nothing
 
   set (Ref.Ref name blobId) = do
     (Store path) <- State.get
     lift $ Level.runCreateLevelDB path keySpace $ do
-      Level.put (toKey name) $ encodeStrict blobId
+      Level.put (toKey name) $ encode blobId
     return ()
 
   delete name = do
@@ -77,20 +77,28 @@ instance RefStore Store where
 toKey :: Ref.Id -> Level.Key
 toKey name = C.pack ("ref/" ++ (Ref.toString name))
 
-encodeStrict :: (Binary.Binary a) => a -> Level.Key
-encodeStrict = L.toStrict . Binary.encode
-
 runStoreOp :: StoreOp r -> IO r
 runStoreOp = createDB dupesKeySpace . storeOpToDBAction
 
 storeOpToDBAction :: StoreOp r -> Level.LevelDBT IO r
 storeOpToDBAction (Pure r) = return r
-storeOpToDBAction (Free (GetOp key g)) = fmap (emApply decode) (Level.get (encode key)) >>= storeOpToDBAction . g
+storeOpToDBAction (Free (GetOp key f)) = fmap (emApply decode) (Level.get (encode key)) >>= storeOpToDBAction . f
 storeOpToDBAction (Free (PutOp key t)) = (Level.put (encode key) (encode key)) >> storeOpToDBAction t
 storeOpToDBAction (Free (RmOp key t)) = (Level.delete (encode key)) >> storeOpToDBAction t
-storeOpToDBAction (Free (ListOp prefix g)) = do
+storeOpToDBAction (Free (ListOp prefix f)) = do
   items <- Level.withSnapshot $ Level.scan (encode prefix) Level.queryItems
-  storeOpToDBAction . g . rights $ map (decode . fst) items
+  storeOpToDBAction . f . rights $ map (decode . fst) items
+storeOpToDBAction (Free (BucketsOp f)) = do
+  buckets <- Level.withSnapshot $ Level.scan (encode "b/") Level.queryItems
+  storeOpToDBAction . f . rights $ map dec buckets
+  where
+    dec (k,v) = let b = decode k in
+      case b of
+        Left e -> Left e
+        Right key -> let ps = decode v in
+          case ps of
+            Left e -> Left e
+            Right paths -> Right $ Bucket key paths
 
 runDupesDBT :: Level.LevelDBT IO r -> IO r
 runDupesDBT = createDB dupesKeySpace

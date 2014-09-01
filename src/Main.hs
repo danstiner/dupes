@@ -13,8 +13,7 @@ data Options = Options
   { optCommand :: Commands.Command }
 
 optionParser :: Parser Options
-optionParser = Options
-  <$> Commands.parser
+optionParser = Options <$> Commands.parser
 
 main :: IO ()
 main = do

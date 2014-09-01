@@ -11,9 +11,8 @@ module Tree (
 
 import Control.Monad ( forM_ )
 import Crypto.Hash.SHA3 ()
+import Data.Serialize
 import qualified Blob
-import qualified Data.Binary as Binary
-import qualified Data.ByteString.Lazy as L
 
 import qualified ContentIdentifier as CI
 
@@ -27,28 +26,28 @@ type Entries = [Entry]
 
 data Tree = Tree Id Entries deriving (Show, Eq)
 
-instance Binary.Binary Tree where
+instance Serialize Tree where
     put (Tree ident entries) = do
-        Binary.put ident
-        forM_ entries Binary.put
+        put ident
+        forM_ entries put
     get = do
-        Binary.get
+        get
 
-instance Binary.Binary Entry where
+instance Serialize Entry where
     put (Entry mode filename key) = do
-        Binary.put mode
-        Binary.put filename
-        Binary.put key
+        put mode
+        put filename
+        put key
     get = do
-        Binary.get
+        get
 
 create :: Entries -> Tree
 create entries = Tree hash entries
     where
-        hash = CI.create CI.SHA3_256 $ L.toStrict $ Binary.encode entries
+        hash = CI.create CI.SHA3_256 $ encode entries
 
 createEntry :: Filename -> Mode -> Blob.Id -> Entry
 createEntry f m i = Entry m f i
 
 toBlob :: Tree -> Blob.Blob
-toBlob = Blob.create . L.toStrict . Binary.encode
+toBlob = Blob.create . encode

@@ -10,7 +10,6 @@ module Dupes (
   , CI.Algro (..)
   , Dupes
   , DupesT
-  , Entry (..)
   , Key
   , createBucketKey
   , createBucketKeyLazy
@@ -24,7 +23,7 @@ module Dupes (
   , mergeOrderedStreamsWye
   , StoreOp
   , StoreOpF (..)
-  , getOp, putOp, rmOp, listOp
+  , getOp, putOp, rmOp, listOp, bucketsOp
 ) where
 
 import ContentIdentifier as CI
@@ -39,7 +38,6 @@ import Data.Machine hiding ( run )
 import Data.Machine.Interleave
 import Data.Serialize
 import GHC.Generics (Generic)
-import qualified Data.Binary as Binary
 import qualified Data.ByteString as B
 import qualified Data.ByteString.Lazy as L
 import Test.QuickCheck
@@ -108,16 +106,13 @@ mergeOrderedStreamsWye= repeatedly start
             yield (RightOnly r)
             right l
 
-
-data Entry = Entry FilePath deriving (Generic)
-
 newtype DupesT m a = DupesT { runDupesT :: m a}
 type Dupes a = DupesT Identity a
 
 type Key = CI.Id
 type BucketType = CI.Type
 type BucketKey = Key
-data Bucket = Bucket Key [Entry] deriving (Generic)
+data Bucket = Bucket Key [PathKey] deriving (Generic, Show)
 
 
 execDupesT :: (Monad m) => DupesT m a -> m a
@@ -135,24 +130,14 @@ nilBucketKey = CI.createNil
 instance MonadTrans DupesT where
   lift = DupesT
 
-instance Eq Entry where
-  (Entry a) == (Entry b) = a == b
-
-instance Binary.Binary Entry where
-  put (Entry path) = do
-    Binary.put path
-  get = do
-    path <- Binary.get
-    return (Entry path)
-
-
-data StoreOpF x = GetOp PathKey (Maybe PathKey -> x) | PutOp PathKey x | RmOp PathKey x | ListOp PathKey ([PathKey] -> x)
+data StoreOpF x = GetOp PathKey (Maybe PathKey -> x) | PutOp PathKey x | RmOp PathKey x | ListOp PathKey ([PathKey] -> x) | BucketsOp ([Bucket] -> x)
 
 instance Functor StoreOpF where
   fmap f (GetOp key g) = GetOp key (f . g)
   fmap f (PutOp key x) = PutOp key (f x)
   fmap f (RmOp key x) = RmOp key (f x)
   fmap f (ListOp prefix g) = ListOp prefix (f . g)
+  fmap f (BucketsOp g) = BucketsOp (f . g)
 
 type StoreOp = Free StoreOpF
 
@@ -167,3 +152,6 @@ rmOp key = liftF $ RmOp key ()
 
 listOp :: PathKey -> StoreOp [PathKey]
 listOp prefix = liftF $ ListOp prefix id
+
+bucketsOp :: StoreOp [Bucket]
+bucketsOp = liftF $ BucketsOp id

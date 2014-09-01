@@ -23,7 +23,10 @@ parser = Options
      <> help "Show only duplicate files." )
 
 run :: Options -> IO ()
-run _ = runStoreOp listAll >>= mapM_ putStrLn . map show
+run (Options {_optShowDupesOnly=False}) = runStoreOp listAll >>= mapM_ putStrLn . map show
   where
     listAll = listOp root
     root = toPathKey ""
+run (Options {_optShowDupesOnly=True}) = runStoreOp listDupes >>= mapM_ putStrLn . map show
+  where
+    listDupes = bucketsOp
