@@ -46,6 +46,7 @@ executable clod
                      , resourcet
                      , text
                      , transformers
+                     , uuid
 
 Test-suite testsuite
   Type:                exitcode-stdio-1.0

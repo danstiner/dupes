@@ -1,23 +1,26 @@
 module Telemetry (
-    recordLaunch
-  , recordExit
-  , recordLsDupes
+    record
   , register
-  , telemetryM
+  , Event (..)
 ) where
 
 import Control.Monad.Trans
+import Data.IORef
+import Data.UUID
+import Data.UUID.V4 as UUIDv4
 import System.FilePath ( (</>) )
+import System.IO.Unsafe ( unsafePerformIO )
 import System.Log.Handler.Log4jXML as Log4j
 import System.Log.Logger
 
 data Event =
     Boot
   | Exit
-  | LsDupes { _dupeBucketCount :: Int }
   deriving ( Show )
 
-type Datapoint = String
+newtype SessionId = SessionId UUID deriving ( Show )
+
+data Record = Record { _event :: Event, _session :: SessionId } deriving ( Show )
 
 level :: Priority
 level = INFO
@@ -25,38 +28,47 @@ level = INFO
 tag :: String
 tag = "Telemetry"
 
+filename :: String
+filename = "telemetry.xml"
+
+processSessionId :: IORef SessionId
+{-# NOINLINE processSessionId #-}
+processSessionId = unsafePerformIO $ do
+  uuid <- UUIDv4.nextRandom
+  newIORef $ SessionId uuid
+
 register :: FilePath -> IO ()
 register folder = do
   s <- Log4j.log4jFileHandler' filePath level
   updateGlobalLogger tag (setLevel level . setHandlers [s])
   where
-    filePath = folder </> "telemetry.xml"
+    filePath = folder </> filename
 
-recordEvent :: Event -> IO ()
-recordEvent = execTelemetry . record
+record :: TelemetryMonad m => Event -> m ()
+record = execTelemetry . emit
 
-recordLaunch :: IO ()
-recordLaunch = recordEvent Boot
+getSessionId :: IO SessionId
+getSessionId = readIORef processSessionId
 
-recordExit :: IO ()
-recordExit = recordEvent Exit
-
-recordLsDupes :: Int -> IO ()
-recordLsDupes = recordEvent . LsDupes
-
-telemetryM :: (Show v) => Datapoint -> v -> IO ()
-telemetryM n v = infoM tag $ n ++ ": " ++ (show v)
-
-newtype Telemetry m a = Telemetry { runTelemetry :: m a}
+newtype TelemetryT m a = TelemetryT { runTelemetryT :: m a}
 
 class (Monad m) => TelemetryMonad m where
-  record :: Event -> Telemetry m ()
+  emit :: Event -> TelemetryT m ()
 
-execTelemetry :: (Monad m) => Telemetry m a -> m a
-execTelemetry = runTelemetry
+execTelemetry :: (Monad m) => TelemetryT m a -> m a
+execTelemetry = runTelemetryT
 
 instance TelemetryMonad IO where
-  record = lift . (infoM tag) . show
+  emit event = lift decorated >>= lift . (infoM tag) . show
+    where
+      decorated = do
+        sessId <- getSessionId
+        return $ Record event sessId
 
-instance MonadTrans Telemetry where
-  lift = Telemetry
+instance Monad m => Monad (TelemetryT m) where
+  fail = TelemetryT . fail
+  return = lift . return
+  x >>= f = TelemetryT $ runTelemetryT x >>= runTelemetryT . f
+
+instance MonadTrans TelemetryT where
+  lift = TelemetryT

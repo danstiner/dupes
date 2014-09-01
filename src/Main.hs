@@ -7,7 +7,7 @@ import qualified App ()
 import qualified Command.Commands as Commands
 import qualified Logging
 import qualified Settings
-import qualified Telemetry
+import Telemetry as Telemetry
 
 data Options = Options
   { optCommand :: Commands.Command }
@@ -33,8 +33,8 @@ runWithOptions options = do
   Logging.register appUserDir ERROR
   Telemetry.register appUserDir
 
-  Telemetry.recordLaunch
+  Telemetry.record Boot
 
   Commands.run (optCommand options)
 
-  Telemetry.recordExit
+  Telemetry.record Exit
