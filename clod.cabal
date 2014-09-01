@@ -39,7 +39,7 @@ executable clod
                      , machines
                      , MissingH
                      , mtl
-                     , optparse-applicative >= 0.9.0
+                     , optparse-applicative >= 0.9 && < 0.10
                      , pipes < 4.0
                      , QuickCheck
                      , resourcet
@@ -72,7 +72,6 @@ Test-suite testsuite
                      , machines
                      , MissingH
                      , mtl
-                     , optparse-applicative >= 0.9.0
                      , pipes < 4.0
                      , resourcet
                      , text
@@ -110,7 +109,6 @@ Test-suite externaltestsuite
                   , machines
                   , MissingH
                   , mtl
-                  , optparse-applicative >= 0.9.0
                   , pipes < 4.0
                   , resourcet
                   , temporary
