@@ -10,13 +10,13 @@ module Dupes (
   , CI.Algro (..)
   , Dupes
   , DupesT
-  , Key
   , createBucketKey
   , createBucketKeyLazy
   , execDupesT
   , nilBucketKey
   , MergedOperation (..)
   , PathKey
+  , unPathKey
   , combine
   , toPathKey
   , mergeOrderedStreams
@@ -32,11 +32,11 @@ import Control.Applicative
 import Control.Monad
 import Control.Monad.Free
 import Control.Monad.Trans
-import Data.ByteString.Char8 as C (pack, unpack)
 import Data.Functor.Identity
 import Data.Machine hiding ( run )
 import Data.Machine.Interleave
 import Data.Serialize
+import Data.Set (Set)
 import GHC.Generics (Generic)
 import qualified Data.ByteString as B
 import qualified Data.ByteString.Lazy as L
@@ -47,8 +47,8 @@ data MergedOperation a = LeftOnly a | RightOnly a | Both a deriving (Show, Eq)
 newtype PathKey = PathKey { unPathKey :: FilePath } deriving (Eq, Ord, Show)
 
 instance Serialize PathKey where
-  put = putByteString . C.pack . unPathKey
-  get = liftM PathKey (fmap C.unpack $ remaining >>= getByteString)
+  put = put . unPathKey
+  get = liftM PathKey get
 
 instance Arbitrary PathKey where
   arbitrary = PathKey <$> arbitrary
@@ -109,11 +109,9 @@ mergeOrderedStreamsWye= repeatedly start
 newtype DupesT m a = DupesT { runDupesT :: m a}
 type Dupes a = DupesT Identity a
 
-type Key = CI.Id
 type BucketType = CI.Type
-type BucketKey = Key
-data Bucket = Bucket Key [PathKey] deriving (Generic, Show, Eq)
-
+type BucketKey = CI.Id
+data Bucket = Bucket BucketKey (Set PathKey) deriving (Generic, Show, Eq)
 
 execDupesT :: (Monad m) => DupesT m a -> m a
 execDupesT = runDupesT

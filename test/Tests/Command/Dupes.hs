@@ -5,11 +5,7 @@ module Tests.Command.Dupes (tests) where
 import Dupes
 
 import Data.Machine
-import Data.Either (rights)
-import Data.List
-import Data.List.Ordered
 import Data.Serialize
-import Data.Word
 
 import Test.Framework
 import Test.Framework.Providers.QuickCheck2 (testProperty)
@@ -18,8 +14,6 @@ import Test.QuickCheck
 tests :: [Test]
 tests = [ (testProperty "Rebuilding combined lists is identity" prop_combineAndRebuildIntList)
         , (testProperty "Encode decode PathKey is identity" prop_serializePathKey)
-        , (testProperty "Encoded Words are orderable" prop_serializedNumbersOrderable)
-        , (testProperty "Encoded SimplePathKeys order as normal" prop_serializedSimplePathKeysOrder)
         , (testProperty "Rebuilding combined path keys is identity" prop_combineAndRebuildSimplePathKeys)
         , (testProperty "Rebuild merged streams in identity" prop_rebuildMergedStreamsInt)]
 
@@ -45,18 +39,6 @@ prop_serializePathKey :: PathKey -> Bool
 prop_serializePathKey a = case decode (encode a) of
   Left _ -> False
   Right b -> a == b
-
-prop_orderedSerialization :: (Serialize a, Ord a) => [a] -> Bool
-prop_orderedSerialization = isSorted . endecode
-  where
-    endecode :: (Serialize b) => [b] -> [b]
-    endecode xs = rights . map decode . sort . map encode $ xs
-
-prop_serializedNumbersOrderable :: [Word] -> Bool
-prop_serializedNumbersOrderable = prop_orderedSerialization
-
-prop_serializedSimplePathKeysOrder :: [PathKey] -> Bool
-prop_serializedSimplePathKeysOrder = prop_orderedSerialization
 
 prop_combineAndRebuildSimplePathKeys :: [PathKey] -> [PathKey] -> Bool
 prop_combineAndRebuildSimplePathKeys = prop_combineAndRebuild

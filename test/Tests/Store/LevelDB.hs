@@ -1,19 +1,23 @@
-module Tests.Store.LevelDB (externalTests) where
+module Tests.Store.LevelDB (tests) where
 
-import Tests.Dupes (storeOpContract)
 import Store.LevelDB
 
-import Database.LevelDB.Higher as Level
-import qualified Data.ByteString.Char8 as C
-import System.IO.Temp
+import Data.Either (rights)
+import Data.List
+import Data.List.Ordered
+import Data.Serialize
 
 import Test.Framework
+import Test.Framework.Providers.QuickCheck2 (testProperty)
 
-keySpace :: KeySpace
-keySpace = C.pack "Tests.Store.LevelDB"
+tests :: [Test]
+tests = [ (testProperty "Serialized DupesPathLevelKey order as normal" prop_serializedSimplePathKeysOrder) ]
 
-externalTests :: [Test]
-externalTests = storeOpContract evalStoreOp
+prop_orderedSerialization :: (Serialize a, Ord a) => [a] -> Bool
+prop_orderedSerialization = isSorted . endecode
   where
-    evalStoreOp actions = withSystemTempDirectory "Tests.Store.LevelDB" $ \dir ->
-      Level.runCreateLevelDB dir keySpace $ storeOpToDBAction actions
+    endecode :: (Serialize b) => [b] -> [b]
+    endecode xs = rights . map decode . sort . map encode $ xs
+
+prop_serializedSimplePathKeysOrder :: [DupesPathLevelKey] -> Bool
+prop_serializedSimplePathKeysOrder = prop_orderedSerialization
