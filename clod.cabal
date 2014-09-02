@@ -47,7 +47,7 @@ executable clod
                      , transformers
                      , uuid
 
-Test-suite testsuite
+Test-suite pure
   Type:                exitcode-stdio-1.0
   Hs-Source-Dirs:      src test
   Main-Is:             TestSuite.hs
@@ -84,7 +84,7 @@ Test-suite testsuite
                      , test-framework-quickcheck2
 
 
-Test-suite externaltestsuite
+Test-suite external
   Type:           exitcode-stdio-1.0
   Hs-Source-Dirs: src test
   Main-Is:        ExternalTestSuite.hs
