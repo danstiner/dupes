@@ -29,10 +29,10 @@ import qualified Text.Read as R
 import qualified Text.ParserCombinators.ReadP as ReadP
 import Data.Char (isHexDigit)
 
-data Algro = CRC32 | MD5 | SHA1 | SHA3_256 deriving (Generic)
+data Algro = CRC32 | MD5 | SHA1 | SHA3_256 | Nil deriving (Generic)
 type Digest = B.ByteString
 type HashSize = Int
-data Id = CRC32_Id Digest | MD5_Id Digest | SHA1_Id Digest | SHA3 HashSize Digest | Nil deriving (Eq, Ord, Generic)
+data Id = CRC32_Id Digest | MD5_Id Digest | SHA1_Id Digest | SHA3 HashSize Digest | Nil_Id deriving (Eq, Ord, Generic)
 
 type IdString = String
 type Type = Algro
@@ -48,7 +48,7 @@ createLazy :: Algro -> L.ByteString -> Id
 createLazy = hashLazy
 
 nil :: Id
-nil = Nil
+nil = Nil_Id
 
 hashLazy :: Algro -> L.ByteString -> Id
 hashLazy MD5 = MD5_Id . MD5.hashlazy
@@ -72,7 +72,7 @@ instance Show Id where
   show (MD5_Id digest) = "md5-" ++ (C.unpack $! Base16.encode digest)
   show (SHA1_Id digest) = "sha1-" ++ (C.unpack $! Base16.encode digest)
   show (SHA3 len digest) = "sha3_" ++ (show len) ++ "-" ++ (C.unpack $! Base16.encode digest)
-  show (Nil) = "nil-"
+  show (Nil_Id) = "nil-0"
 
 instance Read Id where
   readPrec = R.lift $ do
@@ -80,6 +80,7 @@ instance Read Id where
     return $ createIdFromHex hex
 
 instance Serialize Algro where
+  put Nil      = put (0 :: Word8)
   put CRC32    = put (1 :: Word8)
   put MD5      = put (2 :: Word8)
   put SHA3_256 = put (3 :: Word8)
@@ -87,6 +88,7 @@ instance Serialize Algro where
   get = do
     t <- get :: Get Word8
     case t of
+      0 -> return Nil
       1 -> return CRC32
       2 -> return MD5
       3 -> return SHA3_256
@@ -99,7 +101,7 @@ instance Serialize Id where
   put (SHA1_Id  d) = put SHA1  >> put d
   put (SHA3 256 d) = put SHA3_256 >> put d
   put (SHA3 i _) = fail ("Unsuppored SHA3 size: " ++ (show i))
-  put (Nil) = fail ("Cannot serialize nil conetent identifier")
+  put (Nil_Id) = put Nil
 
   get = do
     a <- get :: Get Algro
@@ -108,5 +110,6 @@ instance Serialize Id where
       MD5   -> get >>= return . MD5_Id
       SHA1  -> get >>= return . SHA1_Id
       SHA3_256 -> get >>= return . SHA3 sha3_256HashLength
+      Nil -> return Nil_Id
 
 instance NFData Id where rnf = genericRnf
