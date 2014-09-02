@@ -83,19 +83,22 @@ runStoreOp = createDB dupesKeySpace . storeOpToDBAction
 storeOpToDBAction :: StoreOp r -> Level.LevelDBT IO r
 storeOpToDBAction (Pure r) = return r
 storeOpToDBAction (Free (GetOp key f)) = fmap (emApply decode) (Level.get (encode key)) >>= storeOpToDBAction . f
-storeOpToDBAction (Free (PutOp path key t)) = (Level.put (encode path) (encode key)) >> storeOpToDBAction t
+storeOpToDBAction (Free (PutOp path key t)) = do
+  Level.put (encode path) (encode path)
+  Level.put ((C.pack "b/") `C.append` (encode key)) (encode [path])
+  storeOpToDBAction t
 storeOpToDBAction (Free (RmOp key t)) = (Level.delete (encode key)) >> storeOpToDBAction t
 storeOpToDBAction (Free (ListOp prefix f)) = do
   items <- Level.withSnapshot $ Level.scan (encode prefix) Level.queryItems
   storeOpToDBAction . f . rights $ map (decode . fst) items
 storeOpToDBAction (Free (BucketsOp f)) = do
-  buckets <- Level.withSnapshot $ Level.scan (encode "b/") Level.queryItems
+  buckets <- Level.withSnapshot $ Level.scan (C.pack "b/") Level.queryItems
   storeOpToDBAction . f . rights $ map dec buckets
   where
-    dec (k,v) = let b = decode k in
+    dec (k,v) = let b = decode (C.drop 2 k) :: Either String BucketKey in
       case b of
         Left e -> Left e
-        Right key -> let ps = decode v in
+        Right key -> let ps = decode v :: Either String [PathKey] in
           case ps of
             Left e -> Left e
             Right paths -> Right $ Bucket key paths
