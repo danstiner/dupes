@@ -83,7 +83,7 @@ runStoreOp = createDB dupesKeySpace . storeOpToDBAction
 storeOpToDBAction :: StoreOp r -> Level.LevelDBT IO r
 storeOpToDBAction (Pure r) = return r
 storeOpToDBAction (Free (GetOp key f)) = fmap (emApply decode) (Level.get (encode key)) >>= storeOpToDBAction . f
-storeOpToDBAction (Free (PutOp key t)) = (Level.put (encode key) (encode key)) >> storeOpToDBAction t
+storeOpToDBAction (Free (PutOp path key t)) = (Level.put (encode path) (encode key)) >> storeOpToDBAction t
 storeOpToDBAction (Free (RmOp key t)) = (Level.delete (encode key)) >> storeOpToDBAction t
 storeOpToDBAction (Free (ListOp prefix f)) = do
   items <- Level.withSnapshot $ Level.scan (encode prefix) Level.queryItems

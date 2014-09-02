@@ -80,7 +80,7 @@ storeFree :: ProcessT StoreOp (MergedOperation PathKey) ()
 storeFree = repeatedly $ do
   key <- await
   lift $ case key of
-    LeftOnly a -> putOp a
+    LeftOnly a -> putOp a undefined
     RightOnly a -> rmOp a
     Both _ -> return ()
 

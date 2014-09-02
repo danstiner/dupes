@@ -130,11 +130,11 @@ nilBucketKey = CI.nil
 instance MonadTrans DupesT where
   lift = DupesT
 
-data StoreOpF x = GetOp PathKey (Maybe PathKey -> x) | PutOp PathKey x | RmOp PathKey x | ListOp PathKey ([PathKey] -> x) | BucketsOp ([Bucket] -> x)
+data StoreOpF x = GetOp PathKey (Maybe PathKey -> x) | PutOp PathKey BucketKey x | RmOp PathKey x | ListOp PathKey ([PathKey] -> x) | BucketsOp ([Bucket] -> x)
 
 instance Functor StoreOpF where
-  fmap f (GetOp key g) = GetOp key (f . g)
-  fmap f (PutOp key x) = PutOp key (f x)
+  fmap f (GetOp path g) = GetOp path (f . g)
+  fmap f (PutOp path key x) = PutOp path key (f x)
   fmap f (RmOp key x) = RmOp key (f x)
   fmap f (ListOp prefix g) = ListOp prefix (f . g)
   fmap f (BucketsOp g) = BucketsOp (f . g)
@@ -142,10 +142,10 @@ instance Functor StoreOpF where
 type StoreOp = Free StoreOpF
 
 getOp :: PathKey -> StoreOp (Maybe PathKey)
-getOp key = liftF $ GetOp key id
+getOp path = liftF $ GetOp path id
 
-putOp :: PathKey -> StoreOp ()
-putOp key = liftF $ PutOp key ()
+putOp :: PathKey -> BucketKey -> StoreOp ()
+putOp path key = liftF $ PutOp path key ()
 
 rmOp :: PathKey -> StoreOp ()
 rmOp key = liftF $ RmOp key ()

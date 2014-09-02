@@ -20,9 +20,9 @@ evalStoreOp ops = evalState (runStoreOp ops) (empty, empty)
 runStoreOp :: StoreOp r -> State DupeStore r
 runStoreOp (Pure r) = return r
 runStoreOp (Free (GetOp key f)) = get >>= runStoreOp . f . (lookup key) . fst
-runStoreOp (Free (PutOp key t)) = do
+runStoreOp (Free (PutOp path key t)) = do
   (paths, buckets) <- get
-  put ((insert key key paths), buckets)
+  put ((insert path path paths), (insert key [path] buckets))
   runStoreOp t
 runStoreOp (Free (RmOp key t)) = do
   (paths, buckets) <- get

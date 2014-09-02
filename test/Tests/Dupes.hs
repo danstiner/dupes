@@ -22,8 +22,9 @@ test_PutGet f = testCase "Put then get should give putted value" $ do
   f actions >>= assertEqual "Got value is put value" (Just testPathKey)
   where
     testPathKey = toPathKey "test_path"
+    bucketKey = CI.nil
     actions = do
-      putOp testPathKey
+      putOp testPathKey bucketKey
       getOp testPathKey
 
 test_PutList :: (forall r . StoreOp r -> IO r) -> Test
@@ -31,16 +32,17 @@ test_PutList f = testCase "List after put should show one entry for put" $ do
   f actions >>= assertEqual "List after put shows value" [testPathKey]
   where
     testPathKey = toPathKey "test_path"
+    bucketKey = CI.nil
     actions = do
-      putOp testPathKey
+      putOp testPathKey bucketKey
       listOp testPathKey
 
 test_PutBuckets :: (forall r . StoreOp r -> IO r) -> Test
 test_PutBuckets f = testCase "Bucket listing after put should show entry for put" $ do
-  f actions >>= assertEqual "Buckets after put show value" [(Bucket key [pathKey])]
+  f actions >>= assertEqual "Buckets after put show value" [(Bucket bucketKey [pathKey])]
   where
     pathKey = toPathKey "test_path"
-    key = CI.nil
+    bucketKey = CI.nil
     actions = do
-      putOp pathKey
+      putOp pathKey bucketKey
       bucketsOp
