@@ -35,7 +35,6 @@ executable clod
                      , free
                      , higher-leveldb >= 0.1.0.3
                      , hslogger
-                     , http-conduit
                      , machines
                      , MissingH
                      , mtl
@@ -68,7 +67,6 @@ Test-suite pure
                      , free
                      , higher-leveldb >= 0.1.0.3
                      , hslogger
-                     , http-conduit
                      , machines
                      , MissingH
                      , mtl
@@ -105,7 +103,6 @@ Test-suite external
                   , free
                   , higher-leveldb >= 0.1.0.3
                   , hslogger
-                  , http-conduit
                   , machines
                   , MissingH
                   , mtl
