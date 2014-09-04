@@ -8,6 +8,7 @@ import Dupes
 import Store.LevelDB
 
 import Options.Applicative
+import qualified Data.Set as Set
 
 data Options = Options
   { _optShowDupesOnly :: Bool }
@@ -23,10 +24,13 @@ parser = Options
      <> help "Show only duplicate files." )
 
 run :: Options -> IO ()
-run (Options {_optShowDupesOnly=False}) = runStoreOp listAll >>= mapM_ putStrLn . map show
+run (Options {_optShowDupesOnly=False}) = runStoreOp bucketsOp >>= mapM_ printBucket
+run (Options {_optShowDupesOnly=True}) = runStoreOp bucketsOp >>= mapM_ printBucket . filterDupes
   where
-    listAll = listOp root
-    root = toPathKey ""
-run (Options {_optShowDupesOnly=True}) = runStoreOp listDupes >>= mapM_ putStrLn . map show
+    filterDupes = filter (\(Bucket _ paths) -> 1 < Set.size paths)
+
+printBucket :: Bucket -> IO ()
+printBucket = putStrLn . showBucket
   where
-    listDupes = bucketsOp
+    showBucket (Bucket key paths) = show key ++ " " ++ showPaths paths
+    showPaths = Set.fold (\a b -> a ++ " " ++ b) "" . Set.map unPathKey
