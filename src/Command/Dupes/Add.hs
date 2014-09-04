@@ -64,12 +64,12 @@ processPaths :: ProcessT IO FilePath ()
 processPaths = repeatedly $ await >>= lift . processPath
 
 processPath :: FilePath -> IO ()
-processPath path = runT_ $ runDBActions $ (traverse ~> merge ~> prep ~> store)
+processPath path = runT_ $ runDBActions $ (traverse ~> mergePaths ~> prep ~> store)
   where
     runDBActions = fitM runDupesDBT
     prep = fitM lift prepMergeOp
     traverse = fitM lift (traversePath path ~> toPathKeyP)
-    merge = fitM storeOpToDBAction (mergeProcess path)
+    mergePaths = fitM storeOpToDBAction (mergeProcess path)
     store = fitM storeOpToDBAction (storeFree)
 
 prepMergeOp :: ProcessT IO (MergedOperation PathKey) (MergedOperation (PathKey, BucketKey))
