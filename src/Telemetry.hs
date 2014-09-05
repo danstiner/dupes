@@ -69,6 +69,13 @@ instance TelemetryMonad IO where
         sessId <- getSessionId
         return $ Record event sessId
 
+instance Monad m => Functor (TelemetryT m) where
+    fmap = liftM
+
+instance Monad m => Applicative (TelemetryT m) where
+    pure  = return
+    (<*>) = ap
+
 instance Monad m => Monad (TelemetryT m) where
   fail = TelemetryT . fail
   return = lift . return
