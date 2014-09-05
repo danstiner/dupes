@@ -43,6 +43,7 @@ executable clod
                      , QuickCheck
                      , resourcet
                      , text
+                     , timeit
                      , transformers
                      , uuid
 
