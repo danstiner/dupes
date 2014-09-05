@@ -55,12 +55,14 @@ hashLazy MD5 = MD5_Id . MD5.hashlazy
 hashLazy SHA1 = SHA1_Id . SHA1.hashlazy
 hashLazy SHA3_256 = SHA3 len . (SHA3.hashlazy len) where len = sha3_256HashLength
 hashLazy CRC32 = CRC32_Id . L.toStrict . toLazyByteString . word32BE . crc32
+hashLazy Nil = undefined
 
 hash :: Algro -> B.ByteString -> Id
 hash MD5 = MD5_Id . MD5.hash
 hash SHA1 = SHA1_Id . SHA1.hash
 hash SHA3_256 = SHA3 len . (SHA3.hash len) where len = sha3_256HashLength
 hash CRC32 = CRC32_Id . L.toStrict . toLazyByteString . word32BE . crc32
+hash Nil = undefined
 
 createIdFromHex :: IdString -> Id
 createIdFromHex s = 
