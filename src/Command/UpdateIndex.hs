@@ -50,7 +50,7 @@ parser = Options
    <*> switch
       ( long "refresh"
      <> help "Looks at the current index and checks to see if merges or updates are needed by checking stat() information." )
-  <*> option
+  <*> option auto
       ( long "cacheinfo"
      <> value NoCacheInfoParams
      <> metavar "<mode> <object> <path>"
