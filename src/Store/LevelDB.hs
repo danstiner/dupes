@@ -3,9 +3,7 @@
 {-# LANGUAGE FlexibleInstances #-}
 
 module Store.LevelDB (
-    createStore
-  , Store
-  , runLevelDBIndex
+    runLevelDBIndex
   , runDupes
   , runStoreOp
   , storeOpToDBAction
@@ -15,29 +13,23 @@ module Store.LevelDB (
 
 import Dupes
 import Index
-import qualified Ref
-import qualified Settings
 import Store.Blob ()
-import Store.Ref
+import Store.Repository
 
 import Control.Applicative
 import Control.Monad (liftM)
 import Control.Monad.Free
-import Control.Monad.Trans (lift)
 import Control.Monad.Trans.Resource (MonadResourceBase)
 import Data.ByteString (ByteString)
 import Data.Either (rights)
 import Data.Serialize (Serialize,encode,decode)
 import Data.Set (Set)
-import qualified Control.Monad.Trans.State as State
 import qualified Data.ByteString.Char8 as C
 import qualified Data.Serialize as Serialize
 import qualified Data.Set as Set
 import qualified Database.LevelDB.Higher as Level
-import System.FilePath ( (</>) )
 import Test.QuickCheck
 
-newtype Store = Store { getStorePath :: FilePath }
 type KeySpace = ByteString
 
 newtype DupesPathLevelKey = DupesPathLevelKey FilePath deriving (Eq, Ord, Show)
@@ -49,13 +41,9 @@ instance Serialize DupesPathLevelKey where
 instance Arbitrary DupesPathLevelKey where
   arbitrary = DupesPathLevelKey <$> arbitrary
 
-keySpace,indexKeySpace,dupesKeySpace :: KeySpace
-keySpace = C.pack "MyKeySpace"
+indexKeySpace,dupesKeySpace :: KeySpace
 indexKeySpace = C.pack "Index"
 dupesKeySpace = C.pack "Dupes"
-
-createStore :: FilePath -> Store
-createStore = Store
 
 runLevelDBIndex :: (MonadResourceBase m) => Index (Level.LevelDBT m) a -> Store -> m a
 runLevelDBIndex m s = runLevelDB s indexKeySpace (execIndex m)
@@ -66,35 +54,11 @@ runDupes s m = runLevelDB s dupesKeySpace (execDupesT m)
 runLevelDB :: (MonadResourceBase m) => Store -> KeySpace -> Level.LevelDBT m a -> m a
 runLevelDB = Level.runCreateLevelDB . getStorePath
 
-instance RefStore Store where
-  read name = do
-    (Store path) <- State.get
-    Level.runCreateLevelDB path keySpace $ do
-      r <- Level.get $ toKey name
-      case r of
-        Just val -> let decoded = decode val in
-          case decoded of
-            Left _ -> return Nothing
-            Right key -> return $ Just $ Ref.Ref name key
-        Nothing -> return Nothing
+runStoreOp :: Store -> StoreOp r -> IO r
+runStoreOp store = runDupesDBT store . storeOpToDBAction
 
-  set (Ref.Ref name blobId) = do
-    (Store path) <- State.get
-    lift $ Level.runCreateLevelDB path keySpace $ do
-      Level.put (toKey name) $ encode blobId
-    return ()
-
-  delete name = do
-    (Store path) <- State.get
-    lift $ Level.runCreateLevelDB path keySpace $ do
-      Level.delete $ toKey name
-    return ()
-
-toKey :: Ref.Id -> Level.Key
-toKey name = C.pack ("ref/" ++ (Ref.toString name))
-
-runStoreOp :: StoreOp r -> IO r
-runStoreOp = createDB dupesKeySpace . storeOpToDBAction
+runDupesDBT :: Store -> Level.LevelDBT IO r -> IO r
+runDupesDBT (Store path) = createDB path dupesKeySpace
 
 storeOpToDBAction :: StoreOp r -> Level.LevelDBT IO r
 storeOpToDBAction (Pure r) = return r
@@ -135,13 +99,8 @@ decodePathKey key = case decode key of
   Left a -> Left a
   Right (DupesPathLevelKey path) -> Right (toPathKey path)
 
-runDupesDBT :: Level.LevelDBT IO r -> IO r
-runDupesDBT = createDB dupesKeySpace
-
-createDB :: KeySpace -> Level.LevelDBT IO a -> IO a
-createDB space actions = do
-  appDir <- Settings.getAppDir
-  Level.runCreateLevelDB (appDir </> "leveldb") space actions
+createDB :: FilePath -> KeySpace -> Level.LevelDBT IO a -> IO a
+createDB = Level.runCreateLevelDB
 
 emApply :: (a -> Either e b) -> Maybe a -> Maybe b
 emApply f (Just a) = maybeSnd (f a)

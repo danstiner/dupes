@@ -6,6 +6,7 @@ module Command.Dupes.Ls (
 
 import Dupes
 import Store.LevelDB
+import Store.Repository as Repo
 import Telemetry as Telemetry
 
 import Control.Monad (foldM)
@@ -28,13 +29,18 @@ parser = Options
      <> help "Show only duplicate files." )
 
 run :: Options -> IO ()
-run (Options {_optShowDupesOnly=False}) = recordTelemetry $ runStoreOp bucketsOp >>= foldM printAndInc 0
-run (Options {_optShowDupesOnly=True }) = recordTelemetry $ runStoreOp bucketsOp >>= return . filterDupes >>= foldM printAndInc 0
-  where
-    filterDupes = filter (\(Bucket _ paths) -> 1 < Set.size paths)
+run (Options {_optShowDupesOnly=False}) = listDupes $ \_ -> True
+run (Options {_optShowDupesOnly=True }) = listDupes $ \(Bucket _ paths) -> (1 < Set.size paths)
 
-printAndInc :: Num n => n -> Bucket -> IO n
-printAndInc counter bucket = printBucket bucket >> return (counter + 1)
+listDupes :: (Bucket -> Bool) -> IO ()
+listDupes f = recordTelemetry $ do
+  repo <- Repo.get
+  buckets <- runStoreOp (getStore repo) bucketsOp
+
+  foldM printAndInc 0 $ filter f buckets
+
+  where
+    printAndInc counter bucket = printBucket bucket >> return (counter + 1)
 
 recordTelemetry :: IO Word64 -> IO ()
 recordTelemetry m = do
