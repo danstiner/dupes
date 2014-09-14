@@ -8,6 +8,7 @@ module Command.Dupes.Add (
 
 import Dupes
 import Store.LevelDB
+import Store.Repository as Repo
 
 import Control.DeepSeq
 import Control.Exception
@@ -39,9 +40,9 @@ parser = Options
       ( argument str (metavar "PATH") )
 
 run :: Options -> IO ()
-run opt = runT_ machine
+run opt = Repo.get >>= runT_ . machine
   where
-    machine = pathSource opt ~> processPaths
+    machine repo = pathSource opt ~> processPaths (Repo.getStore repo)
 
 pathSource :: Options -> SourceT IO FilePath
 pathSource opt =
@@ -60,13 +61,13 @@ pathSource opt =
         yield line
         stdinLinesPlan
 
-processPaths :: ProcessT IO FilePath ()
-processPaths = repeatedly $ await >>= lift . processPath
+processPaths :: Store -> ProcessT IO FilePath ()
+processPaths store = repeatedly $ await >>= lift . (processPath store)
 
-processPath :: FilePath -> IO ()
-processPath path = runT_ $ runDBActions $ (traverse ~> mergePaths ~> prep ~> store)
+processPath :: Store -> FilePath -> IO ()
+processPath s path = runT_ . runDBActions $ (traverse ~> mergePaths ~> prep ~> store)
   where
-    runDBActions = fitM runDupesDBT
+    runDBActions = fitM (runDupesDBT s)
     prep = fitM lift prepMergeOp
     traverse = fitM lift (traversePath path ~> toPathKeyP)
     mergePaths = fitM storeOpToDBAction (mergeProcess path)
