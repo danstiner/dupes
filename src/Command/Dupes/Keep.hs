@@ -10,22 +10,10 @@ import Command.ParseUtil
 import Dupes
 import Store.LevelDB
 
-import Control.DeepSeq
-import Control.Exception
-import Control.Monad
-import Control.Monad.Trans ( lift )
-import Data.List ( delete, (\\), sort, isPrefixOf )
-import Data.Set (Set)
+import Data.List ( isPrefixOf )
 import qualified Data.Set as Set
 import Data.Machine hiding ( run )
-import Data.Machine.Fanout
-import Data.Machine.Interleave
 import Options.Applicative
-import qualified Data.ByteString.Lazy as L
-import System.Directory
-import System.FilePath ( (</>) )
-import System.IO
-import Debug.Trace
 
 data Options = Options
   { optStdin :: Bool
