@@ -15,7 +15,7 @@ module Dupes (
   , execDupesT
   , nilBucketKey
   , MergedOperation (..)
-  , PathKey
+  , PathKey (..)
   , unPathKey
   , combine
   , toPathKey
@@ -28,7 +28,6 @@ module Dupes (
 
 import ContentIdentifier as CI
 
-import Control.Applicative
 import Control.Monad
 import Control.Monad.Free
 import Control.Monad.Trans
@@ -40,7 +39,6 @@ import Data.Set (Set)
 import GHC.Generics (Generic)
 import qualified Data.ByteString as B
 import qualified Data.ByteString.Lazy as L
-import Test.QuickCheck
 
 data MergedOperation a = LeftOnly a | RightOnly a | Both a deriving (Show, Eq)
 
@@ -49,9 +47,6 @@ newtype PathKey = PathKey { unPathKey :: FilePath } deriving (Eq, Ord, Show)
 instance Serialize PathKey where
   put = put . unPathKey
   get = liftM PathKey get
-
-instance Arbitrary PathKey where
-  arbitrary = PathKey <$> arbitrary
 
 toPathKey :: FilePath -> PathKey
 toPathKey = PathKey

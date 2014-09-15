@@ -10,7 +10,7 @@ module Store.LevelDB (
   , runStoreOp
   , storeOpToDBAction
   , runDupesDBT
-  , DupesPathLevelKey
+  , DupesPathLevelKey (..)
 ) where
 
 import Dupes
@@ -35,7 +35,6 @@ import qualified Data.Serialize as Serialize
 import qualified Data.Set as Set
 import qualified Database.LevelDB.Higher as Level
 import System.FilePath ( (</>) )
-import Test.QuickCheck
 
 newtype Store = Store { getStorePath :: FilePath }
 type KeySpace = ByteString
@@ -45,9 +44,6 @@ newtype DupesPathLevelKey = DupesPathLevelKey FilePath deriving (Eq, Ord, Show)
 instance Serialize DupesPathLevelKey where
   put (DupesPathLevelKey path) = Serialize.putByteString (C.pack path)
   get = liftM DupesPathLevelKey $ fmap C.unpack $ Serialize.remaining >>= Serialize.getByteString
-
-instance Arbitrary DupesPathLevelKey where
-  arbitrary = DupesPathLevelKey <$> arbitrary
 
 keySpace,indexKeySpace,dupesKeySpace :: KeySpace
 keySpace = C.pack "MyKeySpace"

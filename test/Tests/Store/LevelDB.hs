@@ -2,6 +2,7 @@ module Tests.Store.LevelDB (tests) where
 
 import Store.LevelDB
 
+import Control.Applicative
 import Data.Either (rights)
 import Data.List
 import Data.List.Ordered
@@ -9,6 +10,10 @@ import Data.Serialize
 
 import Test.Framework
 import Test.Framework.Providers.QuickCheck2 (testProperty)
+import Test.QuickCheck
+
+instance Arbitrary DupesPathLevelKey where
+  arbitrary = DupesPathLevelKey <$> arbitrary
 
 tests :: [Test]
 tests = [ (testProperty "Serialized DupesPathLevelKey order as normal" prop_serializedSimplePathKeysOrder) ]
