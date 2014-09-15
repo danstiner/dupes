@@ -9,6 +9,7 @@ module Command.Dupes.Keep (
 import Command.ParseUtil
 import Dupes
 import Store.LevelDB
+import Store.Repository as Repo
 
 import Data.List ( isPrefixOf )
 import qualified Data.Set as Set
@@ -33,8 +34,9 @@ parser = Options
 
 run :: Options -> IO ()
 run opt = do
+  repo <- Repo.get
   pathspecs <- runT $ pathspecSource (optPaths opt) (optStdin opt)
-  buckets <- runStoreOp bucketsOp
+  buckets <- runStoreOp (getStore repo) bucketsOp
   runT_ $ source buckets ~> filterBuckets pathspecs ~> autoM putStrLn
 
 type PathSpec = FilePath
