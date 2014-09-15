@@ -4,12 +4,16 @@ module Tests.Command.Dupes (tests) where
 
 import Dupes
 
+import Control.Applicative
 import Data.Machine
 import Data.Serialize
 
 import Test.Framework
 import Test.Framework.Providers.QuickCheck2 (testProperty)
 import Test.QuickCheck
+
+instance Arbitrary PathKey where
+  arbitrary = PathKey <$> arbitrary
 
 tests :: [Test]
 tests = [ (testProperty "Rebuilding combined lists is identity" prop_combineAndRebuildIntList)

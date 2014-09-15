@@ -6,15 +6,16 @@ module Command.Dupes.Add (
   , run
 ) where
 
+import qualified App
+import Command.ParseUtil
 import Dupes
 import Store.LevelDB
 import Store.Repository as Repo
 
 import Control.DeepSeq
 import Control.Exception
-import Control.Monad
 import Control.Monad.Trans ( lift )
-import Data.List ( delete, (\\), sort )
+import Data.List ( (\\), sort )
 import Data.Machine hiding ( run )
 import Data.Machine.Interleave
 import Options.Applicative
@@ -22,6 +23,10 @@ import qualified Data.ByteString.Lazy as L
 import System.Directory
 import System.FilePath ( (</>) )
 import System.IO
+import System.Log.Logger
+
+logTag :: String
+logTag = App.logTag ++ ".Command.Dupes.Add"
 
 data Options = Options
   { optStdin :: Bool
@@ -42,24 +47,8 @@ parser = Options
 run :: Options -> IO ()
 run opt = Repo.get >>= runT_ . machine
   where
-    machine repo = pathSource opt ~> processPaths (Repo.getStore repo)
-
-pathSource :: Options -> SourceT IO FilePath
-pathSource opt =
-  if (optStdin opt || elem stdinFilename (optPaths opt))
-    then stdinLines ~> prepended actualOptPaths
-    else source actualOptPaths
-  where
-    actualOptPaths = delete stdinFilename (optPaths opt)
-    stdinFilename = "-"
-    stdinLines :: SourceT IO FilePath
-    stdinLines = construct $ stdinLinesPlan
-    stdinLinesPlan = do
-      eof <- lift isEOF
-      unless eof $ do
-        line <- lift getLine
-        yield line
-        stdinLinesPlan
+    machine repo = pathspecs ~> processPaths (Repo.getStore repo)
+    pathspecs = pathspecSource (optPaths opt) (optStdin opt)
 
 processPaths :: Store -> ProcessT IO FilePath ()
 processPaths store = repeatedly $ await >>= lift . (processPath store)
@@ -136,5 +125,5 @@ calcBucketKey path = calc `catch` errorMessage
       key `deepseq` (return $! Just key)
     errorMessage :: IOException -> IO (Maybe BucketKey)
     errorMessage ex = do
-      putStrLn . ("error: " ++) $ show ex
+      warningM logTag (show ex)
       return Nothing
