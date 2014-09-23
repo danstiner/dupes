@@ -37,9 +37,10 @@ instance Serialize DupesPathLevelKey where
   put (DupesPathLevelKey path) = Serialize.putByteString (C.pack path)
   get = liftM DupesPathLevelKey $ fmap C.unpack $ Serialize.remaining >>= Serialize.getByteString
 
-indexKeySpace,dupesKeySpace :: KeySpace
+indexKeySpace,dupesKeySpace,dupesBucketKeySpace :: KeySpace
 indexKeySpace = C.pack "Index"
 dupesKeySpace = C.pack "Dupes"
+dupesBucketKeySpace = C.pack "b/"
 
 runLevelDBIndex :: (MonadResourceBase m) => Index (Level.LevelDBT m) a -> Store -> m a
 runLevelDBIndex m s = runLevelDB s indexKeySpace (execIndex m)
@@ -61,7 +62,7 @@ storeOpToDBAction (Pure r) = return r
 storeOpToDBAction (Free (GetOp path f)) = fmap (emApply decode) (Level.get (encodePathKey path)) >>= storeOpToDBAction . f
 storeOpToDBAction (Free (PutOp path key t)) = do
   let encPath = encodePathKey path
-      encKey  = (C.pack "b/") `C.append` (encode key)
+      encKey  = dupesBucketKeySpace `C.append` (encode key)
   Level.put encPath (encode path)
   existing <- Level.get encKey
   Level.put encKey . encode $ case existing of
@@ -76,7 +77,7 @@ storeOpToDBAction (Free (ListOp prefix f)) = do
   items <- Level.withSnapshot $ Level.scan (encodePathKey prefix) Level.queryItems
   storeOpToDBAction . f . rights $ map (decodePathKey . fst) items
 storeOpToDBAction (Free (BucketsOp f)) = do
-  buckets <- Level.withSnapshot $ Level.scan (C.pack "b/") Level.queryItems
+  buckets <- Level.withSnapshot $ Level.scan dupesBucketKeySpace Level.queryItems
   storeOpToDBAction . f . rights $ map dec buckets
   where
     dec (k,v) = let b = decode (C.drop 2 k) in
