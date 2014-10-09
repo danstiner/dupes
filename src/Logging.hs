@@ -1,7 +1,9 @@
 module Logging (
-    register
+    logLefts
+  , register
 ) where
 
+import Data.Either as Either
 import System.FilePath ( (</>) )
 import System.IO
 import System.Log.Handler.Log4jXML as Log4j
@@ -16,3 +18,9 @@ register outfolder p = do
 
 stderrLogger :: Priority -> IO (GenericHandler Handle)
 stderrLogger p = streamHandler stderr p
+
+logLefts :: String -> Priority -> [Either String a] -> IO [a]
+logLefts logname pri xs =
+  mapM_ (logM logname pri) ls >> return rs
+  where
+    (ls, rs) = Either.partitionEithers xs
