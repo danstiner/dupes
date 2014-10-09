@@ -6,9 +6,9 @@ module Command.Dupes.Add (
   , run
 ) where
 
-import qualified App
 import Command.ParseUtil
 import Dupes
+import qualified App
 import Store.LevelDB
 import Store.Repository as Repo
 
