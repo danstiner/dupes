@@ -15,8 +15,8 @@ storeOpContract :: (forall r . StoreOp r -> IO r) -> [Test]
 storeOpContract f = [
     test_PutGet f
   , test_PutList f
-  , test_PutBuckets f
-  , test_PutDupes_VerifyBucket f
+  , test_PutSingle_NoDupeBuckets f
+  , test_PutDupes_VerifyDupeBucket f
   ]
 
 test_PutGet :: (forall r . StoreOp r -> IO r) -> Test
@@ -39,24 +39,25 @@ test_PutList f = testCase "List after put should show one entry for put" $ do
       putOp testPathKey bucketKey
       listOp testPathKey
 
-test_PutBuckets :: (forall r . StoreOp r -> IO r) -> Test
-test_PutBuckets f = testCase "Bucket list after put should have single entry" $ do
-  f actions >>= assertEqual "Bucket after put show value" [(Bucket bucketKey (Set.singleton pathKey))]
+test_PutSingle_NoDupeBuckets :: (forall r . StoreOp r -> IO r) -> Test
+test_PutSingle_NoDupeBuckets f = testCase "Dupes list after put should have no entries" $ do
+  f actions >>= assertEqual "No buckets after put" []
   where
     pathKey = toPathKey "test_path"
     bucketKey = CI.nil
     actions = do
       putOp pathKey bucketKey
-      bucketsOp
+      dupesOp
 
-test_PutDupes_VerifyBucket :: (forall r . StoreOp r -> IO r) -> Test
-test_PutDupes_VerifyBucket f = testCase "Bucket list after duplicate puts should have single entry" $ do
-  f actions >>= assertEqual "Single bucket" [(Bucket bucketKey (Set.insert pathKey2 $ Set.singleton pathKey1))]
+test_PutDupes_VerifyDupeBucket :: (forall r . StoreOp r -> IO r) -> Test
+test_PutDupes_VerifyDupeBucket f = testCase "Bucket list after duplicate puts should have single entry" $ do
+  f actions >>= assertEqual "Single bucket" [(Bucket bucketKey pathKeySet)]
   where
     pathKey1 = toPathKey "test_path1"
     pathKey2 = toPathKey "test_path2"
+    pathKeySet = (Set.insert pathKey2 $ Set.singleton pathKey1)
     bucketKey = CI.nil
     actions = do
       putOp pathKey1 bucketKey
       putOp pathKey2 bucketKey
-      bucketsOp
+      dupesOp

@@ -13,34 +13,56 @@ module Store.LevelDB (
 
 import Dupes
 import Index
+import Logging
+import qualified App
 import Store.Blob ()
 import Store.Repository
 
 import Control.Applicative
 import Control.Monad (liftM)
 import Control.Monad.Free
+import Control.Monad.Trans.Class (lift)
 import Control.Monad.Trans.Resource (MonadResourceBase)
 import Data.ByteString (ByteString)
 import Data.Either (rights)
 import Data.Serialize (Serialize,encode,decode)
-import Data.Set (Set)
 import qualified Data.ByteString.Char8 as C
+import qualified Data.List as List
 import qualified Data.Serialize as Serialize
 import qualified Data.Set as Set
 import qualified Database.LevelDB.Higher as Level
+import System.Log.Logger
 
 type KeySpace = ByteString
+
+data DupeLevelKey = DupeLevelKey BucketKey PathKey
 
 newtype DupesPathLevelKey = DupesPathLevelKey FilePath deriving (Eq, Ord, Show)
 
 instance Serialize DupesPathLevelKey where
   put (DupesPathLevelKey path) = Serialize.putByteString (C.pack path)
-  get = liftM DupesPathLevelKey $ fmap C.unpack $ Serialize.remaining >>= Serialize.getByteString
+  get = liftM DupesPathLevelKey $ fmap C.unpack (Serialize.remaining >>= Serialize.getByteString)
 
-indexKeySpace,dupesKeySpace,dupesBucketKeySpace :: KeySpace
+instance Serialize DupeLevelKey where
+  put (DupeLevelKey bucketKey pathKey) = do
+    Serialize.put bucketKey
+    Serialize.put pathKey
+  get = liftA2 DupeLevelKey Serialize.get Serialize.get
+
+logTag :: String
+logTag = App.logTag ++ ".Store.LevelDB"
+
+indexKeySpace,dupesKeySpace :: KeySpace
 indexKeySpace = C.pack "Index"
 dupesKeySpace = C.pack "Dupes"
-dupesBucketKeySpace = C.pack "b/"
+
+dupePathKeySpace,dupeBucketKeySpace,dupeDupesKeySpace :: KeySpace
+dupePathKeySpace = C.pack "Path"
+dupeBucketKeySpace = C.pack "Bucket"
+dupeDupesKeySpace = C.pack "Dupe"
+
+dupeBucketPrefix :: ByteString
+dupeBucketPrefix = C.empty
 
 runLevelDBIndex :: (MonadResourceBase m) => Index (Level.LevelDBT m) a -> Store -> m a
 runLevelDBIndex m s = runLevelDB s indexKeySpace (execIndex m)
@@ -59,34 +81,53 @@ runDupesDBT (Store path) = createDB path dupesKeySpace
 
 storeOpToDBAction :: StoreOp r -> Level.LevelDBT IO r
 storeOpToDBAction (Pure r) = return r
-storeOpToDBAction (Free (GetOp path f)) = fmap (emApply decode) (Level.get (encodePathKey path)) >>= storeOpToDBAction . f
+storeOpToDBAction (Free (GetOp path f)) = Level.withKeySpace dupePathKeySpace $
+  Level.get (encodePathKey path) >>= storeOpToDBAction . f . (const path <$>)
 storeOpToDBAction (Free (PutOp path key t)) = do
-  let encPath = encodePathKey path
-      encKey  = dupesBucketKeySpace `C.append` (encode key)
-  Level.put encPath (encode path)
-  existing <- Level.get encKey
-  Level.put encKey . encode $ case existing of
-    Nothing -> Set.singleton path
-    Just b  -> let dec = decode b :: Either String (Set PathKey) in
-      case dec of
-        Left _ -> Set.singleton path
-        Right paths -> Set.insert path paths
+  existing <- Level.withKeySpace dupeBucketKeySpace $ Level.get encKey
+  case existing of
+    Nothing -> Level.withKeySpace dupeBucketKeySpace $Level.put encKey encPath
+    Just prev -> addDupeEntry prev
+  Level.withKeySpace dupePathKeySpace $ Level.put encPath encKey
   storeOpToDBAction t
+  where
+    encPath = encodePathKey path
+    encKey  = encodeSingletonBucketKey key
+    encDupeKey = encodeDupeBucketKey key path
+    addDupeEntry prevVal = Level.withKeySpace dupeDupesKeySpace $ do
+      case (decodePathKey prevVal) of
+        Left msg -> lift $ errorM logTag msg >> errorM logTag (show prevVal)
+        Right prevPath -> Level.put (encodeDupeBucketKey key prevPath) C.empty
+      Level.put encDupeKey C.empty
+
 storeOpToDBAction (Free (RmOp path t)) = (Level.delete (encodePathKey path)) >> storeOpToDBAction t
 storeOpToDBAction (Free (ListOp prefix f)) = do
-  items <- Level.withSnapshot $ Level.scan (encodePathKey prefix) Level.queryItems
+  items <- Level.withKeySpace dupePathKeySpace $ Level.withSnapshot $ Level.scan (encodePathKey prefix) Level.queryItems
   storeOpToDBAction . f . rights $ map (decodePathKey . fst) items
-storeOpToDBAction (Free (BucketsOp f)) = do
-  buckets <- Level.withSnapshot $ Level.scan dupesBucketKeySpace Level.queryItems
-  storeOpToDBAction . f . rights $ map dec buckets
+storeOpToDBAction (Free (DupesOp f)) =
+  scanDupeBuckets >>= storeOpToDBAction . f
+
+scanDupeBuckets :: Level.LevelDBT IO [Bucket]
+scanDupeBuckets = do
+  dupeItems <- Level.withSnapshot $ Level.withKeySpace dupeDupesKeySpace $ Level.scan dupeBucketPrefix Level.queryItems
+  let dupeDecodedEntries = map decodeDupeBucketEntry dupeItems
+  dupeEntries <- lift $ logLefts logTag WARNING dupeDecodedEntries
+  return $ map toBucket $ List.groupBy (\a b -> fst a == fst b) dupeEntries
   where
-    dec (k,v) = let b = decode (C.drop 2 k) in
-      case b of
-        Left e -> Left e
-        Right key -> let ps = decode v in
-          case ps of
-            Left e -> Left e
-            Right paths -> Right $ Bucket key paths
+    toBucket xs = Bucket (fst $ head xs) (Set.fromList $ map snd xs)
+
+encodeSingletonBucketKey :: BucketKey -> Level.Key
+encodeSingletonBucketKey = encode
+
+encodeDupeBucketKey :: BucketKey -> PathKey -> Level.Key
+encodeDupeBucketKey bucket path =
+  encode $ DupeLevelKey bucket path
+
+decodeDupeBucketEntry :: (Level.Key, Level.Value) -> Either String (BucketKey, PathKey)
+decodeDupeBucketEntry (key, _) =
+  unpack <$> decode key
+  where
+    unpack (DupeLevelKey bucketKey pathKey) = (bucketKey, pathKey)
 
 encodePathKey :: PathKey -> Level.Key
 encodePathKey = encode . DupesPathLevelKey . unPathKey
@@ -98,11 +139,3 @@ decodePathKey key = case decode key of
 
 createDB :: FilePath -> KeySpace -> Level.LevelDBT IO a -> IO a
 createDB = Level.runCreateLevelDB
-
-emApply :: (a -> Either e b) -> Maybe a -> Maybe b
-emApply f (Just a) = maybeSnd (f a)
-emApply _ Nothing = Nothing
-
-maybeSnd :: Either a b -> Maybe b
-maybeSnd (Left _) = Nothing
-maybeSnd (Right b) = Just b

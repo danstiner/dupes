@@ -33,5 +33,9 @@ runStoreOp (Free (RmOp key t)) = do
   runStoreOp t
 runStoreOp (Free (ListOp _ f)) = runStoreOp . f . Map.keys . pathStore =<< get
 runStoreOp (Free (BucketsOp f)) = runStoreOp . f . (map toBucket) . Map.assocs . bucketStore =<< get
+runStoreOp (Free (DupesOp f)) = runStoreOp . f . (filter isDupe) . (map toBucket) . Map.assocs . bucketStore =<< get
   where
-    toBucket (key, paths) = Bucket key paths
+    isDupe (Bucket _ paths) = Set.size paths > 1
+
+toBucket :: (BucketKey, Set PathKey) -> Bucket
+toBucket (key, paths) = Bucket key paths

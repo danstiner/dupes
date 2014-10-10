@@ -16,14 +16,13 @@ module Dupes (
   , nilBucketKey
   , MergedOperation (..)
   , PathKey (..)
-  , unPathKey
   , combine
   , toPathKey
   , mergeOrderedStreams
   , mergeOrderedStreamsWye
   , StoreOp
   , StoreOpF (..)
-  , getOp, putOp, rmOp, listOp, bucketsOp
+  , getOp, putOp, rmOp, listOp, bucketsOp, dupesOp
 ) where
 
 import ContentIdentifier as CI
@@ -123,7 +122,7 @@ nilBucketKey = CI.nil
 instance MonadTrans DupesT where
   lift = DupesT
 
-data StoreOpF x = GetOp PathKey (Maybe PathKey -> x) | PutOp PathKey BucketKey x | RmOp PathKey x | ListOp PathKey ([PathKey] -> x) | BucketsOp ([Bucket] -> x)
+data StoreOpF x = GetOp PathKey (Maybe PathKey -> x) | PutOp PathKey BucketKey x | RmOp PathKey x | ListOp PathKey ([PathKey] -> x) | BucketsOp ([Bucket] -> x) | DupesOp ([Bucket] -> x)
 
 instance Functor StoreOpF where
   fmap f (GetOp path g) = GetOp path (f . g)
@@ -131,6 +130,7 @@ instance Functor StoreOpF where
   fmap f (RmOp key x) = RmOp key (f x)
   fmap f (ListOp prefix g) = ListOp prefix (f . g)
   fmap f (BucketsOp g) = BucketsOp (f . g)
+  fmap f (DupesOp g) = DupesOp (f . g)
 
 type StoreOp = Free StoreOpF
 
@@ -148,3 +148,6 @@ listOp prefix = liftF $ ListOp prefix id
 
 bucketsOp :: StoreOp [Bucket]
 bucketsOp = liftF $ BucketsOp id
+
+dupesOp :: StoreOp [Bucket]
+dupesOp = liftF $ DupesOp id
