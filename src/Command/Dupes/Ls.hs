@@ -29,16 +29,14 @@ parser = Options
      <> help "Show only duplicate files." )
 
 run :: Options -> IO ()
-run (Options {_optShowDupesOnly=False}) = listDupes $ \_ -> True
-run (Options {_optShowDupesOnly=True }) = listDupes $ \(Bucket _ paths) -> (1 < Set.size paths)
+run (Options {_optShowDupesOnly=False}) = printListing bucketsOp
+run (Options {_optShowDupesOnly=True }) = printListing dupesOp
 
-listDupes :: (Bucket -> Bool) -> IO ()
-listDupes f = recordTelemetry $ do
+printListing :: StoreOp [Bucket] -> IO ()
+printListing op = recordTelemetry $ do
   repo <- Repo.get
-  buckets <- runStoreOp (getStore repo) bucketsOp
-
-  foldM printAndInc 0 $ filter f buckets
-
+  buckets <- runStoreOp (getStore repo) op
+  foldM printAndInc 0 buckets
   where
     printAndInc counter bucket = printBucket bucket >> return (counter + 1)
 
