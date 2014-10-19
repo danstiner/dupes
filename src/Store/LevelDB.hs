@@ -86,7 +86,7 @@ storeOpToDBAction (Free (GetOp path f)) = Level.withKeySpace dupePathKeySpace $
 storeOpToDBAction (Free (PutOp path key t)) = do
   existing <- Level.withKeySpace dupeBucketKeySpace $ Level.get encKey
   case existing of
-    Nothing -> Level.withKeySpace dupeBucketKeySpace $Level.put encKey encPath
+    Nothing -> Level.withKeySpace dupeBucketKeySpace $ Level.put encKey encPath
     Just prev -> addDupeEntry prev
   Level.withKeySpace dupePathKeySpace $ Level.put encPath encKey
   storeOpToDBAction t
@@ -102,14 +102,14 @@ storeOpToDBAction (Free (PutOp path key t)) = do
 
 storeOpToDBAction (Free (RmOp path t)) = (Level.delete (encodePathKey path)) >> storeOpToDBAction t
 storeOpToDBAction (Free (ListOp prefix f)) = do
-  items <- Level.withKeySpace dupePathKeySpace $ Level.withSnapshot $ Level.scan (encodePathKey prefix) Level.queryItems
+  items <- Level.withKeySpace dupePathKeySpace $ Level.scan (encodePathKey prefix) Level.queryItems
   storeOpToDBAction . f . rights $ map (decodePathKey . fst) items
 storeOpToDBAction (Free (DupesOp f)) =
   scanDupeBuckets >>= storeOpToDBAction . f
 
 scanDupeBuckets :: Level.LevelDBT IO [Bucket]
 scanDupeBuckets = do
-  dupeItems <- Level.withSnapshot $ Level.withKeySpace dupeDupesKeySpace $ Level.scan dupeBucketPrefix Level.queryItems
+  dupeItems <- Level.withKeySpace dupeDupesKeySpace $ Level.scan dupeBucketPrefix Level.queryItems
   let dupeDecodedEntries = map decodeDupeBucketEntry dupeItems
   dupeEntries <- lift $ logLefts logTag WARNING dupeDecodedEntries
   return $ map toBucket $ List.groupBy (\a b -> fst a == fst b) dupeEntries
