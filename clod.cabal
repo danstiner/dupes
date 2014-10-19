@@ -18,6 +18,7 @@ executable clod
   Hs-Source-Dirs:      src
   Main-Is:             Main.hs
   GHC-Options:         -Wall -threaded -O3
+  GHC-Prof-Options:    -fprof-auto "-with-rtsopts=-N -p -s -i0.1"
   Build-Depends:       base >= 4.5 && < 4.8
                      , base16-bytestring
                      , bytestring
