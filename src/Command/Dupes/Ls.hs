@@ -16,7 +16,7 @@ import qualified Data.Set as Set
 import System.TimeIt as TimeIt
 
 data Options = Options
-  { _optShowDupesOnly :: Bool }
+  { _optAll :: Bool }
 
 parserInfo :: ParserInfo Options
 parserInfo = info parser
@@ -25,12 +25,12 @@ parserInfo = info parser
 parser :: Parser Options
 parser = Options
   <$> switch
-      ( long "dupe-only"
-     <> help "Show only duplicate files." )
+      ( long "all"
+     <> help "Show not just duplicate files." )
 
 run :: Options -> IO ()
-run (Options {_optShowDupesOnly=False}) = printListing bucketsOp
-run (Options {_optShowDupesOnly=True }) = printListing dupesOp
+run (Options {_optAll=True}) = printListing bucketsOp
+run (Options {_optAll=False}) = printListing dupesOp
 
 printListing :: StoreOp [Bucket] -> IO ()
 printListing op = recordTelemetry $ do
@@ -38,7 +38,7 @@ printListing op = recordTelemetry $ do
   buckets <- runStoreOp (getStore repo) op
   foldM printAndInc 0 buckets
   where
-    printAndInc counter bucket = printBucket bucket >> return (counter + 1)
+    printAndInc n bucket = printBucket bucket >> (return $! n + 1)
 
 recordTelemetry :: IO Word64 -> IO ()
 recordTelemetry m = do
