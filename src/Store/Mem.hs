@@ -14,7 +14,7 @@ import Prelude
 import qualified Data.Map.Strict as Map
 
 data DupeStore = DupeStore { pathStore :: DupePathsStore, bucketStore :: DupeBucketStore }
-type DupePathsStore = Map PathKey PathKey
+type DupePathsStore = Map PathKey BucketKey
 type DupeBucketStore = Map BucketKey (Set PathKey)
 
 evalStoreOp :: StoreOp r -> r
@@ -25,7 +25,7 @@ runStoreOp (Pure r) = return r
 runStoreOp (Free (GetOp key f)) = runStoreOp . f . (Map.lookup key) . pathStore =<< get
 runStoreOp (Free (PutOp path key t)) = do
   (DupeStore paths buckets) <- get
-  put (DupeStore (Map.insert path path paths) (Map.insertWith Set.union key (Set.singleton path) buckets))
+  put (DupeStore (Map.insert path key paths) (Map.insertWith Set.union key (Set.singleton path) buckets))
   runStoreOp t
 runStoreOp (Free (RmOp key t)) = do
   (DupeStore paths buckets) <- get

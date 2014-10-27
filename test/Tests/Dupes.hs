@@ -21,13 +21,13 @@ storeOpContract f = [
 
 test_PutGet :: (forall r . StoreOp r -> IO r) -> Test
 test_PutGet f = testCase "Put then get path" $ do
-  f actions >>= assertEqual "Got value is put value" (Just testPathKey)
+  f actions >>= assertEqual "Got value is put value" (Just bucketKey)
   where
-    testPathKey = toPathKey "test_path"
+    pathKey = toPathKey "test_path"
     bucketKey = CI.nil
     actions = do
-      putOp testPathKey bucketKey
-      getOp testPathKey
+      putOp pathKey bucketKey
+      getOp pathKey
 
 test_PutList :: (forall r . StoreOp r -> IO r) -> Test
 test_PutList f = testCase "List after put should show one entry for put" $ do

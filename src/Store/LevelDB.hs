@@ -18,6 +18,7 @@ import qualified App
 import Store.Blob ()
 import Store.Repository
 
+import Control.Error.Util (hush)
 import Control.Applicative
 import Control.Monad (liftM)
 import Control.Monad.Free
@@ -82,7 +83,7 @@ runDupesDBT (Store path) = createDB path dupesKeySpace
 storeOpToDBAction :: StoreOp r -> Level.LevelDBT IO r
 storeOpToDBAction (Pure r) = return r
 storeOpToDBAction (Free (GetOp path f)) = Level.withKeySpace dupePathKeySpace $
-  Level.get (encodePathKey path) >>= storeOpToDBAction . f . (const path <$>)
+  Level.get (encodePathKey path) >>= storeOpToDBAction . f . (>>= (hush.decode))
 storeOpToDBAction (Free (PutOp path key t)) = do
   existing <- Level.withKeySpace dupeBucketKeySpace $ Level.get encKey
   case existing of
