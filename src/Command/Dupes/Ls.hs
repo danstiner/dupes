@@ -9,8 +9,7 @@ import Store.LevelDB
 import Store.Repository as Repo
 import Telemetry as Telemetry
 
-import Control.Monad (foldM)
-import Data.Word
+import Control.Monad ( foldM )
 import Options.Applicative
 import qualified Data.Set as Set
 import System.TimeIt as TimeIt
@@ -39,11 +38,9 @@ printListing op = recordTelemetry $ do
   foldM printAndInc 0 buckets
   where
     printAndInc n bucket = printBucket bucket >> (return $! n + 1)
-
-recordTelemetry :: IO Word64 -> IO ()
-recordTelemetry m = do
-  (time, count) <- TimeIt.timeItT m
-  Telemetry.record (DupesLs time count)
+    recordTelemetry m = do
+      (time, count) <- TimeIt.timeItT m
+      Telemetry.record (DupesLs time count)
 
 printBucket :: Bucket -> IO ()
 printBucket = putStrLn . showBucket
