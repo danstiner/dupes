@@ -11,6 +11,7 @@ import Telemetry as Telemetry
 
 import Control.Monad ( foldM )
 import Options.Applicative
+import qualified Data.ByteString.Char8 as C
 import qualified Data.Set as Set
 import System.TimeIt as TimeIt
 
@@ -46,4 +47,4 @@ printBucket :: Bucket -> IO ()
 printBucket = putStrLn . showBucket
   where
     showBucket (Bucket key paths) = show key ++ " " ++ showPaths paths
-    showPaths = Set.fold (\a b -> a ++ " " ++ b) "" . Set.map unPathKey
+    showPaths = Set.fold (\a b -> a ++ " " ++ b) "" . Set.map (C.unpack . unPathKey)

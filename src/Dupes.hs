@@ -36,19 +36,22 @@ import Data.Machine.Interleave
 import Data.Serialize
 import Data.Set (Set)
 import GHC.Generics (Generic)
+import qualified Data.ByteString.Char8 as C
 import qualified Data.ByteString as B
 import qualified Data.ByteString.Lazy as L
 
 data MergedOperation a = LeftOnly a | RightOnly a | Both a deriving (Show, Eq)
 
-newtype PathKey = PathKey { unPathKey :: FilePath } deriving (Eq, Ord, Show)
+type FilePathByteString = C.ByteString
+
+newtype PathKey = PathKey { unPathKey :: FilePathByteString } deriving (Eq, Ord, Show)
 
 instance Serialize PathKey where
   put = put . unPathKey
   get = liftM PathKey get
 
 toPathKey :: FilePath -> PathKey
-toPathKey = PathKey
+toPathKey = PathKey . C.pack
 
 combine :: (Ord a, Eq a) => [a] -> [a] -> [MergedOperation a]
 combine [] [] = []

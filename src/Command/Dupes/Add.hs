@@ -19,6 +19,7 @@ import Data.List ( (\\), sort )
 import Data.Machine hiding ( run )
 import Data.Machine.Interleave
 import Options.Applicative
+import qualified Data.ByteString.Char8 as C
 import qualified Data.ByteString.Lazy as L
 import System.Directory
 import System.FilePath ( (</>) )
@@ -69,7 +70,7 @@ prepMergeOp = repeatedly $ do
     Both pathKey -> yield $ Both (pathKey, undefined)
     RightOnly p -> yield $ RightOnly (p, undefined)
     LeftOnly p -> do
-      mBucketKey <- lift $ calcBucketKey $ unPathKey p
+      mBucketKey <- lift . calcBucketKey . C.unpack $ unPathKey p
       case mBucketKey of
         Just bucketKey -> yield $ LeftOnly (p, bucketKey)
         Nothing -> return ()

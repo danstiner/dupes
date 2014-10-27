@@ -7,13 +7,14 @@ import Dupes
 import Control.Applicative
 import Data.Machine
 import Data.Serialize
+import qualified Data.ByteString.Char8 as C
 
 import Test.Framework
 import Test.Framework.Providers.QuickCheck2 (testProperty)
 import Test.QuickCheck
 
 instance Arbitrary PathKey where
-  arbitrary = PathKey <$> arbitrary
+  arbitrary = PathKey <$> liftA C.pack arbitrary
 
 tests :: [Test]
 tests = [ (testProperty "Rebuilding combined lists is identity" prop_combineAndRebuildIntList)

@@ -12,9 +12,10 @@ import Store.LevelDB
 import Store.Repository as Repo
 
 import Data.List ( isPrefixOf )
-import qualified Data.Set as Set
 import Data.Machine hiding ( run )
 import Options.Applicative
+import qualified Data.ByteString.Char8 as C
+import qualified Data.Set as Set
 
 data Options = Options
   { optStdin :: Bool
@@ -44,7 +45,7 @@ type PathSpec = FilePath
 filterBuckets :: [PathSpec] -> Process Bucket FilePath
 filterBuckets specs = repeatedly $ do
   (Bucket _ pathSet) <- await
-  let (matches, others) = Set.partition (matchSpecs specs) $ Set.map unPathKey pathSet
+  let (matches, others) = Set.partition (matchSpecs specs) $ Set.map (C.unpack . unPathKey) pathSet
   if (Set.null matches && not (Set.null others))
     then return ()
     else mapM_ yield $ Set.elems others

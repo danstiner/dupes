@@ -130,7 +130,7 @@ decodeDupeBucketEntry (key, _) =
     unpack (DupeLevelKey bucketKey pathKey) = (bucketKey, pathKey)
 
 encodePathKey :: PathKey -> Level.Key
-encodePathKey = encode . DupesPathLevelKey . unPathKey
+encodePathKey = unPathKey
 
 decodePathKey :: Level.Key -> Either String PathKey
 decodePathKey key = case decode key of
