@@ -11,12 +11,12 @@ import qualified Blob
 
 data CacheInfoParams = NoCacheInfoParams | CacheInfoParams Int Blob.Id FilePath
 
-instance Read CacheInfoParams where
-  readPrec = do
-    m <- step readPrec
-    i <- step readPrec
-    path <- step readPrec
-    return $ CacheInfoParams m i path
+--instance Read CacheInfoParams where
+--  readPrec = do
+--    m <- step readPrec
+--    i <- step readPrec
+--    path <- step readPrec
+--    return $ CacheInfoParams m i path
 
 
 data Options = Options
@@ -31,7 +31,7 @@ data Options = Options
   --, optAssumeUnchanged :: Bool
   --, optSkipWorkTree :: Bool
   --, optReallyRefresh :: Bool
-  , _optCacheInfo :: CacheInfoParams
+  --, _optCacheInfo :: CacheInfoParams
   --, optVerbose :: Bool
   , _optPath :: [FilePath] }
 
@@ -50,11 +50,11 @@ parser = Options
    <*> switch
       ( long "refresh"
      <> help "Looks at the current index and checks to see if merges or updates are needed by checking stat() information." )
-  <*> option auto
-      ( long "cacheinfo"
-     <> value NoCacheInfoParams
-     <> metavar "<mode> <object> <path>"
-     <> help "Looks at the current index and checks to see if merges or updates are needed by checking stat() information." )
+  -- <*> option auto
+  --    ( long "cacheinfo"
+  --   <> value NoCacheInfoParams
+  --   <> metavar "<mode> <object> <path>"
+  --   <> help "Looks at the current index and checks to see if merges or updates are needed by checking stat() information." )
   <*> many
       ( argument str (metavar "PATH"))
 

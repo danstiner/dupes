@@ -21,6 +21,7 @@ executable clod
   GHC-Prof-Options:  -fprof-auto "-with-rtsopts=-N -p -s -i0.1"
   Build-Depends:       base >= 4.5 && < 4.8
                      , base16-bytestring
+                     , base32-bytestring
                      , bytestring
                      , cereal
                      , containers
@@ -51,6 +52,7 @@ Test-suite pure
   Main-Is:           TestSuite.hs
   Build-Depends:       base >= 4 && < 5
                      , base16-bytestring
+                     , base32-bytestring
                      , bytestring
                      , cereal
                      , containers
@@ -85,6 +87,7 @@ Test-suite external
   GHC-Options:    -threaded -O
   Build-Depends:  base >= 4 && < 5
                   , base16-bytestring
+                  , base32-bytestring
                   , bytestring
                   , cereal
                   , containers

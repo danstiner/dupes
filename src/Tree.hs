@@ -16,7 +16,7 @@ import qualified Blob
 
 import qualified ContentIdentifier as CI
 
-type Id = CI.Id
+type Id = CI.ContentIdentifier
 
 type Mode = Int
 type Filename = String

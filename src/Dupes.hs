@@ -107,7 +107,7 @@ newtype DupesT m a = DupesT { runDupesT :: m a}
 type Dupes a = DupesT Identity a
 
 type BucketType = CI.Type
-type BucketKey = CI.Id
+type BucketKey = CI.ContentIdentifier
 data Bucket = Bucket BucketKey (Set PathKey) deriving (Generic, Show, Eq)
 
 execDupesT :: (Monad m) => DupesT m a -> m a

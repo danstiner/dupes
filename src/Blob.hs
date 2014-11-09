@@ -18,7 +18,7 @@ import qualified ContentIdentifier as CI
 idType :: CI.Type
 idType = CI.SHA3_256
 
-type Id = CI.Id
+type Id = CI.ContentIdentifier
 data Data = Bytes B.ByteString | LazyBytes L.ByteString deriving (Show, Eq)
 
 data Blob = Blob Id Data deriving (Show, Eq)
@@ -37,5 +37,5 @@ createId d = case d of
 recreateLazy :: Blob.Id -> L.ByteString -> Blob
 recreateLazy i d = Blob i (LazyBytes d)
 
-toHexString :: CI.Id -> String
+toHexString :: CI.ContentIdentifier -> String
 toHexString = show
