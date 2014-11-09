@@ -1,7 +1,8 @@
 {-# LANGUAGE Rank2Types #-}
 
 module Command.ParseUtil (
-	pathspecSource
+    pathspecSource
+  , PathSpec
 ) where
 
 import Control.Monad
@@ -10,7 +11,9 @@ import Data.List ( delete )
 import Data.Machine
 import System.IO
 
-pathspecSource :: [FilePath] -> Bool -> SourceT IO FilePath
+type PathSpec = FilePath
+
+pathspecSource :: [PathSpec] -> Bool -> SourceT IO PathSpec
 pathspecSource argPaths readMoreFromStdin =
   if (readMoreFromStdin || elem stdinFilename argPaths)
     then stdinAsLinesSource ~> prepended filteredArgPaths
@@ -19,7 +22,7 @@ pathspecSource argPaths readMoreFromStdin =
     filteredArgPaths = delete stdinFilename argPaths
     stdinFilename = "-"
 
-stdinAsLinesSource :: SourceT IO FilePath
+stdinAsLinesSource :: SourceT IO String
 stdinAsLinesSource = construct $ stdinLinesPlan
   where
     stdinLinesPlan = do

@@ -40,8 +40,6 @@ run opt = do
   buckets <- runStoreOp (getStore repo) bucketsOp
   runT_ $ source buckets ~> filterBuckets pathspecs ~> autoM putStrLn
 
-type PathSpec = FilePath
-
 filterBuckets :: [PathSpec] -> Process Bucket FilePath
 filterBuckets specs = repeatedly $ do
   (Bucket _ pathSet) <- await

@@ -46,21 +46,21 @@ parser = Options
       ( argument str (metavar "PATH") )
 
 run :: Options -> IO ()
-run opt = Repo.get >>= runT_ . machine
+run opt = runT_ . machine =<< Repo.get
   where
     machine repo = pathspecs ~> processPaths (Repo.getStore repo)
     pathspecs = pathspecSource (optPaths opt) (optStdin opt)
 
-processPaths :: Store -> ProcessT IO FilePath ()
+processPaths :: Store -> ProcessT IO PathSpec ()
 processPaths store = repeatedly $ await >>= lift . (processPath store)
 
-processPath :: Store -> FilePath -> IO ()
-processPath s path = runT_ . runDBActions $ (traverse ~> mergePaths ~> prep ~> store)
+processPath :: Store -> PathSpec -> IO ()
+processPath s path = runT_ . runDBActions $ (traverse ~> mergeExisting ~> prep ~> store)
   where
     runDBActions = fitM (runDupesDBT s)
     prep = fitM lift prepMergeOp
     traverse = fitM lift (traversePath path ~> toPathKeyP)
-    mergePaths = fitM storeOpToDBAction (mergeProcess path)
+    mergeExisting = fitM storeOpToDBAction (mergeProcess path)
     store = fitM storeOpToDBAction (storeFree)
 
 prepMergeOp :: ProcessT IO (MergedOperation PathKey) (MergedOperation (PathKey, BucketKey))
