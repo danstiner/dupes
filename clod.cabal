@@ -22,7 +22,7 @@ executable clod
   Build-Depends:       base >= 4.5 && < 4.8
                      , base16-bytestring
                      , base32-bytestring
-                     , bytestring
+                     , bytestring >= 0.10.4.0
                      , cereal
                      , containers
                      , cryptohash
@@ -53,7 +53,7 @@ Test-suite pure
   Build-Depends:       base >= 4 && < 5
                      , base16-bytestring
                      , base32-bytestring
-                     , bytestring
+                     , bytestring >= 0.10.4.0
                      , cereal
                      , containers
                      , cryptohash
@@ -88,7 +88,7 @@ Test-suite external
   Build-Depends:  base >= 4 && < 5
                   , base16-bytestring
                   , base32-bytestring
-                  , bytestring
+                  , bytestring >= 0.10.4.0
                   , cereal
                   , containers
                   , cryptohash
