@@ -16,14 +16,14 @@ tests = [ (testProperty "concatenation of result equal to input" prop_concat)
 
 prop_concat :: [Int] -> Test.QuickCheck.Property.Result
 prop_concat xs =
-  MkResult (Just $ concat grouped == xs) True msg False False [] []
+  mkResult (Just $ concat grouped == xs) msg
   where
     grouped = run (source xs ~> groupBy (==))
     msg = "grouping: " ++ (show grouped)
 
 prop_equalelem :: [Int] -> Test.QuickCheck.Property.Result
 prop_equalelem xs =
-  MkResult (Just $ all sublistEq grouped) True msg False False [] []
+  mkResult (Just $ all sublistEq grouped) msg
   where
     grouped = run (source xs ~> groupBy (==))
     msg = "grouping: " ++ (show grouped)
@@ -32,7 +32,7 @@ prop_equalelem xs =
 
 prop_adjacentsNotEqual :: [Int] -> Test.QuickCheck.Property.Result
 prop_adjacentsNotEqual xs =
-  MkResult (Just $ adjNotEqual grouped) True msg False False [] []
+  mkResult (Just $ adjNotEqual grouped) msg
   where
     grouped = run (source xs ~> groupBy (==))
     msg = "grouping: " ++ (show grouped)
@@ -40,3 +40,5 @@ prop_adjacentsNotEqual xs =
     adjNotEqual _ = True
     eq (a:_) (b:_) = a == b
     eq _ _ = False
+
+mkResult result msg = MkResult result True msg Nothing False [] []

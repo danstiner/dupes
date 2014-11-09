@@ -75,7 +75,7 @@ Test-suite pure
                      , transformers
 
                      , HUnit
-                     , QuickCheck
+                     , QuickCheck >= 2.7
                      , test-framework
                      , test-framework-hunit
                      , test-framework-quickcheck2
