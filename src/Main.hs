@@ -1,6 +1,5 @@
 
 import Options.Applicative
-import System.Directory as Directory
 import System.Log.Logger
 
 import qualified App ()
@@ -26,11 +25,10 @@ main = do
 
 runWithOptions :: Options -> IO ()
 runWithOptions options = do
-  appUserDir <- Settings.getAppDir
-  Directory.createDirectoryIfMissing False appUserDir
+  appDir <- Settings.getAndCreateAppDir
 
-  Logging.register appUserDir ERROR
-  Telemetry.register appUserDir
+  Logging.register appDir ERROR
+  Telemetry.register appDir
 
   Telemetry.record Boot
 
