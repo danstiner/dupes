@@ -15,14 +15,14 @@ tests = [ (testProperty "concatenation of result equal to input" prop_groupBy_co
         , (testProperty "adjacent sublists do not contain equal elements" prop_groupBy_adjacentsNotEqual)]
 
 prop_groupBy_concat :: [Int] -> Property.Result
-prop_concat xs =
+prop_groupBy_concat xs =
   mkResult (Just $ concat grouped == xs) msg
   where
     grouped = run (source xs ~> groupBy (==))
     msg = "grouping: " ++ (show grouped)
 
 prop_groupBy_equalelem :: [Int] -> Property.Result
-prop_equalelem xs =
+prop_groupBy_equalelem xs =
   mkResult (Just $ all sublistEq grouped) msg
   where
     grouped = run (source xs ~> groupBy (==))
@@ -31,7 +31,7 @@ prop_equalelem xs =
     sublistEq (x:xs) = all (==x) xs
 
 prop_groupBy_adjacentsNotEqual :: [Int] -> Property.Result
-prop_adjacentsNotEqual xs =
+prop_groupBy_adjacentsNotEqual xs =
   mkResult (Just $ adjNotEqual grouped) msg
   where
     grouped = run (source xs ~> groupBy (==))
