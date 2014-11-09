@@ -7,21 +7,21 @@ import Data.Machine
 import Test.Framework
 import Test.Framework.Providers.QuickCheck2 (testProperty)
 import Test.QuickCheck
-import Test.QuickCheck.Property
+import Test.QuickCheck.Property as Property
 
 tests :: [Test]
-tests = [ (testProperty "concatenation of result equal to input" prop_concat)
-        , (testProperty "sublists contain only equal elements" prop_equalelem)
-        , (testProperty "adjacent sublists do not contain equal elements" prop_adjacentsNotEqual)]
+tests = [ (testProperty "concatenation of result equal to input" prop_groupBy_concat)
+        , (testProperty "sublists contain only equal elements" prop_groupBy_equalelem)
+        , (testProperty "adjacent sublists do not contain equal elements" prop_groupBy_adjacentsNotEqual)]
 
-prop_concat :: [Int] -> Test.QuickCheck.Property.Result
+prop_groupBy_concat :: [Int] -> Property.Result
 prop_concat xs =
   mkResult (Just $ concat grouped == xs) msg
   where
     grouped = run (source xs ~> groupBy (==))
     msg = "grouping: " ++ (show grouped)
 
-prop_equalelem :: [Int] -> Test.QuickCheck.Property.Result
+prop_groupBy_equalelem :: [Int] -> Property.Result
 prop_equalelem xs =
   mkResult (Just $ all sublistEq grouped) msg
   where
@@ -30,7 +30,7 @@ prop_equalelem xs =
     sublistEq [] = True
     sublistEq (x:xs) = all (==x) xs
 
-prop_adjacentsNotEqual :: [Int] -> Test.QuickCheck.Property.Result
+prop_groupBy_adjacentsNotEqual :: [Int] -> Property.Result
 prop_adjacentsNotEqual xs =
   mkResult (Just $ adjNotEqual grouped) msg
   where
@@ -41,4 +41,5 @@ prop_adjacentsNotEqual xs =
     eq (a:_) (b:_) = a == b
     eq _ _ = False
 
+mkResult :: Maybe Bool -> String -> Property.Result
 mkResult result msg = MkResult result True msg Nothing False [] []
