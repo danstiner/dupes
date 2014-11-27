@@ -1,3 +1,5 @@
+{-# LANGUAGE OverloadedStrings #-}
+
 module Tests.Store.LevelDBExternal (externalTests) where
 
 import Tests.Dupes (storeOpContract)
@@ -10,7 +12,7 @@ import System.IO.Temp
 import Test.Framework
 
 keySpace :: KeySpace
-keySpace = C.pack "Tests.Store.LevelDB"
+keySpace = "Tests.Store.LevelDB"
 
 externalTests :: [Test]
 externalTests = storeOpContract evalStoreOp

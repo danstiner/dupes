@@ -1,6 +1,7 @@
 {-# LANGUAGE ConstraintKinds #-}
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE OverloadedStrings #-}
 
 module Store.LevelDB (
     runLevelDBIndex
@@ -54,13 +55,13 @@ logTag :: String
 logTag = App.logTag ++ ".Store.LevelDB"
 
 indexKeySpace,dupesKeySpace :: KeySpace
-indexKeySpace = C.pack "Index"
-dupesKeySpace = C.pack "Dupes"
+indexKeySpace = "Index"
+dupesKeySpace = "Dupes"
 
 dupePathKeySpace,dupeBucketKeySpace,dupeDupesKeySpace :: KeySpace
-dupePathKeySpace = C.pack "Path"
-dupeBucketKeySpace = C.pack "Bucket"
-dupeDupesKeySpace = C.pack "Dupe"
+dupePathKeySpace = "Path"
+dupeBucketKeySpace = "Bucket"
+dupeDupesKeySpace = "Dupe"
 
 dupeBucketPrefix :: ByteString
 dupeBucketPrefix = C.empty
