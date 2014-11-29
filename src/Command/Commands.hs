@@ -21,7 +21,7 @@ data Command
 
 parser :: Parser Command
 parser = subparser (
-  <> ( command "dupe"         (fmap Dupes Dupes.parserInfo) )
+     ( command "dupe"         (fmap Dupes Dupes.parserInfo) )
   <> ( command "dupes"        (fmap Dupes Dupes.parserInfo) )
   <> ( command "hash-object"  (fmap HashObject HashObject.parserInfo) )
   <> ( command "init"         (fmap Init Init.parserInfo) )
