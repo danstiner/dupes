@@ -4,7 +4,7 @@ module Settings (
 ) where
 
 import System.Directory as Dir
-import System.FilePath ( (</>) )
+import System.FilePath  ((</>))
 
 getAndCreateAppDir :: IO FilePath
 getAndCreateAppDir = do
@@ -13,4 +13,4 @@ getAndCreateAppDir = do
   return dir
 
 getAppDir :: IO FilePath
-getAppDir = Dir.getHomeDirectory >>= return . (</> ".clod")
+getAppDir = fmap (</> ".clod") Dir.getHomeDirectory

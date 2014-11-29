@@ -15,7 +15,7 @@ type PathSpec = FilePath
 
 pathspecSource :: [PathSpec] -> Bool -> SourceT IO PathSpec
 pathspecSource argPaths readMoreFromStdin =
-  if (readMoreFromStdin || elem stdinFilename argPaths)
+  if readMoreFromStdin || elem stdinFilename argPaths
     then stdinAsLinesSource ~> prepended filteredArgPaths
     else source filteredArgPaths
   where
@@ -23,11 +23,10 @@ pathspecSource argPaths readMoreFromStdin =
     stdinFilename = "-"
 
 stdinAsLinesSource :: SourceT IO String
-stdinAsLinesSource = construct $ stdinLinesPlan
-  where
-    stdinLinesPlan = do
-      eof <- lift isEOF
-      unless eof $ do
-        line <- lift getLine
-        yield line
-        stdinLinesPlan
+stdinAsLinesSource = construct stdinLinesPlan where
+  stdinLinesPlan = do
+    eof <- lift isEOF
+    unless eof $ do
+      line <- lift getLine
+      yield line
+      stdinLinesPlan

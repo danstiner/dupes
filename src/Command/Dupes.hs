@@ -21,9 +21,9 @@ parserInfo = info parser
 
 parser :: Parser Options
 parser = subparser (
-     ( command "add" (fmap Add AddDupe.parserInfo) )
-  <> ( command "keep" (fmap Keep KeepDupes.parserInfo) )
-  <> ( command "ls" (fmap Ls LsDupes.parserInfo) )
+     command "add" (fmap Add AddDupe.parserInfo)
+  <> command "keep" (fmap Keep KeepDupes.parserInfo)
+  <> command "ls" (fmap Ls LsDupes.parserInfo)
   )
 
 run :: Options -> IO ()

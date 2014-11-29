@@ -3,11 +3,11 @@ module Logging (
   , register
 ) where
 
-import Data.Either as Either
-import System.FilePath ( (</>) )
+import Data.Either                 as Either
+import System.FilePath             ((</>))
 import System.IO
 import System.Log.Handler.Log4jXML as Log4j
-import System.Log.Handler.Simple as SimpleLog
+import System.Log.Handler.Simple   as SimpleLog
 import System.Log.Logger
 
 register :: FilePath -> Priority -> IO ()
@@ -17,7 +17,7 @@ register outfolder p = do
   updateGlobalLogger rootLoggerName (setLevel p . setHandlers [app, std])
 
 stderrLogger :: Priority -> IO (GenericHandler Handle)
-stderrLogger p = streamHandler stderr p
+stderrLogger = streamHandler stderr
 
 logLefts :: String -> Priority -> [Either String a] -> IO [a]
 logLefts logname pri xs =

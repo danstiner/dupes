@@ -16,7 +16,7 @@ instance Arbitrary DupesPathLevelKey where
   arbitrary = DupesPathLevelKey <$> arbitrary
 
 tests :: [Test]
-tests = [ (testProperty "Serialized DupesPathLevelKey order as normal" prop_serializedSimplePathKeysOrder) ]
+tests = [testProperty "Serialized DupesPathLevelKey order as normal" prop_serializedSimplePathKeysOrder]
 
 prop_orderedSerialization :: (Serialize a, Ord a) => [a] -> Bool
 prop_orderedSerialization = isSorted . endecode

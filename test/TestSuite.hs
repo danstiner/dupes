@@ -1,10 +1,10 @@
 module Main where
 
+import           Test.Framework      (defaultMain, testGroup)
 import qualified Tests.Command.Dupes as Dupes
-import qualified Tests.Machine as Machine
-import qualified Tests.Store.Mem as Mem
+import qualified Tests.Machine       as Machine
 import qualified Tests.Store.LevelDB as LevelDB
-import           Test.Framework (defaultMain, testGroup)
+import qualified Tests.Store.Mem     as Mem
 
 main :: IO ()
 main = defaultMain tests

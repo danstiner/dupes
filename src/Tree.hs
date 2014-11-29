@@ -9,10 +9,10 @@ module Tree (
   , toBlob
 ) where
 
-import Control.Monad ( forM_ )
-import Crypto.Hash.SHA3 ()
-import Data.Serialize
 import qualified Blob
+import           Control.Monad     (forM_)
+import           Crypto.Hash.SHA3  ()
+import           Data.Serialize
 
 import qualified ContentIdentifier as CI
 
@@ -30,16 +30,14 @@ instance Serialize Tree where
     put (Tree ident entries) = do
         put ident
         forM_ entries put
-    get = do
-        get
+    get = get
 
 instance Serialize Entry where
     put (Entry mode filename key) = do
         put mode
         put filename
         put key
-    get = do
-        get
+    get = get
 
 create :: Entries -> Tree
 create entries = Tree hash entries
@@ -47,7 +45,7 @@ create entries = Tree hash entries
         hash = CI.createStrict CI.SHA3_256 $ encode entries
 
 createEntry :: Filename -> Mode -> Blob.Id -> Entry
-createEntry f m i = Entry m f i
+createEntry f m = Entry m f
 
 toBlob :: Tree -> Blob.Blob
 toBlob = Blob.create . encode

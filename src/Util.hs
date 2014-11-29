@@ -1,11 +1,11 @@
 module Util (
-	getStore
+  getStore
 ) where
 
 import qualified Settings
-import Store.LevelDB as LevelDB
+import           Store.LevelDB   as LevelDB
 
-import System.FilePath ( (</>) )
+import           System.FilePath ((</>))
 
 getStore :: IO LevelDB.Store
 getStore = do

@@ -19,6 +19,7 @@ import qualified App
 import Store.Blob ()
 import Store.Repository
 
+import Data.Function (on)
 import Control.Error.Util (hush)
 import Control.Applicative
 import Control.Monad (liftM)
@@ -97,12 +98,12 @@ storeOpToDBAction (Free (PutOp path key t)) = do
     encKey  = encodeSingletonBucketKey key
     encDupeKey = encodeDupeBucketKey key path
     addDupeEntry prevVal = Level.withKeySpace dupeDupesKeySpace $ do
-      case (decodePathKey prevVal) of
+      case decodePathKey prevVal of
         Left msg -> lift $ errorM logTag msg >> errorM logTag (show prevVal)
         Right prevPath -> Level.put (encodeDupeBucketKey key prevPath) C.empty
       Level.put encDupeKey C.empty
 
-storeOpToDBAction (Free (RmOp path t)) = (Level.delete (encodePathKey path)) >> storeOpToDBAction t
+storeOpToDBAction (Free (RmOp path t)) = Level.delete (encodePathKey path) >> storeOpToDBAction t
 storeOpToDBAction (Free (ListOp prefix f)) = do
   items <- Level.withKeySpace dupePathKeySpace $ Level.scan (encodePathKey prefix) Level.queryItems
   storeOpToDBAction . f . rights $ map (decodePathKey . fst) items
@@ -114,7 +115,7 @@ scanDupeBuckets = do
   dupeItems <- Level.withKeySpace dupeDupesKeySpace $ Level.scan dupeBucketPrefix Level.queryItems
   let dupeDecodedEntries = map decodeDupeBucketEntry dupeItems
   dupeEntries <- lift $ logLefts logTag WARNING dupeDecodedEntries
-  return $ map toBucket $ List.groupBy (\a b -> fst a == fst b) dupeEntries
+  return $ map toBucket $ List.groupBy ((==) `on` fst) dupeEntries
   where
     toBucket xs = Bucket (fst $ head xs) (Set.fromList $ map snd xs)
 

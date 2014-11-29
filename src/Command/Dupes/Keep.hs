@@ -11,6 +11,7 @@ import Dupes
 import Store.LevelDB
 import Store.Repository as Repo
 
+import Control.Monad (unless)
 import Data.List ( isPrefixOf )
 import Data.Machine hiding ( run )
 import Options.Applicative
@@ -44,12 +45,11 @@ filterBuckets :: [PathSpec] -> Process Bucket FilePath
 filterBuckets specs = repeatedly $ do
   (Bucket _ pathSet) <- await
   let (matches, others) = Set.partition (matchSpecs specs) $ Set.map (C.unpack . unPathKey) pathSet
-  if (Set.null matches && not (Set.null others))
-    then return ()
-    else mapM_ yield $ Set.elems others
+  unless (Set.null matches && not (Set.null others))
+    $ mapM_ yield $ Set.elems others
 
 matchSpecs :: [PathSpec] -> FilePath -> Bool
-matchSpecs specs path = and $ map (\s -> matchSpec s path) specs
+matchSpecs specs path = all (`matchSpec` path) specs
 
 matchSpec :: PathSpec -> FilePath -> Bool
-matchSpec spec path = isPrefixOf spec path
+matchSpec = isPrefixOf

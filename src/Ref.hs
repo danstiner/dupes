@@ -14,10 +14,10 @@ newtype Id = String String deriving (Eq, Show, Ord)
 data Ref = Ref Id Blob.Id deriving (Show, Eq)
 
 createId :: String -> Ref.Id
-createId name = String name
+createId = String
 
 create :: Id -> Blob.Id -> Ref
-create name refid = Ref name refid
+create = Ref
 
 toString :: Id -> String
 toString (String s) = s

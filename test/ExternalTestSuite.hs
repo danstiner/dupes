@@ -1,7 +1,7 @@
 module Main where
 
+import           Test.Framework              (defaultMain, testGroup)
 import qualified Tests.Store.LevelDBExternal as LevelDB
-import           Test.Framework (defaultMain, testGroup)
 
 main :: IO ()
 main = defaultMain tests

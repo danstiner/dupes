@@ -8,21 +8,22 @@ module Plumbing (
 
 import qualified App
 
-import qualified Data.ByteString as B
-import Control.Monad.Trans.State (evalStateT)
-import System.Directory ( doesDirectoryExist, getDirectoryContents )
-import System.FilePath ( (</>) )
-import System.Log.Logger
-import Control.Exception
-import Data.Maybe (catMaybes)
-import System.IO.Error
-import Control.Monad (guard)
+import           Control.Exception
+import           Control.Monad             (guard)
+import           Control.Monad.Trans.State (evalStateT)
+import qualified Data.ByteString           as B
+import           Data.Maybe                (catMaybes)
+import           System.Directory          (doesDirectoryExist,
+                                            getDirectoryContents)
+import           System.FilePath           ((</>))
+import           System.IO.Error
+import           System.Log.Logger
 
-import Store.Blob as BlobStore
-import Store.Ref as RefStore
 import qualified Blob
-import qualified Tree
 import qualified Ref
+import           Store.Blob                as BlobStore
+import           Store.Ref                 as RefStore
+import qualified Tree
 
 
 logTag :: String
@@ -60,9 +61,9 @@ listDirectory path = do
 createTreeEntry :: (BlobStore a) => FilePath -> FilePath -> a -> IO (Maybe Tree.Entry)
 createTreeEntry parentPath name store = do
     isDir <- doesDirectoryExist fullpath
-    case isDir of
-        True -> createDirEntry
-        False -> createFileEntry
+    if isDir
+        then createDirEntry
+        else createFileEntry
     where
         fullpath = parentPath </> name
         createDirEntry = do
@@ -72,7 +73,7 @@ createTreeEntry parentPath name store = do
             result <- tryJust (guard . isDoesNotExistError) (blobFromPath fullpath)
             case result of
                 Left e -> do
-                    noticeM logTag ("Problem reading file: " ++ fullpath ++", exception: " ++ (show e))
+                    noticeM logTag ("Problem reading file: " ++ fullpath ++ ", exception: " ++ show e)
                     return Nothing
                 Right blob -> do
                     evalStateT (BlobStore.put blob) store

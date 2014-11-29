@@ -7,7 +7,7 @@ module Command.Dupes.Ls (
 import Dupes
 import Store.LevelDB
 import Store.Repository as Repo
-import Telemetry as Telemetry
+import Telemetry
 
 import Control.Monad ( foldM )
 import Options.Applicative

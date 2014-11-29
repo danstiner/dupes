@@ -10,10 +10,10 @@ module Blob (
   , toHexString
 ) where
 
-import qualified Data.ByteString as B
+import qualified Data.ByteString      as B
 import qualified Data.ByteString.Lazy as L
 
-import qualified ContentIdentifier as CI
+import qualified ContentIdentifier    as CI
 
 idType :: CI.Type
 idType = CI.SHA3_256

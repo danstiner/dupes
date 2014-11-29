@@ -4,15 +4,15 @@ module Telemetry (
   , Event (..)
 ) where
 
-import Control.Applicative (Applicative(..))
-import Control.Monad       (liftM, ap)
+import Control.Applicative         (Applicative (..))
+import Control.Monad               (ap, liftM)
 import Control.Monad.Trans
 import Data.IORef
 import Data.UUID
-import Data.UUID.V4 as UUIDv4
+import Data.UUID.V4                as UUIDv4
 import Data.Word
-import System.FilePath  ((</>))
-import System.IO.Unsafe (unsafePerformIO)
+import System.FilePath             ((</>))
+import System.IO.Unsafe            (unsafePerformIO)
 import System.Log.Handler.Log4jXML as Log4j
 import System.Log.Logger
 
@@ -63,7 +63,7 @@ execTelemetry :: (Monad m) => TelemetryT m a -> m a
 execTelemetry = runTelemetryT
 
 instance TelemetryMonad IO where
-  emit event = lift decorated >>= lift . (infoM tag) . show
+  emit event = lift decorated >>= lift . infoM tag . show
     where
       decorated = do
         sessId <- getSessionId

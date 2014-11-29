@@ -1,7 +1,7 @@
+{-# LANGUAGE DeriveGeneric              #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
-{-# LANGUAGE MultiParamTypeClasses #-}
-{-# LANGUAGE DeriveGeneric #-}
-{-# LANGUAGE Rank2Types #-}
+{-# LANGUAGE MultiParamTypeClasses      #-}
+{-# LANGUAGE Rank2Types                 #-}
 
 module Dupes (
     Bucket (..)
@@ -25,20 +25,20 @@ module Dupes (
   , getOp, putOp, rmOp, listOp, bucketsOp, dupesOp
 ) where
 
-import ContentIdentifier as CI
+import           ContentIdentifier       as CI
 
-import Control.Monad
-import Control.Monad.Free
-import Control.Monad.Trans
-import Data.Functor.Identity
-import Data.Machine hiding ( run )
-import Data.Machine.Interleave
-import Data.Serialize
-import Data.Set (Set)
-import GHC.Generics (Generic)
-import qualified Data.ByteString.Char8 as C
-import qualified Data.ByteString as B
-import qualified Data.ByteString.Lazy as L
+import           Control.Monad
+import           Control.Monad.Free
+import           Control.Monad.Trans
+import qualified Data.ByteString         as B
+import qualified Data.ByteString.Char8   as C
+import qualified Data.ByteString.Lazy    as L
+import           Data.Functor.Identity
+import           Data.Machine            hiding (run)
+import           Data.Machine.Interleave
+import           Data.Serialize
+import           Data.Set                (Set)
+import           GHC.Generics            (Generic)
 
 data MergedOperation a = LeftOnly a | RightOnly a | Both a deriving (Show, Eq)
 
@@ -92,16 +92,10 @@ mergeOrderedStreamsWye= repeatedly start
         Nothing -> yield (LeftOnly l) >> awaits JustX >>= yield . LeftOnly
 
     mergeStep :: (Ord a) => a -> a -> PlanT (MY a a) (MergedOperation a) m ()
-    mergeStep l r =
-      if l == r
-        then yield (Both l)
-        else if l < r
-          then do
-            yield (LeftOnly l)
-            left r
-          else do
-            yield (RightOnly r)
-            right l
+    mergeStep l r
+      | l == r = yield (Both l)
+      | l < r = yield (LeftOnly l) >> left r
+      | otherwise = yield (RightOnly r) >> right l
 
 newtype DupesT m a = DupesT { runDupesT :: m a}
 type Dupes a = DupesT Identity a

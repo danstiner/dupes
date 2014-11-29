@@ -26,8 +26,7 @@ logTag :: String
 logTag = App.logTag ++ ".Store.Flat"
 
 createStore :: FilePath -> Store
-createStore path = Store path
-
+createStore = Store 
 buildFilepath :: FilePath -> Blob.Id -> FilePath
 buildFilepath path key =
   parentDir </> name
@@ -44,7 +43,7 @@ buildFilepathParts path key =
 instance BlobStore Store where
     get key = do
         (Store storePath) <- State.get
-        lift $ infoM logTag ("get: " ++ (Blob.toString key))
+        lift $ infoM logTag ("get: " ++ Blob.toString key)
         v <- lift $ L.readFile $ buildFilepath storePath key
         return $ Just (Blob.recreateLazy key v)
 
@@ -53,7 +52,7 @@ instance BlobStore Store where
         let (parentDir, name) = buildFilepathParts storePath key
         let path = parentDir </> name
         lift $ do
-            infoM logTag ("put: " ++ (Blob.toString key))
+            infoM logTag ("put: " ++ Blob.toString key)
             Directory.createDirectoryIfMissing True parentDir
             writeToFile path val
         where
@@ -63,5 +62,5 @@ instance BlobStore Store where
     delete key = do
         (Store storePath) <- State.get
         lift $ do
-            infoM logTag ("delete: " ++ (Blob.toString key))
+            infoM logTag ("delete: " ++ Blob.toString key)
             Directory.removeFile $ buildFilepath storePath key

@@ -1,4 +1,3 @@
-{-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 
 module Index (
@@ -8,7 +7,6 @@ module Index (
 ) where
 
 import Control.Monad.Trans
-
 
 type RelativeFilePath = FilePath
 

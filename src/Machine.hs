@@ -1,11 +1,15 @@
 {-# LANGUAGE RankNTypes #-}
 
 module Machine (
-  groupBy
+    group
+  , groupBy
 ) where
 
 import Control.Applicative
 import Data.Machine
+
+group :: Eq a => Process a [a]
+group = groupBy (==)
 
 -- | Group the input by contiguously equal elements into sets
 --
@@ -15,6 +19,6 @@ groupBy eq = repeatedly $ go [] where
   go [] = await >>= go . (:[])
   go acc@(x:_) = do
     i <- await <|> yield (reverse acc) *> stop
-    if (eq x i)
+    if x `eq` i
       then go (i:acc)
       else yield (reverse acc) *> go [i]

@@ -12,6 +12,7 @@ import qualified App
 import Store.LevelDB
 import Store.Repository as Repo
 
+import Control.Monad (when)
 import Control.DeepSeq
 import Control.Exception
 import Control.Monad.Trans ( lift )
@@ -52,7 +53,7 @@ run opt = runT_ . machine =<< Repo.get
     pathspecs = pathspecSource (optPaths opt) (optStdin opt)
 
 processPaths :: Store -> ProcessT IO PathSpec ()
-processPaths store = repeatedly $ await >>= lift . (processPath store)
+processPaths store = repeatedly $ await >>= lift . processPath store
 
 processPath :: Store -> PathSpec -> IO ()
 processPath s path = runT_ . runDBActions $ (traverse ~> mergeExisting ~> hashNew ~> store)
@@ -61,7 +62,7 @@ processPath s path = runT_ . runDBActions $ (traverse ~> mergeExisting ~> hashNe
     hashNew = fitM lift hash
     traverse = fitM lift (traversePathSpec path ~> toPathKeyP)
     mergeExisting = fitM storeOpToDBAction (mergeProcess path)
-    store = fitM storeOpToDBAction (storeFree)
+    store = fitM storeOpToDBAction storeFree
 
 hash :: ProcessT IO (MergedOperation PathKey) (MergedOperation (PathKey, BucketKey))
 hash = repeatedly $ do
@@ -98,13 +99,11 @@ traversePathSpec = construct . plan
   plan path = do
     isDir <- lift $ doesDirectoryExist path
     yield path
-    if isDir
-      then do
-        contents <- lift $ getDirectoryContents path
-        let actual = map (path </>) $ contents \\ [".", ".."]
-        slashed <- lift $ addSlashes actual
-        mapM_ plan $ sort slashed
-      else return ()
+    when isDir $
+      do  contents <- lift $ getDirectoryContents path
+          let actual = map (path </>) $ contents \\ [".", ".."]
+          slashed <- lift $ addSlashes actual
+          mapM_ plan $ sort slashed
   addSlashes = mapM addSlash
   addSlash path = do
     isDir <- doesDirectoryExist path
@@ -121,7 +120,7 @@ calcBucketKey path = calc `catch` errorMessage
     calc = withBinaryFile path ReadMode $ \hnd -> do
       c <- L.hGetContents hnd
       let key = createBucketKey CRC32 c
-      key `deepseq` (return $! Just key)
+      key `deepseq` return (Just key)
     errorMessage :: IOException -> IO (Maybe BucketKey)
     errorMessage ex = do
       warningM logTag (show ex)

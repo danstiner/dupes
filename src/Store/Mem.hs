@@ -22,7 +22,7 @@ evalStoreOp ops = evalState (runStoreOp ops) (DupeStore Map.empty Map.empty)
 
 runStoreOp :: StoreOp r -> State DupeStore r
 runStoreOp (Pure r) = return r
-runStoreOp (Free (GetOp key f)) = runStoreOp . f . (Map.lookup key) . pathStore =<< get
+runStoreOp (Free (GetOp key f)) = runStoreOp . f . Map.lookup key . pathStore =<< get
 runStoreOp (Free (PutOp path key t)) = do
   (DupeStore paths buckets) <- get
   put (DupeStore (Map.insert path key paths) (Map.insertWith Set.union key (Set.singleton path) buckets))
@@ -32,8 +32,8 @@ runStoreOp (Free (RmOp key t)) = do
   put (DupeStore (Map.delete key paths) buckets)
   runStoreOp t
 runStoreOp (Free (ListOp _ f)) = runStoreOp . f . Map.keys . pathStore =<< get
-runStoreOp (Free (BucketsOp f)) = runStoreOp . f . (map toBucket) . Map.assocs . bucketStore =<< get
-runStoreOp (Free (DupesOp f)) = runStoreOp . f . (filter isDupe) . (map toBucket) . Map.assocs . bucketStore =<< get
+runStoreOp (Free (BucketsOp f)) = runStoreOp . f . map toBucket . Map.assocs . bucketStore =<< get
+runStoreOp (Free (DupesOp f)) = runStoreOp . f . filter isDupe . map toBucket . Map.assocs . bucketStore =<< get
   where
     isDupe (Bucket _ paths) = Set.size paths > 1
 

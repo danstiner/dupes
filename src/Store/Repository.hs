@@ -25,7 +25,7 @@ get' dir = do
   exists <- doesDirectoryExist rDir
   if exists
     then repoAt rDir
-    else if (parent == dir)
+    else if parent == dir
         then errorAndCrash "fatal: Not a clod repository (or any of the parent directories)"
         else get' parent
   where

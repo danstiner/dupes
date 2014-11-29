@@ -15,25 +15,25 @@ module ContentIdentifier (
     )
 where
 
-import Control.Applicative
-import Control.DeepSeq
-import Control.DeepSeq.Generics (genericRnf)
-import Data.ByteString.Builder
-import Data.ByteString.Short (ShortByteString, toShort, fromShort)
-import Data.Digest.CRC32
-import Data.Monoid ( (<>) )
-import Data.Serialize
-import Data.Word
-import GHC.Generics (Generic)
-import qualified Crypto.Hash.SHA1 as SHA1
-import qualified Crypto.Hash.SHA256 as SHA256
-import qualified Crypto.Hash.SHA3 as SHA3
-import qualified Data.ByteString as B
-import qualified Data.ByteString.Base16 as Base16
-import qualified Data.ByteString.Base32 as Base32
-import qualified Data.ByteString.Char8 as C
-import qualified Data.ByteString.Lazy as L
-import qualified Data.ByteString.Short as Short
+import           Control.Applicative
+import           Control.DeepSeq
+import           Control.DeepSeq.Generics (genericRnf)
+import qualified Crypto.Hash.SHA1         as SHA1
+import qualified Crypto.Hash.SHA256       as SHA256
+import qualified Crypto.Hash.SHA3         as SHA3
+import qualified Data.ByteString          as B
+import qualified Data.ByteString.Base16   as Base16
+import qualified Data.ByteString.Base32   as Base32
+import           Data.ByteString.Builder
+import qualified Data.ByteString.Char8    as C
+import qualified Data.ByteString.Lazy     as L
+import           Data.ByteString.Short    (ShortByteString, fromShort, toShort)
+import qualified Data.ByteString.Short    as Short
+import           Data.Digest.CRC32
+import           Data.Monoid              ((<>))
+import           Data.Serialize
+import           Data.Word
+import           GHC.Generics             (Generic)
 
 data Algro = SHA1 | CRC32 | SHA256 | SHA3_256 | Nil deriving (Eq, Ord, Generic, Enum)
 type Digest = ShortByteString
@@ -54,7 +54,8 @@ create :: Algro -> L.ByteString -> ContentIdentifier
 create a d = ContentIdentifier a $! toShort $! hashLazy a d
 
 flattenIdList :: Algro -> [ContentIdentifier] -> ContentIdentifier
-flattenIdList a = createStrict a . foldr B.append B.empty . map fromShort . map (\(ContentIdentifier _ d) -> d)
+flattenIdList a = createStrict a . foldr combine B.empty where
+  combine = B.append . fromShort . (\(ContentIdentifier _ d) -> d)
 
 nil :: ContentIdentifier
 nil = ContentIdentifier Nil Short.empty
@@ -85,7 +86,7 @@ toHex :: ContentIdentifier -> B.ByteString
 toHex (ContentIdentifier _ d) = Base16.encode $ fromShort d
 
 toURN :: ContentIdentifier -> B.ByteString
-toURN (ContentIdentifier a d) = (urnPrefixForAlgro a) `B.append` (Base32.encode $ fromShort d)
+toURN (ContentIdentifier a d) = urnPrefixForAlgro a `B.append` Base32.encode (fromShort d)
 
 fromURN :: B.ByteString -> Either String ContentIdentifier
 fromURN = undefined
@@ -99,7 +100,7 @@ urnPrefix a = urn <> colon <> algro <> colon
 
 urnPrefixForAlgro :: Algro -> B.ByteString
 urnPrefixForAlgro algro =
-  C.pack $ "urn:" ++ (algroName algro) ++ ":"
+  C.pack $ "urn:" ++ algroName algro ++ ":"
 
 algroNameAsByteString :: Algro -> B.ByteString
 algroNameAsByteString = C.pack . algroName
@@ -116,7 +117,7 @@ instance Show ContentIdentifier where
 
 instance Serialize Algro where
   put a = put ((fromIntegral $ fromEnum a) :: Word8)
-  get = (get :: Get Word8) >>= return . toEnum . fromIntegral
+  get = fmap (toEnum . fromIntegral) (get :: Get Word8)
 
 instance Serialize ContentIdentifier where
   put (ContentIdentifier a d) = put a >> put d
