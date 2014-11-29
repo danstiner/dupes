@@ -21,17 +21,17 @@ data Command
 
 parser :: Parser Command
 parser = subparser (
-     ( command "dupe" (fmap Dupes Dupes.parserInfo) )
-  <> ( command "dupes" (fmap Dupes Dupes.parserInfo) )
-  <> ( command "hash-object" (fmap HashObject HashObject.parserInfo) )
-  <> ( command "init" (fmap Init Init.parserInfo) )
-  <> ( command "ls-files" (fmap LsFiles LsFiles.parserInfo) )
+  <> ( command "dupe"         (fmap Dupes Dupes.parserInfo) )
+  <> ( command "dupes"        (fmap Dupes Dupes.parserInfo) )
+  <> ( command "hash-object"  (fmap HashObject HashObject.parserInfo) )
+  <> ( command "init"         (fmap Init Init.parserInfo) )
+  <> ( command "ls-files"     (fmap LsFiles LsFiles.parserInfo) )
   <> ( command "update-index" (fmap UpdateIndex UpdateIndex.parserInfo) )
   )
 
 run :: Command -> IO ()
-run (Dupes opt) = Dupes.run opt
-run (HashObject opt) = HashObject.run opt
-run (Init opt) = Init.run opt
-run (LsFiles opt) = LsFiles.run opt
+run (Dupes opt)       = Dupes.run opt
+run (HashObject opt)  = HashObject.run opt
+run (Init opt)        = Init.run opt
+run (LsFiles opt)     = LsFiles.run opt
 run (UpdateIndex opt) = UpdateIndex.run opt

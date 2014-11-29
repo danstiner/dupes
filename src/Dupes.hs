@@ -11,7 +11,7 @@ module Dupes (
   , Dupes
   , DupesT
   , createBucketKey
-  , createBucketKeyLazy
+  , createBucketKeyStrict
   , execDupesT
   , nilBucketKey
   , MergedOperation (..)
@@ -113,11 +113,11 @@ data Bucket = Bucket BucketKey (Set PathKey) deriving (Generic, Show, Eq)
 execDupesT :: (Monad m) => DupesT m a -> m a
 execDupesT = runDupesT
 
-createBucketKey :: BucketType -> B.ByteString -> BucketKey
-createBucketKey = CI.create
+createBucketKeyStrict :: BucketType -> B.ByteString -> BucketKey
+createBucketKeyStrict = CI.createStrict
 
-createBucketKeyLazy :: BucketType -> L.ByteString -> BucketKey
-createBucketKeyLazy = CI.createLazy
+createBucketKey :: BucketType -> L.ByteString -> BucketKey
+createBucketKey = CI.create
 
 nilBucketKey :: BucketKey
 nilBucketKey = CI.nil

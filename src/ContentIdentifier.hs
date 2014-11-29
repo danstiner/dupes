@@ -2,12 +2,14 @@
 
 module ContentIdentifier (
     create
-  , createLazy
+  , createStrict
+  , flattenIdList
   , nil
   , Algro (..)
   , Type
   , Value
   , toURNBuilder
+  , toHexBuilder
   , toURN
   , ContentIdentifier (..)
     )
@@ -17,14 +19,12 @@ import Control.Applicative
 import Control.DeepSeq
 import Control.DeepSeq.Generics (genericRnf)
 import Data.ByteString.Builder
-import Data.ByteString.Lazy.Builder
 import Data.ByteString.Short (ShortByteString, toShort, fromShort)
 import Data.Digest.CRC32
 import Data.Monoid ( (<>) )
 import Data.Serialize
 import Data.Word
 import GHC.Generics (Generic)
-import qualified Crypto.Hash.MD5 as MD5
 import qualified Crypto.Hash.SHA1 as SHA1
 import qualified Crypto.Hash.SHA256 as SHA256
 import qualified Crypto.Hash.SHA3 as SHA3
@@ -37,8 +37,8 @@ import qualified Data.ByteString.Short as Short
 
 data Algro = SHA1 | CRC32 | SHA256 | SHA3_256 | Nil deriving (Eq, Ord, Generic, Enum)
 type Digest = ShortByteString
-data ContentIdentifier = ContentIdentifier {-# UNPACK #-} !Algro
-                                           {-# UNPACK #-} !Digest deriving (Eq, Ord, Generic)
+data ContentIdentifier = ContentIdentifier !Algro
+                            {-# UNPACK #-} !Digest deriving (Eq, Ord, Generic)
 
 type HashSize = Int
 type Type = Algro
@@ -47,11 +47,14 @@ type Value = Digest
 sha3_256HashLength :: HashSize
 sha3_256HashLength = 256
 
-create :: Algro -> B.ByteString -> ContentIdentifier
-create a d = ContentIdentifier a $! toShort $! hash a d
+createStrict :: Algro -> B.ByteString -> ContentIdentifier
+createStrict a d = ContentIdentifier a $! toShort $! hash a d
 
-createLazy :: Algro -> L.ByteString -> ContentIdentifier
-createLazy a d = ContentIdentifier a $! toShort $! hashLazy a d
+create :: Algro -> L.ByteString -> ContentIdentifier
+create a d = ContentIdentifier a $! toShort $! hashLazy a d
+
+flattenIdList :: Algro -> [ContentIdentifier] -> ContentIdentifier
+flattenIdList a = createStrict a . foldr B.append B.empty . map fromShort . map (\(ContentIdentifier _ d) -> d)
 
 nil :: ContentIdentifier
 nil = ContentIdentifier Nil Short.empty
@@ -73,6 +76,13 @@ hash Nil      = undefined
 toURNBuilder :: ContentIdentifier -> Builder
 toURNBuilder (ContentIdentifier algro digest) =
   urnPrefix algro <> byteString (Base32.encode $ fromShort digest)
+
+toHexBuilder :: ContentIdentifier -> Builder
+toHexBuilder (ContentIdentifier _ d) =
+  byteString $! Base16.encode $ fromShort d
+
+toHex :: ContentIdentifier -> B.ByteString
+toHex (ContentIdentifier _ d) = Base16.encode $ fromShort d
 
 toURN :: ContentIdentifier -> B.ByteString
 toURN (ContentIdentifier a d) = (urnPrefixForAlgro a) `B.append` (Base32.encode $ fromShort d)

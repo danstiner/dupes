@@ -44,7 +44,7 @@ instance Serialize Entry where
 create :: Entries -> Tree
 create entries = Tree hash entries
     where
-        hash = CI.create CI.SHA3_256 $ encode entries
+        hash = CI.createStrict CI.SHA3_256 $ encode entries
 
 createEntry :: Filename -> Mode -> Blob.Id -> Entry
 createEntry f m i = Entry m f i

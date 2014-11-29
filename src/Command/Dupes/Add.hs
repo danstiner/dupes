@@ -55,16 +55,16 @@ processPaths :: Store -> ProcessT IO PathSpec ()
 processPaths store = repeatedly $ await >>= lift . (processPath store)
 
 processPath :: Store -> PathSpec -> IO ()
-processPath s path = runT_ . runDBActions $ (traverse ~> mergeExisting ~> prep ~> store)
+processPath s path = runT_ . runDBActions $ (traverse ~> mergeExisting ~> hashNew ~> store)
   where
     runDBActions = fitM (runDupesDBT s)
-    prep = fitM lift prepMergeOp
-    traverse = fitM lift (traversePath path ~> toPathKeyP)
+    hashNew = fitM lift hash
+    traverse = fitM lift (traversePathSpec path ~> toPathKeyP)
     mergeExisting = fitM storeOpToDBAction (mergeProcess path)
     store = fitM storeOpToDBAction (storeFree)
 
-prepMergeOp :: ProcessT IO (MergedOperation PathKey) (MergedOperation (PathKey, BucketKey))
-prepMergeOp = repeatedly $ do
+hash :: ProcessT IO (MergedOperation PathKey) (MergedOperation (PathKey, BucketKey))
+hash = repeatedly $ do
   mergeOp <- await
   case mergeOp of
     Both pathKey -> yield $ Both (pathKey, undefined)
@@ -92,14 +92,12 @@ storeFree = repeatedly $ do
     RightOnly (p, _) -> rmOp p
     Both _ -> return ()
 
-traversePath :: FilePath -> SourceT IO FilePath
-traversePath = construct . plan
+traversePathSpec :: FilePath -> SourceT IO FilePath
+traversePathSpec = construct . plan
   where
   plan path = do
     isDir <- lift $ doesDirectoryExist path
-
     yield path
-
     if isDir
       then do
         contents <- lift $ getDirectoryContents path
@@ -122,7 +120,7 @@ calcBucketKey path = calc `catch` errorMessage
   where
     calc = withBinaryFile path ReadMode $ \hnd -> do
       c <- L.hGetContents hnd
-      let key = createBucketKeyLazy CRC32 c
+      let key = createBucketKey CRC32 c
       key `deepseq` (return $! Just key)
     errorMessage :: IOException -> IO (Maybe BucketKey)
     errorMessage ex = do

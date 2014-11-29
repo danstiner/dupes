@@ -31,8 +31,8 @@ createFromData dat = Blob (createId dat) dat
 
 createId :: Data -> Blob.Id
 createId d = case d of
-  Bytes dat -> CI.create idType dat
-  LazyBytes dat -> CI.createLazy idType dat
+  Bytes dat -> CI.createStrict idType dat
+  LazyBytes dat -> CI.create idType dat
 
 recreateLazy :: Blob.Id -> L.ByteString -> Blob
 recreateLazy i d = Blob i (LazyBytes d)
