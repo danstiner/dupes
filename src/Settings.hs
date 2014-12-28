@@ -13,4 +13,4 @@ getAndCreateAppDir = do
   return dir
 
 getAppDir :: IO FilePath
-getAppDir = fmap (</> ".clod") Dir.getHomeDirectory
+getAppDir = fmap (</> ".dupes") Dir.getHomeDirectory

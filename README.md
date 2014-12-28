@@ -1,6 +1,6 @@
-clod
+dupes
 ====
 
-Re-implementation of git using Haskell and general playground for content-addressed storage.
+Utility for de-duplicating large sets of files and folders.
 
-[![Build Status](https://api.travis-ci.org/danstiner/clod.svg)](https://travis-ci.org/danstiner/clod)
+[![Build Status](https://api.travis-ci.org/danstiner/dupes.svg)](https://travis-ci.org/danstiner/dupes)

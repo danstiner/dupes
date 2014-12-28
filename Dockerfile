@@ -8,6 +8,5 @@ RUN cabal install -j hdevtools
 ENV PATH /.cabal/bin:$PATH
 ENV LANG C.UTF-8
 
-# Clod specific steps
+# App specific steps
 RUN apt-get install -y libleveldb-dev
-

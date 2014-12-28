@@ -4,6 +4,7 @@ module Command.Init (
   , run
 ) where
 
+import Store.Repository as R
 import Options.Applicative
 import qualified App
 import System.Directory
@@ -27,4 +28,7 @@ parser = Options
      <> help "Only print warning and error messages.")
 
 run :: Options -> IO ()
-run _ = createDirectory ".clod" >> getCurrentDirectory >>= infoM logTag . ("Initialized empty Clod directory in " ++)
+run _ = do
+    path <- R.getPath
+    createDirectory path
+    infoM logTag ("Initialized empty repository at " ++ path)
