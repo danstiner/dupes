@@ -3,12 +3,12 @@ module Logging (
   , register
 ) where
 
-import Data.Either                 as Either
-import System.FilePath             ((</>))
-import System.IO
-import System.Log.Handler.Log4jXML as Log4j
-import System.Log.Handler.Simple   as SimpleLog
-import System.Log.Logger
+import           Data.Either                 as Either
+import           System.FilePath             ((</>))
+import           System.IO
+import           System.Log.Handler.Log4jXML as Log4j
+import           System.Log.Handler.Simple   as SimpleLog
+import           System.Log.Logger
 
 register :: FilePath -> Priority -> IO ()
 register outfolder p = do

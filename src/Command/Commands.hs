@@ -4,12 +4,12 @@ module Command.Commands (
   , run
 ) where
 
-import qualified Command.Add as Add
-import qualified Command.Keep as Keep
-import qualified Command.Ls as Ls
-import qualified Command.Init as Init
+import qualified Command.Add         as Add
+import qualified Command.Init        as Init
+import qualified Command.Keep        as Keep
+import qualified Command.Ls          as Ls
 
-import Options.Applicative
+import           Options.Applicative
 
 data Command
   = Add Add.Options

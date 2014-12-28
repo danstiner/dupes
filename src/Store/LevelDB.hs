@@ -1,5 +1,5 @@
-{-# LANGUAGE ConstraintKinds #-}
-{-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE ConstraintKinds   #-}
+{-# LANGUAGE FlexibleContexts  #-}
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE OverloadedStrings #-}
 
@@ -12,29 +12,29 @@ module Store.LevelDB (
   , DupesPathLevelKey (..)
 ) where
 
-import Dupes
-import Index
-import Logging
 import qualified App
-import Store.Blob ()
-import Store.Repository
+import           Dupes
+import           Index
+import           Logging
+import           Store.Blob                   ()
+import           Store.Repository
 
-import Data.Function (on)
-import Control.Error.Util (hush)
-import Control.Applicative
-import Control.Monad (liftM)
-import Control.Monad.Free
-import Control.Monad.Trans.Class (lift)
-import Control.Monad.Trans.Resource (MonadResourceBase)
-import Data.ByteString (ByteString)
-import Data.Either (rights)
-import Data.Serialize (Serialize,encode,decode)
-import qualified Data.ByteString.Char8 as C
-import qualified Data.List as List
-import qualified Data.Serialize as Serialize
-import qualified Data.Set as Set
-import qualified Database.LevelDB.Higher as Level
-import System.Log.Logger
+import           Control.Applicative
+import           Control.Error.Util           (hush)
+import           Control.Monad                (liftM)
+import           Control.Monad.Free
+import           Control.Monad.Trans.Class    (lift)
+import           Control.Monad.Trans.Resource (MonadResourceBase)
+import           Data.ByteString              (ByteString)
+import qualified Data.ByteString.Char8        as C
+import           Data.Either                  (rights)
+import           Data.Function                (on)
+import qualified Data.List                    as List
+import           Data.Serialize               (Serialize, decode, encode)
+import qualified Data.Serialize               as Serialize
+import qualified Data.Set                     as Set
+import qualified Database.LevelDB.Higher      as Level
+import           System.Log.Logger
 
 type KeySpace = ByteString
 

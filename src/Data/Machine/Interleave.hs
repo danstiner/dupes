@@ -1,5 +1,5 @@
 
-{-# LANGUAGE GADTs #-}
+{-# LANGUAGE GADTs      #-}
 {-# LANGUAGE Rank2Types #-}
 
 module Data.Machine.Interleave
@@ -11,12 +11,12 @@ module Data.Machine.Interleave
   , capXM, capYM
   ) where
 
-import Control.Category
-import Data.Machine.Process
-import Data.Machine.Type
-import Data.Machine.Is
-import Data.Machine.Source
-import Prelude hiding ((.),id)
+import           Control.Category
+import           Data.Machine.Is
+import           Data.Machine.Process
+import           Data.Machine.Source
+import           Data.Machine.Type
+import           Prelude              hiding (id, (.))
 
 -------------------------------------------------------------------------------
 -- Interleave streams non-deterministically with look-ahead

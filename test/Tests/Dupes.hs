@@ -2,14 +2,14 @@
 
 module Tests.Dupes (storeOpContract) where
 
-import ContentIdentifier as CI
-import Dupes
+import           ContentIdentifier              as CI
+import           Dupes
 
-import qualified Data.Set as Set
+import qualified Data.Set                       as Set
 
-import Test.Framework
-import Test.Framework.Providers.HUnit
-import Test.HUnit hiding (Test)
+import           Test.Framework
+import           Test.Framework.Providers.HUnit
+import           Test.HUnit                     hiding (Test)
 
 storeOpContract :: (forall r . StoreOp r -> IO r) -> [Test]
 storeOpContract f = [

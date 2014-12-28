@@ -7,10 +7,10 @@ module Store.Repository (
 
 import qualified App
 
-import Control.Monad
-import System.Directory
-import System.FilePath
-import System.Log.Logger
+import           Control.Monad
+import           System.Directory
+import           System.FilePath
+import           System.Log.Logger
 
 logTag :: String
 logTag = App.logTag ++ ".Store.Repository"

@@ -4,13 +4,13 @@ module Command.Dupes (
   , run
 ) where
 
-import qualified Command.Dupes.Add as AddDupe
-import qualified Command.Dupes.Keep as KeepDupes
-import qualified Command.Dupes.Ls as LsDupes
+import qualified Command.Dupes.Add   as AddDupe
+import qualified Command.Dupes.Keep  as KeepDupes
+import qualified Command.Dupes.Ls    as LsDupes
 
-import Options.Applicative
+import           Options.Applicative
 
-data Options 
+data Options
   = Add AddDupe.Options
   | Keep KeepDupes.Options
   | Ls LsDupes.Options

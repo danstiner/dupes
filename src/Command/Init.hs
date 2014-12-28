@@ -4,11 +4,11 @@ module Command.Init (
   , run
 ) where
 
-import Store.Repository as R
-import Options.Applicative
 import qualified App
-import System.Directory
-import System.Log.Logger
+import           Options.Applicative
+import           Store.Repository    as R
+import           System.Directory
+import           System.Log.Logger
 
 logTag :: String
 logTag = App.logTag ++ ".Command.Init"

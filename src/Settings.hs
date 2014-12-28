@@ -3,8 +3,8 @@ module Settings (
   , getAndCreateAppDir
 ) where
 
-import System.Directory as Dir
-import System.FilePath  ((</>))
+import           System.Directory as Dir
+import           System.FilePath  ((</>))
 
 getAndCreateAppDir :: IO FilePath
 getAndCreateAppDir = do

@@ -2,14 +2,14 @@
 
 module Tests.Store.LevelDBExternal (externalTests) where
 
-import Tests.Dupes (storeOpContract)
-import Store.LevelDB
+import           Store.LevelDB
+import           Tests.Dupes             (storeOpContract)
 
-import Database.LevelDB.Higher as Level
-import qualified Data.ByteString.Char8 as C
-import System.IO.Temp
+import qualified Data.ByteString.Char8   as C
+import           Database.LevelDB.Higher as Level
+import           System.IO.Temp
 
-import Test.Framework
+import           Test.Framework
 
 keySpace :: KeySpace
 keySpace = "Tests.Store.LevelDB"

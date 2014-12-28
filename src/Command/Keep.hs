@@ -6,17 +6,17 @@ module Command.Keep (
   , run
 ) where
 
-import Command.ParseUtil
-import Dupes
-import Store.LevelDB
-import Store.Repository as Repo
+import           Command.ParseUtil
+import           Dupes
+import           Store.LevelDB
+import           Store.Repository      as Repo
 
-import Control.Monad (unless)
-import Data.List ( isPrefixOf )
-import Data.Machine hiding ( run )
-import Options.Applicative
+import           Control.Monad         (unless)
 import qualified Data.ByteString.Char8 as C
-import qualified Data.Set as Set
+import           Data.List             (isPrefixOf)
+import           Data.Machine          hiding (run)
+import qualified Data.Set              as Set
+import           Options.Applicative
 
 data Options = Options
   { optStdin :: Bool

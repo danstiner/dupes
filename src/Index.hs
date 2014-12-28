@@ -6,7 +6,7 @@ module Index (
   , execIndex
 ) where
 
-import Control.Monad.Trans
+import           Control.Monad.Trans
 
 type RelativeFilePath = FilePath
 

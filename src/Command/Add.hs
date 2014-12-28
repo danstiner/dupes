@@ -6,26 +6,26 @@ module Command.Add (
   , run
 ) where
 
-import Command.ParseUtil
-import Dupes
 import qualified App
-import Store.LevelDB
-import Store.Repository as Repo
+import           Command.ParseUtil
+import           Dupes
+import           Store.LevelDB
+import           Store.Repository        as Repo
 
-import Control.Monad (when)
-import Control.DeepSeq
-import Control.Exception
-import Control.Monad.Trans ( lift )
-import Data.List ( (\\), sort )
-import Data.Machine hiding ( run )
-import Data.Machine.Interleave
-import Options.Applicative
-import qualified Data.ByteString.Char8 as C
-import qualified Data.ByteString.Lazy as L
-import System.Directory
-import System.FilePath ( (</>) )
-import System.IO
-import System.Log.Logger
+import           Control.DeepSeq
+import           Control.Exception
+import           Control.Monad           (when)
+import           Control.Monad.Trans     (lift)
+import qualified Data.ByteString.Char8   as C
+import qualified Data.ByteString.Lazy    as L
+import           Data.List               (sort, (\\))
+import           Data.Machine            hiding (run)
+import           Data.Machine.Interleave
+import           Options.Applicative
+import           System.Directory
+import           System.FilePath         ((</>))
+import           System.IO
+import           System.Log.Logger
 
 logTag :: String
 logTag = App.logTag ++ ".Command.Add"

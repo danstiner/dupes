@@ -1,13 +1,13 @@
 module Tests.Machine (tests) where
 
-import Machine
+import           Machine
 
-import Data.Machine
+import           Data.Machine
 
-import Test.Framework
-import Test.Framework.Providers.QuickCheck2 (testProperty)
-import Test.QuickCheck
-import Test.QuickCheck.Property as Property
+import           Test.Framework
+import           Test.Framework.Providers.QuickCheck2 (testProperty)
+import           Test.QuickCheck
+import           Test.QuickCheck.Property             as Property
 
 tests :: [Test]
 tests = [ testProperty "concatenation of result equal to input" prop_groupBy_concat

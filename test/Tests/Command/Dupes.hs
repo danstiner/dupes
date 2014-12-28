@@ -2,16 +2,16 @@
 
 module Tests.Command.Dupes (tests) where
 
-import Dupes
+import           Dupes
 
-import Control.Applicative
-import Data.Machine
-import Data.Serialize
-import qualified Data.ByteString.Char8 as C
+import           Control.Applicative
+import qualified Data.ByteString.Char8                as C
+import           Data.Machine
+import           Data.Serialize
 
-import Test.Framework
-import Test.Framework.Providers.QuickCheck2 (testProperty)
-import Test.QuickCheck
+import           Test.Framework
+import           Test.Framework.Providers.QuickCheck2 (testProperty)
+import           Test.QuickCheck
 
 instance Arbitrary PathKey where
   arbitrary = PathKey <$> liftA C.pack arbitrary

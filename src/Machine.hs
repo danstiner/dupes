@@ -5,8 +5,8 @@ module Machine (
   , groupBy
 ) where
 
-import Control.Applicative
-import Data.Machine
+import           Control.Applicative
+import           Data.Machine
 
 group :: Eq a => Process a [a]
 group = groupBy (==)

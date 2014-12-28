@@ -4,16 +4,16 @@ module Command.Ls (
   , run
 ) where
 
-import Dupes
-import Store.LevelDB
-import Store.Repository as Repo
-import Telemetry
+import           Dupes
+import           Store.LevelDB
+import           Store.Repository      as Repo
+import           Telemetry
 
-import Control.Monad ( foldM )
-import Options.Applicative
+import           Control.Monad         (foldM)
 import qualified Data.ByteString.Char8 as C
-import qualified Data.Set as Set
-import System.TimeIt as TimeIt
+import qualified Data.Set              as Set
+import           Options.Applicative
+import           System.TimeIt         as TimeIt
 
 data Options = Options
   { _optAll :: Bool }

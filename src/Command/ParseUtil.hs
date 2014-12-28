@@ -5,11 +5,11 @@ module Command.ParseUtil (
   , PathSpec
 ) where
 
-import Control.Monad
-import Control.Monad.Trans ( lift )
-import Data.List ( delete )
-import Data.Machine
-import System.IO
+import           Control.Monad
+import           Control.Monad.Trans (lift)
+import           Data.List           (delete)
+import           Data.Machine
+import           System.IO
 
 type PathSpec = FilePath
 

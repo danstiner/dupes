@@ -3,15 +3,15 @@ module Store.Mem (
   , evalStoreOp
 ) where
 
-import Dupes
+import           Dupes
 
-import Control.Monad.Free
-import Control.Monad.State.Lazy
-import Data.Map.Strict (Map)
-import Data.Set (Set)
-import qualified Data.Set as Set
-import Prelude
-import qualified Data.Map.Strict as Map
+import           Control.Monad.Free
+import           Control.Monad.State.Lazy
+import           Data.Map.Strict          (Map)
+import qualified Data.Map.Strict          as Map
+import           Data.Set                 (Set)
+import qualified Data.Set                 as Set
+import           Prelude
 
 data DupeStore = DupeStore { pathStore :: DupePathsStore, bucketStore :: DupeBucketStore }
 type DupePathsStore = Map PathKey BucketKey
