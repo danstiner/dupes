@@ -1,6 +1,6 @@
 {-# LANGUAGE Rank2Types #-}
 
-module Command.Dupes.Keep (
+module Command.Keep (
     Options
   , parserInfo
   , run

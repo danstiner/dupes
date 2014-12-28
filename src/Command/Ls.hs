@@ -1,4 +1,4 @@
-module Command.Dupes.Ls (
+module Command.Ls (
     Options
   , parserInfo
   , run

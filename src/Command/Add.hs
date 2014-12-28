@@ -1,6 +1,6 @@
 {-# LANGUAGE Rank2Types #-}
 
-module Command.Dupes.Add (
+module Command.Add (
     Options
   , parserInfo
   , run
@@ -28,7 +28,7 @@ import System.IO
 import System.Log.Logger
 
 logTag :: String
-logTag = App.logTag ++ ".Command.Dupes.Add"
+logTag = App.logTag ++ ".Command.Add"
 
 data Options = Options
   { optStdin :: Bool
