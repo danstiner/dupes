@@ -78,7 +78,7 @@ keyPrefix :: B.ByteString
 keyPrefix = B.singleton 0
 
 toKey :: FilePath -> Key
-toKey path = keyPrefix `B.append` E.encodeUtf8 $ T.pack path
+toKey path = keyPrefix `B.append` E.encodeUtf8 (T.pack path)
 
 fromKey :: Key -> FilePath
 fromKey = T.unpack . E.decodeUtf8 . B.tail
