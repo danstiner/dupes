@@ -43,10 +43,7 @@ cmp (FileEntry filepath _) (IndexEntry indexpath) = compare filepath indexpath
 cmp _ _ = LT
 
 keyRange :: KeyRange
-keyRange = AllKeys -- KeyRange keyPrefix (const GT) --cmp . compare keyPrefix)
-  where
-    cmp EQ = LT
-    cmp a = a
+keyRange = KeyRange keyPrefix (compare keyPrefix)
 
 keyPrefix = B.singleton 0
 
