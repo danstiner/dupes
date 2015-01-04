@@ -17,7 +17,8 @@ import           Control.Applicative
 import           Control.Monad
 import           Control.Monad.Trans.Resource
 import qualified Data.ByteString              as B
-import qualified Data.ByteString.Char8        as C
+import           Data.Text                    as T
+import           Data.Text.Encoding           as E
 import           Database.LevelDB             as DB hiding (open)
 import           Database.LevelDB.Streaming
 import           Pipes
@@ -48,10 +49,10 @@ keyRange = KeyRange keyPrefix (compare keyPrefix)
 keyPrefix = B.singleton 0
 
 toKey :: FilePath -> Key
-toKey path = keyPrefix `B.append` C.pack path
+toKey path = keyPrefix `B.append` (E.encodeUtf8 $ T.pack path)
 
 fromKey :: Key -> FilePath
-fromKey = C.unpack . B.tail
+fromKey = T.unpack . E.decodeUtf8 . B.tail
 
 producerFromIterator :: MonadResource m => DB -> ReadOptions -> (Iterator -> Producer a m ()) -> Producer a m ()
 producerFromIterator db opts f = do
