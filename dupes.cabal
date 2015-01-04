@@ -34,18 +34,16 @@ executable dupes
                      , errors
                      , filepath
                      , free
-                     , higher-leveldb >= 0.1.0.3
-                     , leveldb-haskell >= 0.6
                      , hslogger
-                     , machines
+                     , leveldb-haskell >= 0.6
                      , MissingH
-                     , unix
-                     , pipes
                      , mtl
                      , optparse-applicative >= 0.10
-                     , resourcet <0.5.0.0
+                     , pipes
+                     , resourcet
                      , text
                      , transformers == 0.3.*
+                     , unix
 
 Test-suite pure
   Type:              exitcode-stdio-1.0
@@ -66,9 +64,7 @@ Test-suite pure
                      , errors
                      , filepath
                      , free
-                     , higher-leveldb >= 0.1.0.3
                      , hslogger
-                     , machines
                      , MissingH
                      , mtl
                      , resourcet
@@ -101,9 +97,7 @@ Test-suite external
                   , errors
                   , filepath
                   , free
-                  , higher-leveldb >= 0.1.0.3
                   , hslogger
-                  , machines
                   , MissingH
                   , mtl
                   , resourcet
