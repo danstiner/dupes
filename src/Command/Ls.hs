@@ -40,4 +40,4 @@ printIndexEffect r = Index.list (getIndex r) >-> printIndexEntry
 printIndexEntry :: MonadIO m => Consumer IndexEntry m ()
 printIndexEntry = forever $ await >>= p
   where
-    p (IndexEntry path) = liftIO $ putStrLn path
+    p (IndexEntry path _) = liftIO $ putStrLn path

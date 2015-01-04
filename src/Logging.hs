@@ -4,11 +4,9 @@ module Logging (
   , module System.Log.Logger
 ) where
 
-import           Data.Either                 as Either
-import           System.FilePath             ((</>))
+import           Data.Either               as Either
 import           System.IO
-import           System.Log.Handler.Log4jXML as Log4j
-import           System.Log.Handler.Simple   as SimpleLog
+import           System.Log.Handler.Simple as SimpleLog
 import           System.Log.Logger
 
 register :: Priority -> IO ()

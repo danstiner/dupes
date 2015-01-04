@@ -3,13 +3,13 @@ module Pipes.Path
       PathEntry (..)
     , walk
     , getPath
+    , getStatus
     ) where
 
 import           Control.Exception
 import qualified Data.ByteString.Char8 as C
 import           Data.Either
 import           Data.List
-import           Data.Monoid           (mappend)
 import           Data.Ord              (comparing)
 import           Pipes
 import           System.Directory
@@ -26,6 +26,11 @@ getPath :: PathEntry -> FilePath
 getPath (FileEntry path _) = path
 getPath (DirectoryStart path) = path
 getPath (DirectoryEnd path _) = path
+
+getStatus :: PathEntry -> FileStatus
+getStatus (FileEntry _ status) = status
+getStatus (DirectoryStart _) = assert False undefined
+getStatus (DirectoryEnd _ status) = status
 
 walk :: MonadIO m => FilePath -> Producer PathEntry m ()
 walk path = do
@@ -51,10 +56,10 @@ recurse (path, status)
     addDirSlash (path, status) = if isDirectory status then (path ++ "/", status) else (path, status)
     comparePaths = comparing (C.pack . fst)
 
-getStatus :: FilePath -> IO (Either SomeException FileStatus)
-getStatus = try . getSymbolicLinkStatus
+tryGetStatus :: FilePath -> IO (Either SomeException FileStatus)
+tryGetStatus = try . getSymbolicLinkStatus
 
 getStatus' :: FilePath -> IO (Either SomeException (FilePath, FileStatus))
 getStatus' path = do
-    status <- getStatus path
+    status <- tryGetStatus path
     return (fmap (\s -> (path, s)) status)

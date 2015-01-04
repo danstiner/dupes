@@ -17,11 +17,8 @@ import qualified DuplicateCache
 import           Index                 (Index)
 import qualified Index
 
-import           Control.Applicative
-import           Control.Exception
 import           Control.Monad
-import           Database.LevelDB      (MonadResource, Options (..),
-                                        runResourceT)
+import           Database.LevelDB      (MonadResource, Options (..))
 import qualified Database.LevelDB      as DB
 import qualified Database.LevelDB.Base as DBB
 import           Pipes
@@ -57,6 +54,7 @@ findRepo dir = do
     isRoot path = takeDirectory path == path
     errorAndCrash msg = errorM logTag msg >> fail msg
 
+repoDirFor :: FilePath -> FilePath
 repoDirFor = (</> ".dupes")
 
 repoAt :: FilePath -> IO Repository
