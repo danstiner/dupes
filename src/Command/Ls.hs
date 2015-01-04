@@ -4,13 +4,13 @@ module Command.Ls (
   , run
 ) where
 
-import Index as Index
-import           Store.Repository      as R
+import           Index
+import           Store.Repository             as R
 
+import           Control.Monad
 import           Control.Monad.Trans.Resource
-import Control.Monad
-import Pipes
 import           Options.Applicative
+import           Pipes
 
 data Options = Options
   { _optAll :: Bool }

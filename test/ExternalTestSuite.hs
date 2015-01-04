@@ -1,6 +1,6 @@
 module Main where
 
-import           Test.Framework              (defaultMain, testGroup)
+import           Test.Framework (defaultMain, testGroup)
 
 main :: IO ()
 main = defaultMain tests

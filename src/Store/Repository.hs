@@ -1,5 +1,5 @@
-{-# LANGUAGE RankNTypes #-}
 {-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE RankNTypes       #-}
 
 module Store.Repository (
     Store (..)
@@ -12,21 +12,22 @@ module Store.Repository (
   , create
   ) where
 
-import qualified Index as Index
-import qualified DuplicateCache as DuplicateCache
-import Index (Index)
-import DuplicateCache (DuplicateCache)
+import           DuplicateCache        (DuplicateCache)
+import qualified DuplicateCache
+import           Index                 (Index)
+import qualified Index
 
-import Control.Applicative
-import qualified Database.LevelDB as DB
-import qualified Database.LevelDB.Base as DBB
-import Database.LevelDB (runResourceT, MonadResource, Options (..))
+import           Control.Applicative
+import           Control.Exception
 import           Control.Monad
+import           Database.LevelDB      (MonadResource, Options (..),
+                                        runResourceT)
+import qualified Database.LevelDB      as DB
+import qualified Database.LevelDB.Base as DBB
+import           Pipes
 import           System.Directory
 import           System.FilePath
 import           System.Log.Logger
-import           Pipes
-import           Control.Exception
 
 logTag :: String
 logTag = "Store.Repository"
@@ -74,7 +75,7 @@ create path = do
     createDirectory repoPath
     DBB.withDB (repoPath </> "store") (DB.defaultOptions {createIfMissing=True}) (\db -> return ())
   where
-    repoPath = repoDirFor path 
+    repoPath = repoDirFor path
 
 withRepository :: MonadResource m => Repository -> (RepositoryHandle -> m a) -> m a
 withRepository r f = open r >>= f

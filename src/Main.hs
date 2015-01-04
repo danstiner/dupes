@@ -2,7 +2,7 @@
 import           Options.Applicative
 
 import qualified Command.Commands    as Commands
-import Logging
+import           Logging
 
 data Options = Options
   { optCommand :: Commands.Command }

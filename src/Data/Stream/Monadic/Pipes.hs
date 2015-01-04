@@ -1,4 +1,4 @@
-{-# LANGUAGE BangPatterns #-}
+{-# LANGUAGE BangPatterns              #-}
 {-# LANGUAGE ExistentialQuantification #-}
 
 module Data.Stream.Monadic.Pipes
@@ -6,8 +6,8 @@ module Data.Stream.Monadic.Pipes
       fromStream
     ) where
 
-import Pipes
-import Database.LevelDB.Streaming
+import           Database.LevelDB.Streaming
+import           Pipes
 
 fromStream :: (Monad m) => Stream m Entry -> Producer Entry m ()
 fromStream (Stream next s0) = go =<< lift s0

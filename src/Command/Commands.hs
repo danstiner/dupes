@@ -7,7 +7,7 @@ module Command.Commands (
 import qualified Command.Init        as Init
 import qualified Command.Keep        as Keep
 import qualified Command.Ls          as Ls
-import qualified Command.Update          as Update
+import qualified Command.Update      as Update
 
 import           Options.Applicative
 

@@ -7,7 +7,7 @@ module Command.Keep (
 ) where
 
 import           Command.ParseUtil
-import           Store.Repository      as R
+import           Store.Repository    as R
 
 import           Options.Applicative
 

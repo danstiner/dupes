@@ -6,8 +6,8 @@ module Command.Update (
 
 import           Store.Repository
 
-import           Options.Applicative
 import           Control.Monad.Trans.Resource
+import           Options.Applicative
 
 logTag :: String
 logTag = "Command.Update"

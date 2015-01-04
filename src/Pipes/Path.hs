@@ -5,17 +5,17 @@ module Pipes.Path
     , getPath
     ) where
 
+import           Control.Exception
 import qualified Data.ByteString.Char8 as C
-import Data.Either
-import Data.List
+import           Data.Either
+import           Data.List
+import           Data.Monoid           (mappend)
+import           Data.Ord              (comparing)
 import           Pipes
+import           System.Directory
 import           System.FilePath
 import           System.IO
 import           System.Posix.Files
-import           Control.Exception
-import           System.Directory
-import Data.Monoid (mappend)
-import Data.Ord (comparing)
 
 data PathEntry
   = FileEntry FilePath FileStatus

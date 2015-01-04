@@ -6,18 +6,18 @@ module DuplicateCache (
     , open
 ) where
 
-import Index (IndexChange (..))
+import           Index                      (IndexChange (..))
 
-import Control.Monad
 import           Control.Exception
+import           Control.Monad
+import           Database.LevelDB           hiding (open)
+import           Database.LevelDB.Streaming
 import           Pipes
-import Database.LevelDB hiding (open)
-import Database.LevelDB.Streaming
 
 data DuplicateCache = DuplicateCache DB
 
 open :: DB -> DuplicateCache
-open db = DuplicateCache db
+open = DuplicateCache
 
 update :: (MonadResource m) => DuplicateCache -> Consumer IndexChange m ()
 update cache = forever $ do

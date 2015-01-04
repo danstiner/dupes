@@ -9,18 +9,18 @@ module Index (
   , IndexEntry (..)
 ) where
 
-import Pipes.Difference
-import Pipes.Path
-import Data.Stream.Monadic.Pipes as P
+import           Data.Stream.Monadic.Pipes    as P
+import           Pipes.Difference
+import           Pipes.Path
 
+import           Control.Applicative
+import           Control.Monad
 import           Control.Monad.Trans.Resource
-import Control.Applicative
-import qualified Data.ByteString.Char8 as C
-import qualified Data.ByteString as B
-import Control.Monad
+import qualified Data.ByteString              as B
+import qualified Data.ByteString.Char8        as C
+import           Database.LevelDB             as DB hiding (open)
+import           Database.LevelDB.Streaming
 import           Pipes
-import Database.LevelDB as DB hiding (open)
-import Database.LevelDB.Streaming
 
 data Index = Index { db ::DB, getReadOptions :: ReadOptions, getWriteOptions :: WriteOptions, indexPath :: FilePath }
 
@@ -33,7 +33,7 @@ data IndexChange
   deriving (Show)
 
 open :: DB -> FilePath -> Index
-open db path = Index db defaultReadOptions defaultWriteOptions path
+open db = Index db defaultReadOptions defaultWriteOptions
 
 update :: MonadResource m => Index -> Producer IndexChange m ()
 update index = diff cmp (walk $ indexPath index) (list index) >-> update' index
