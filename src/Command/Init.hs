@@ -4,14 +4,13 @@ module Command.Init (
   , run
 ) where
 
-import qualified App
 import           Options.Applicative
 import           Store.Repository    as R
 import           System.Directory
 import           System.Log.Logger
 
 logTag :: String
-logTag = App.logTag ++ ".Command.Init"
+logTag = "Command.Init"
 
 data Options = Options
   { _optQuiet :: Bool }
@@ -29,6 +28,6 @@ parser = Options
 
 run :: Options -> IO ()
 run _ = do
-    path <- R.getPath
-    createDirectory path
+    path <- getCurrentDirectory
+    R.create path
     infoM logTag ("Initialized empty repository at " ++ path)

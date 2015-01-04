@@ -17,7 +17,7 @@ tested-with:         GHC==7.6.3, GHC==7.8.2
 executable dupes
   Hs-Source-Dirs:    src
   Main-Is:           Main.hs
-  GHC-Options:       -Wall -threaded -O3
+  GHC-Options:       -Wall -threaded -fno-warn-unused-binds -fno-ignore-asserts
   GHC-Prof-Options:  -fprof-auto "-with-rtsopts=-N -p -s -i0.1"
   Build-Depends:       base >= 4.5 && < 4.8
                      , base16-bytestring
@@ -35,16 +35,17 @@ executable dupes
                      , filepath
                      , free
                      , higher-leveldb >= 0.1.0.3
+                     , leveldb-haskell >= 0.6
                      , hslogger
                      , machines
                      , MissingH
+                     , unix
+                     , pipes
                      , mtl
                      , optparse-applicative >= 0.10
                      , resourcet <0.5.0.0
                      , text
-                     , timeit
                      , transformers == 0.3.*
-                     , uuid
 
 Test-suite pure
   Type:              exitcode-stdio-1.0
