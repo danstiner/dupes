@@ -4,6 +4,7 @@ module Command.Ls (
   , run
 ) where
 
+import           DuplicateCache
 import           Index
 import           Store.Repository             as R
 
@@ -27,7 +28,7 @@ parser = Options
 
 run :: Options -> IO ()
 run (Options {_optAll=True}) = printIndex
-run (Options {_optAll=False}) = undefined
+run (Options {_optAll=False}) = printDuplicates
 
 printIndex :: IO ()
 printIndex = do
@@ -41,3 +42,16 @@ printIndexEntry :: MonadIO m => Consumer IndexEntry m ()
 printIndexEntry = forever $ await >>= p
   where
     p (IndexEntry path _) = liftIO $ putStrLn path
+
+printDuplicates :: IO ()
+printDuplicates = do
+  r <- R.get
+  runResourceT $ R.withRepository r $ runEffect . printDuplicatesEffect
+
+printDuplicatesEffect :: (MonadResource m) => RepositoryHandle -> Effect m ()
+printDuplicatesEffect r = DuplicateCache.list (getCache r) >-> printDuplicateEntry
+
+printDuplicateEntry :: MonadIO m => Consumer HashPath m ()
+printDuplicateEntry = forever $ await >>= p
+  where
+    p (HashPath hash path) = liftIO $ putStrLn (show hash ++ "\t" ++ path)
