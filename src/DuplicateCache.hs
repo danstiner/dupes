@@ -26,7 +26,6 @@ import qualified Data.ByteString              as B
 import           Data.Either
 import           Data.Int
 import           Data.Maybe
-import           Data.Serialize
 import           Data.Serialize               as S
 import           Data.Text                    as T
 import           Data.Text.Encoding           as E

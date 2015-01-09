@@ -6,18 +6,18 @@ module Command.Keep (
   , run
 ) where
 
-import           Store.Repository    as R
-import DuplicateCache
+import           DuplicateCache
+import           Store.Repository             as R
 
-import           Options.Applicative
-import Pipes
-import qualified Pipes.Prelude as P
-import Data.List
-import Control.Monad
+import           Control.Exception
+import           Control.Monad
 import           Control.Monad.Trans.Resource
-import Control.Exception
-import System.FilePath.Posix
-import System.Directory
+import           Data.List
+import           Options.Applicative
+import           Pipes
+import qualified Pipes.Prelude                as P
+import           System.Directory
+import           System.FilePath.Posix
 
 data Options = Options
   { optPaths :: [FilePath]  }
@@ -32,7 +32,7 @@ parser = Options
       ( argument str (metavar "PATHSPEC") )
 
 run :: Options -> IO ()
-run opt = mapM_ (\p -> canonicalizePath p >>= keepPath) (optPaths opt)
+run opt = mapM_ (canonicalizePath >=> keepPath) (optPaths opt)
 
 keepPath :: FilePath -> IO ()
 keepPath path = do

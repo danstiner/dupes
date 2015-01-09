@@ -6,22 +6,23 @@ module Command.Remove (
   , run
 ) where
 
-import           Store.Repository    as R
-import DuplicateCache
+import           DuplicateCache
+import           Store.Repository             as R
 
-import           Options.Applicative
-import Pipes
-import qualified Pipes.Prelude as P
-import Data.List
-import Control.Monad
+import           Control.Applicative
+import           Control.Exception
+import           Control.Monad
 import           Control.Monad.Trans.Resource
-import Control.Exception
-import System.FilePath.Posix
-import System.Directory
+import           Data.List
+import           Options.Applicative
+import           Pipes
+import qualified Pipes.Prelude                as P
+import           System.Directory
+import           System.FilePath.Posix
 
 data Options = Options
   { optPrefixes :: Bool
-  , optPaths :: [FilePath]  }
+  , optPaths    :: [FilePath]  }
 
 parserInfo :: ParserInfo Options
 parserInfo = info parser
@@ -38,7 +39,7 @@ parser = Options
 run :: Options -> IO ()
 run opt = if optPrefixes opt
   then removePrefixes
-  else mapM_ (\p -> canonicalizePath p >>= dedupePath) (optPaths opt)
+  else mapM_ (canonicalizePath >=> dedupePath) (optPaths opt)
 
 removePrefixes :: IO ()
 removePrefixes = do
@@ -73,7 +74,7 @@ dedupePathEffect :: MonadResource m => FilePath ->  RepositoryHandle -> Effect m
 dedupePathEffect path r = DuplicateCache.listPath (getCache r) path >-> P.filterM (hasDupesOutside (getCache r) path) >-> printPath
 
 hasDupesOutside :: MonadResource m => DuplicateCache -> FilePath -> HashPath -> m Bool
-hasDupesOutside r listedPath (HashPath hash path) = fmap not $ P.null (list >-> filterToOutside)
+hasDupesOutside r listedPath (HashPath hash path) = not <$> P.null (list >-> filterToOutside)
   where
     list = listDupes r hash
     filterToOutside = P.filter (\(HashPath _ p) -> p /= path && not (listedPath `isPrefixOf` p))
