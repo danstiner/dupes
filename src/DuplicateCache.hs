@@ -4,9 +4,13 @@
 module DuplicateCache (
     DuplicateCache (..)
     , HashPath (..)
+    , DupeCount (..)
     , update
     , open
     , list
+    , dupeCount
+    , listDupes
+    , listPath
 ) where
 
 import           Index                        (FileHash, IndexChange (..))
@@ -35,7 +39,7 @@ data DuplicateCache = DuplicateCache { getDb :: DB, getReadOptions :: ReadOption
 
 data HashPath = HashPath { getFileHash :: !FileHash, getFilePath :: !FilePath }
 
-data DupeList = None | ZeroDupe !FilePath | ManyDupe  deriving (Show)
+data DupeCount = None | ZeroDupe !FilePath | ManyDupe  deriving (Show)
 
 instance Serialize HashPath where
   put (HashPath hash path) = S.put hash >> S.put path
@@ -55,7 +59,7 @@ update cache = forever $ await >>= go
 
 add :: MonadResource m => DuplicateCache -> FilePath -> FileHash -> m ()
 add cache@(DuplicateCache db _ writeOptions) path hash = do
-    count <- dupeList cache hash
+    count <- dupeCount cache hash
     add'
     liftIO $ putStr "+ " >> putStrLn path
     case count of
@@ -68,7 +72,7 @@ add cache@(DuplicateCache db _ writeOptions) path hash = do
 remove :: (MonadResource m) => DuplicateCache -> FilePath -> FileHash -> m ()
 remove cache path hash = do
     remove' cache
-    count <- dupeList cache hash
+    count <- dupeCount cache hash
     liftIO $ putStr "- " >> putStrLn path
     case count of
       None -> return ()
@@ -94,18 +98,34 @@ list :: MonadResource m => DuplicateCache -> Producer HashPath m ()
 list (DuplicateCache db readOptions _) = producerFromIterator db readOptions go
   where
     go :: (Applicative m, MonadIO m) => Iterator -> Producer HashPath m ()
-    go iterator = P.fromStream (entrySlice iterator pathKeyRange Asc) >-> convert
+    go iterator = P.fromStream (entrySlice iterator allPathsKeyRange Asc) >-> convert
     convert :: (Monad m) => Pipe Entry HashPath m ()
     convert = forever $ await >>= \(key, value) -> yield (HashPath (fromPathValue value) (fromPathKey key))
 
-dupeList :: MonadResource m => DuplicateCache -> FileHash -> m DupeList
-dupeList (DuplicateCache db readOptions _) hash =
+dupeCount :: MonadResource m => DuplicateCache -> FileHash -> m DupeCount
+dupeCount (DuplicateCache db readOptions _) hash =
   withIterator db readOptions $ \iterator -> do
   first2 <- toList . DBS.take 2 $ keySlice iterator (hashKeyRange hash) Asc
   case first2 of
     [] -> return None
     [key] -> return $ either (const None) (ZeroDupe . getFilePath) (fromHashPathKey key)
     _ -> return ManyDupe
+
+listDupes :: MonadResource m => DuplicateCache -> FileHash -> Producer HashPath m ()
+listDupes (DuplicateCache db readOptions _) hash = producerFromIterator db readOptions go
+  where
+    go :: (Applicative m, MonadIO m) => Iterator -> Producer HashPath m ()
+    go iterator = P.fromStream (keySlice iterator (hashKeyRange hash) Asc) >-> convert
+    convert :: (Monad m) => Pipe Key HashPath m ()
+    convert = forever $ await >>= \key -> either (const $ return ()) yield (fromHashPathKey key)
+
+listPath :: MonadResource m => DuplicateCache -> FilePath -> Producer HashPath m ()
+listPath (DuplicateCache db readOptions _) path = producerFromIterator db readOptions go
+  where
+    go :: (Applicative m, MonadIO m) => Iterator -> Producer HashPath m ()
+    go iterator = P.fromStream (entrySlice iterator (pathKeyRange path) Asc) >-> convert
+    convert :: (Monad m) => Pipe Entry HashPath m ()
+    convert = forever $ await >>= \(key, value) -> yield (HashPath (fromPathValue value) (fromPathKey key))
 
 zeroToNothing :: (Eq a, Num a) => a -> Maybe a
 zeroToNothing 0 = Nothing
@@ -120,14 +140,20 @@ pathKeyPrefix = B.singleton pathKeyPrefixValue
 pathKeyPrefixValue :: Word8
 pathKeyPrefixValue = 2
 
-pathKeyRange :: KeyRange
-pathKeyRange = KeyRange pathKeyPrefix (\k -> compare (B.head k) pathKeyPrefixValue)
+allPathsKeyRange :: KeyRange
+allPathsKeyRange = KeyRange pathKeyPrefix (\k -> compare (B.head k) pathKeyPrefixValue)
+
+pathKeyRange :: FilePath -> KeyRange
+pathKeyRange path = KeyRange prefix prefixCompare
+  where
+    prefix = pathKeyPrefix `B.append` E.encodeUtf8 (T.pack path)
+    prefixCompare v = compare (B.take (B.length prefix) v) prefix
 
 toPathKey :: FilePath -> Key
-toPathKey path = pathKeyPrefix `B.append` encode path
+toPathKey path = pathKeyPrefix `B.append` E.encodeUtf8 (T.pack path)
 
 fromPathKey :: Key -> FilePath
-fromPathKey = either (assert False undefined) id . decode . B.tail
+fromPathKey = T.unpack . E.decodeUtf8 . B.tail
 
 toPathValue :: FileHash -> Value
 toPathValue = encode

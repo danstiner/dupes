@@ -9,7 +9,7 @@ module Data.Stream.Monadic.Pipes
 import           Database.LevelDB.Streaming
 import           Pipes
 
-fromStream :: (Monad m) => Stream m Entry -> Producer Entry m ()
+fromStream :: Monad m => Stream m a -> Producer a m ()
 fromStream (Stream next s0) = go =<< lift s0
   where
     go !s = do

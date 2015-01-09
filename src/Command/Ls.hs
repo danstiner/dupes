@@ -14,7 +14,7 @@ import           Options.Applicative
 import           Pipes
 
 data Options = Options
-  { _optAll :: Bool }
+  { optAll :: Bool }
 
 parserInfo :: ParserInfo Options
 parserInfo = info parser
@@ -27,8 +27,8 @@ parser = Options
      <> help "Show not just duplicate files." )
 
 run :: Options -> IO ()
-run (Options {_optAll=True}) = printIndex
-run (Options {_optAll=False}) = printDuplicates
+run (Options {optAll=True}) = printIndex
+run (Options {optAll=False}) = printDuplicates
 
 printIndex :: IO ()
 printIndex = do
