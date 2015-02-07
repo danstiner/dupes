@@ -131,7 +131,7 @@ fromValue v = case decode v of
   Right stat -> stat
 
 toFileInfo :: FileStatus -> FileHash -> FileInfo
-toFileInfo s hash = UnixFileInfo (modificationTime s) (statusChangeTime s) (fileID s) (fileSize s) (fileOwner s) (fileGroup s) hash
+toFileInfo s = UnixFileInfo (modificationTime s) (statusChangeTime s) (fileID s) (fileSize s) (fileOwner s) (fileGroup s)
 
 toFileInfo' :: FileStatus -> FileInfo
 toFileInfo' s = toFileInfo s nullHash
@@ -153,7 +153,7 @@ list (Index db readOptions _ _) = producerFromIterator db readOptions go
     convert :: (Monad m) => Pipe Entry IndexEntry m ()
     convert = forever $ await >>= \(key, value) -> yield (IndexEntry (fromKey key) (fromValue value))
 
-update' :: (MonadResource m) => Index -> Pipe (SequenceDifference PathEntry IndexEntry) IndexChange m ()
+update' :: MonadResource m => Index -> Pipe (SequenceDifference PathEntry IndexEntry) IndexChange m ()
 update' (Index db _ writeOptions _) = forever $ await >>= go
   where
     go (LeftOnly a) = do
