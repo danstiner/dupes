@@ -1,7 +1,7 @@
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE RankNTypes       #-}
 
-module Store.Repository (
+module Repository (
     Store (..)
   , Repository (..)
   , RepositoryHandle (..)
@@ -27,7 +27,7 @@ import           System.FilePath
 import           System.Log.Logger
 
 logTag :: String
-logTag = "Store.Repository"
+logTag = "Repository"
 
 newtype Store = Store { getStorePath :: FilePath }
 data Repository = Repository { getPath :: FilePath, getStore :: Store }
@@ -39,8 +39,6 @@ get = findPath >>= repoAt
 findPath :: IO FilePath
 findPath = getCurrentDirectory >>= findRepo
 
--- TODO: Should work similar to how git files either .git files containing the filename of the config directory
---       or actual .git directories
 findRepo :: FilePath -> IO FilePath
 findRepo dir = do
     exists <- doesDirectoryExist repoPath

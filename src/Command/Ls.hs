@@ -6,7 +6,7 @@ module Command.Ls (
 
 import           DuplicateCache
 import           Index
-import           Store.Repository             as R
+import           Repository                   as R
 
 import           Control.Monad
 import           Control.Monad.Trans.Resource

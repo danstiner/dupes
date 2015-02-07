@@ -7,7 +7,7 @@ module Command.Keep (
 ) where
 
 import           DuplicateCache
-import           Store.Repository             as R
+import           Repository                   as R
 
 import           Control.Exception
 import           Control.Monad

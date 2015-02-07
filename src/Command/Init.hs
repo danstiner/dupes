@@ -5,7 +5,7 @@ module Command.Init (
 ) where
 
 import           Options.Applicative
-import           Store.Repository    as R
+import           Repository          as R
 import           System.Directory
 import           System.Log.Logger
 

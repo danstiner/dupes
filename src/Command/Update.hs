@@ -4,7 +4,7 @@ module Command.Update (
     , run
     ) where
 
-import           Store.Repository
+import           Repository
 
 import           Control.Monad.Trans.Resource
 import           Options.Applicative

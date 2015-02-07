@@ -7,7 +7,7 @@ module Command.Remove (
 ) where
 
 import           DuplicateCache
-import           Store.Repository             as R
+import           Repository                   as R
 
 import           Control.Applicative
 import           Control.Exception
