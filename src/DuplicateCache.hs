@@ -68,7 +68,7 @@ add cache@(DuplicateCache db _ writeOptions) path hash = do
   where
     add' = DB.put db writeOptions (toHashPathKey $ HashPath hash path) defaultPathValue
 
-remove :: (MonadResource m) => DuplicateCache -> FilePath -> FileHash -> m ()
+remove :: MonadResource m => DuplicateCache -> FilePath -> FileHash -> m ()
 remove cache path hash = do
     remove' cache
     count <- dupeCount cache hash
