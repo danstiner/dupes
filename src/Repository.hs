@@ -10,10 +10,14 @@ module Repository (
   , update
   , withRepository
   , create
+  , find
+  , isRepository
   ) where
 
 import           DuplicateCache        (DuplicateCache)
 import qualified DuplicateCache
+import           FileAccess            (FileAccess)
+import qualified FileAccess
 import           Index                 (Index)
 import qualified Index
 
@@ -40,17 +44,25 @@ findPath :: IO FilePath
 findPath = getCurrentDirectory >>= findRepo
 
 findRepo :: FilePath -> IO FilePath
-findRepo dir = do
-    exists <- doesDirectoryExist repoPath
-    if exists
-      then return dir
-      else do
-        when (isRoot dir) $ errorAndCrash "fatal: Not a dupes repository (or any of the parent directories)"
-        findRepo (takeDirectory dir)
+findRepo path =
+    FileAccess.runIO (find path) >>= either noRepoFound return
   where
-    repoPath = repoDirFor dir
-    isRoot path = takeDirectory path == path
+    noRepoFound = errorAndCrash
     errorAndCrash msg = errorM logTag msg >> fail msg
+
+find :: FilePath -> FileAccess (Either String FilePath)
+find path = isRepository path >>= pathIsRepo
+  where
+    pathIsRepo True  = return $ Right path
+    pathIsRepo False = do
+      parent <- FileAccess.parentDirectory path
+      if path == parent
+        then reachedRootPath
+        else find parent
+    reachedRootPath = return $ Left "Neither path or any of its parents are a repository"
+
+isRepository :: FilePath -> FileAccess Bool
+isRepository = FileAccess.doesDirectoryExist . repoDirFor
 
 repoDirFor :: FilePath -> FilePath
 repoDirFor = (</> ".dupes")
@@ -68,10 +80,13 @@ open (Repository path (Store store)) = do
 
 create :: FilePath -> IO ()
 create path = do
+  exists <- FileAccess.runIO $ isRepository path
+  unless exists $ do
     createDirectory repoPath
-    DBB.withDB (repoPath </> "store") (DB.defaultOptions {createIfMissing=True}) (\db -> return ())
+    createStore repoPath
   where
     repoPath = repoDirFor path
+    createStore path = DBB.withDB (path </> "store") (DB.defaultOptions {createIfMissing=True}) (const $ return ())
 
 withRepository :: MonadResource m => Repository -> (RepositoryHandle -> m a) -> m a
 withRepository r f = open r >>= f

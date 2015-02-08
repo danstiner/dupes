@@ -5,7 +5,7 @@ module Command.Init (
 ) where
 
 import           Options.Applicative
-import           Repository          as R
+import           Repository
 import           System.Directory
 import           System.Log.Logger
 
@@ -27,7 +27,9 @@ parser = Options
      <> help "Only print warning and error messages.")
 
 run :: Options -> IO ()
-run _ = do
-    path <- getCurrentDirectory
-    R.create path
-    infoM logTag ("Initialized empty repository at " ++ path)
+run _ = getCurrentDirectory >>= createRepository
+
+createRepository :: FilePath -> IO ()
+createRepository path = do
+  Repository.create path
+  infoM logTag ("Initialized empty repository at " ++ path)

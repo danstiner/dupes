@@ -65,11 +65,14 @@ Test-suite pure
                      , filepath
                      , free
                      , hslogger
+                     , leveldb-haskell
                      , MissingH
                      , mtl
+                     , pipes
                      , resourcet
                      , text
                      , transformers
+                     , unix
 
                      , HUnit
                      , QuickCheck >= 2.7
