@@ -53,7 +53,7 @@ recurse (path, status)
     | otherwise = yield (FileEntry path status)
   where
     printEx = liftIO . hPrint stderr
-    addDirSlash (path, status) = if isDirectory status then (path ++ "/", status) else (path, status)
+    addDirSlash (path', status') = if isDirectory status' then (path' ++ "/", status') else (path', status')
     comparePaths = comparing (C.pack . fst)
 
 tryGetStatus :: FilePath -> IO (Either SomeException FileStatus)

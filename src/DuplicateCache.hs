@@ -14,7 +14,6 @@ module DuplicateCache (
 ) where
 
 import           Index                        (FileHash, IndexChange (..))
-import           Logging
 
 import           Data.Stream.Monadic.Pipes    as P
 
@@ -23,8 +22,6 @@ import           Control.Exception
 import           Control.Monad
 import           Control.Monad.Trans.Resource
 import qualified Data.ByteString              as B
-import           Data.Either
-import           Data.Int
 import           Data.Maybe
 import           Data.Serialize               as S
 import           Data.Text                    as T

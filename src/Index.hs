@@ -27,7 +27,6 @@ import           Control.Monad.Trans.Resource
 import qualified Crypto.Hash.SHA1             as SHA1
 import qualified Data.ByteString              as B
 import qualified Data.ByteString.Base16       as Base16
-import           Data.ByteString.Builder
 import qualified Data.ByteString.Char8        as C
 import qualified Data.ByteString.Lazy         as L
 import           Data.Monoid
@@ -35,7 +34,6 @@ import           Data.Ord                     (comparing)
 import           Data.Serialize               as S
 import           Data.Text                    as T
 import           Data.Text.Encoding           as E
-import           Data.Text.Encoding.Error     as EE
 import           Data.Word
 import           Database.LevelDB             as DB hiding (open)
 import           Database.LevelDB.Streaming
@@ -43,10 +41,10 @@ import           Foreign.C.Types
 import           GHC.Generics                 (Generic)
 import           Pipes
 import           System.IO
-import           System.IO.Unsafe             (unsafePerformIO)
 import           System.Posix.Files
 import           System.Posix.Types
 
+logTag :: String
 logTag = "Index"
 
 newtype FileHash = FileHash B.ByteString deriving (Eq, Ord, Generic)
@@ -127,7 +125,7 @@ toValue = encode
 
 fromValue :: Value -> FileInfo
 fromValue v = case decode v of
-  Left err -> assert False undefined
+  Left _ -> assert False undefined
   Right stat -> stat
 
 toFileInfo :: FileStatus -> FileHash -> FileInfo

@@ -10,7 +10,6 @@ import           DuplicateCache
 import           Repository                   as R
 
 import           Control.Applicative
-import           Control.Exception
 import           Control.Monad
 import           Control.Monad.Trans.Resource
 import           Data.List
@@ -59,9 +58,7 @@ filterPrefixes r = forever $ await >>= go
         name1 `isPrefixOf` name2 && ext1 == ext2
 
 printPath :: MonadIO m => Consumer HashPath m ()
-printPath = forever $ await >>= p
-  where
-    p (HashPath hash path) = liftIO $ putStrLn path
+printPath = P.map getFilePath >-> P.print
 
 dedupePath :: FilePath -> IO ()
 dedupePath path = R.runEffect $ dedupePathEffect path
@@ -70,7 +67,7 @@ dedupePathEffect :: MonadResource m => FilePath ->  RepositoryHandle -> Effect m
 dedupePathEffect path r = DuplicateCache.listPath (getCache r) path >-> P.filterM (hasDupesOutside (getCache r) path) >-> printPath
 
 hasDupesOutside :: MonadResource m => DuplicateCache -> FilePath -> HashPath -> m Bool
-hasDupesOutside r listedPath (HashPath hash path) = not <$> P.null (list >-> filterToOutside)
+hasDupesOutside r listedPath (HashPath hash path) = not <$> P.null (listHashDupes >-> filterToOutside)
   where
-    list = listDupes r hash
+    listHashDupes = listDupes r hash
     filterToOutside = P.filter (\(HashPath _ p) -> p /= path && not (listedPath `isPrefixOf` p))
