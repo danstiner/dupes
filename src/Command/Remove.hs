@@ -42,9 +42,7 @@ run opt = if optPrefixes opt
   else mapM_ (canonicalizePath >=> dedupePath) (optPaths opt)
 
 removePrefixes :: IO ()
-removePrefixes = do
-  r <- R.get
-  runResourceT $ R.withRepository r $ runEffect . removePrefixesEffect
+removePrefixes = R.runEffect removePrefixesEffect
 
 removePrefixesEffect :: MonadResource m => RepositoryHandle -> Effect m ()
 removePrefixesEffect r = DuplicateCache.list (getCache r) >-> filterPrefixes (getCache r) >-> printPath
@@ -66,9 +64,7 @@ printPath = forever $ await >>= p
     p (HashPath hash path) = liftIO $ putStrLn path
 
 dedupePath :: FilePath -> IO ()
-dedupePath path = do
-  r <- R.get
-  runResourceT $ R.withRepository r $ runEffect . dedupePathEffect path
+dedupePath path = R.runEffect $ dedupePathEffect path
 
 dedupePathEffect :: MonadResource m => FilePath ->  RepositoryHandle -> Effect m ()
 dedupePathEffect path r = DuplicateCache.listPath (getCache r) path >-> P.filterM (hasDupesOutside (getCache r) path) >-> printPath

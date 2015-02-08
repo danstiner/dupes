@@ -8,17 +8,13 @@ import           DuplicateCache
 import           Index
 import           Repository                   as R
 
-import           Control.Monad
 import           Control.Monad.Trans.Resource
 import           Options.Applicative
 import           Pipes
+import qualified Pipes.Prelude                as P
 
 data Options = Options
   { optAll :: Bool }
-
-parserInfo :: ParserInfo Options
-parserInfo = info parser
-  (progDesc "Show information about files in the duplicate index")
 
 parser :: Parser Options
 parser = Options
@@ -26,32 +22,23 @@ parser = Options
       ( long "all"
      <> help "Show not just duplicate files." )
 
+parserInfo :: ParserInfo Options
+parserInfo = info parser
+  (progDesc "Show information about files in the duplicate index")
+
 run :: Options -> IO ()
-run (Options {optAll=True}) = printIndex
-run (Options {optAll=False}) = printDuplicates
+run (Options {optAll=True}) = R.runEffect printIndex
+run (Options {optAll=False}) = R.runEffect printDuplicates
 
-printIndex :: IO ()
-printIndex = do
-  r <- R.get
-  runResourceT $ R.withRepository r $ runEffect . printIndexEffect
-
-printIndexEffect :: (MonadResource m) => RepositoryHandle -> Effect m ()
-printIndexEffect r = Index.list (getIndex r) >-> printIndexEntry
-
-printIndexEntry :: MonadIO m => Consumer IndexEntry m ()
-printIndexEntry = forever $ await >>= p
+printIndex :: RepositoryHandle -> Effect (ResourceT IO) ()
+printIndex repository = listIndexEntries >-> getEntryPath >-> P.print
   where
-    p (IndexEntry path _) = liftIO $ putStrLn path
+    listIndexEntries = Index.list $ getIndex repository
+    getEntryPath = P.map indexEntryPath
 
-printDuplicates :: IO ()
-printDuplicates = do
-  r <- R.get
-  runResourceT $ R.withRepository r $ runEffect . printDuplicatesEffect
-
-printDuplicatesEffect :: (MonadResource m) => RepositoryHandle -> Effect m ()
-printDuplicatesEffect r = DuplicateCache.list (getCache r) >-> printDuplicateEntry
-
-printDuplicateEntry :: MonadIO m => Consumer HashPath m ()
-printDuplicateEntry = forever $ await >>= p
+printDuplicates :: RepositoryHandle -> Effect (ResourceT IO) ()
+printDuplicates repository = listDuplicates >-> toString >-> P.print
   where
-    p (HashPath hash path) = liftIO $ putStrLn (show hash ++ "\t" ++ path)
+    listDuplicates = DuplicateCache.list (getCache repository)
+    toString = P.map stringify
+    stringify (HashPath hash path) = show hash ++ "\t" ++ path

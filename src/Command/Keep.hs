@@ -35,9 +35,7 @@ run :: Options -> IO ()
 run opt = mapM_ (canonicalizePath >=> keepPath) (optPaths opt)
 
 keepPath :: FilePath -> IO ()
-keepPath path = do
-  r <- R.get
-  runResourceT $ R.withRepository r $ runEffect . keepPathEffect path
+keepPath path = R.runEffect $ keepPathEffect path
 
 keepPathEffect :: MonadResource m => FilePath ->  RepositoryHandle -> Effect m ()
 keepPathEffect path r = dupesOf (getCache r) path (DuplicateCache.listPath (getCache r) path) >-> printPath
