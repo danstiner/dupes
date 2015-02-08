@@ -3,7 +3,7 @@ module Test.Repository (tests) where
 import           FileAccess
 import           Repository
 
-import           Data.Either
+import           Data.Either.Compat
 import           System.FilePath
 import           Test.Framework.Providers.HUnit
 import           Test.HUnit
@@ -49,7 +49,5 @@ test_findWhenNoRepo = True @=? isLeft result
   where
     result = FileAccess.runPure filesystem $ find "/path"
     filesystem = ["/path", "/"]
-
-isLeft = either (const True) (const False)
 
 makeRepository path = [path </> ".dupes"]
