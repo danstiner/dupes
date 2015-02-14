@@ -45,6 +45,7 @@ executable dupes
                      , text
                      , transformers == 0.3.*
                      , unix
+                     , mmorph
 
 Test-suite pure
   Type:              exitcode-stdio-1.0
@@ -75,6 +76,7 @@ Test-suite pure
                      , text
                      , transformers
                      , unix
+                     , mmorph
 
                      , HUnit
                      , QuickCheck >= 2.7

@@ -69,23 +69,23 @@ instance Show FileHash where
   show (FileHash hash) = C.unpack $ Base16.encode hash
 
 instance Serialize FileInfo where
-  put (UnixFileInfo (CTime mtime) (CTime ctime) (CIno inode) (COff size) (CUid uid) (CGid gid) hash) = do
-    S.put mtime
-    S.put ctime
-    S.put inode
-    S.put size
-    S.put uid
-    S.put gid
+  put (UnixFileInfo (CTime mtime') (CTime ctime') (CIno inode') (COff size') (CUid uid') (CGid gid') hash) = do
+    S.put mtime'
+    S.put ctime'
+    S.put inode'
+    S.put size'
+    S.put uid'
+    S.put gid'
     S.put hash
   get = do
-    mtime <- S.get
-    ctime <- S.get
-    inode <- S.get
-    size <- S.get
-    uid <- S.get
-    gid <- S.get
+    mtime' <- S.get
+    ctime' <- S.get
+    inode' <- S.get
+    size' <- S.get
+    uid' <- S.get
+    gid' <- S.get
     hash <- S.get
-    return $ UnixFileInfo (CTime mtime) (CTime ctime) (CIno inode) (COff size) (CUid uid) (CGid gid) hash
+    return $ UnixFileInfo (CTime mtime') (CTime ctime') (CIno inode') (COff size') (CUid uid') (CGid gid') hash
 
 instance Serialize FileHash where
   put (FileHash hash) = S.put hash
@@ -95,7 +95,7 @@ open :: DB -> FilePath -> Index
 open db = Index db defaultReadOptions defaultWriteOptions
 
 update :: MonadResource m => Index -> Producer IndexChange m ()
-update index = diff cmp (walk $ indexPath index) (list index) >-> update' index
+update i = diff cmp (walk $ indexPath i) (list i) >-> update' i
 
 cmp :: PathEntry -> IndexEntry -> Ordering
 cmp (FileEntry filepath filestat) (IndexEntry indexpath indexstat) =

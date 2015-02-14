@@ -1,16 +1,26 @@
-{-# LANGUAGE RankNTypes          #-}
-{-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE DeriveFunctor        #-}
+{-# LANGUAGE FlexibleContexts     #-}
+{-# LANGUAGE RankNTypes           #-}
+{-# LANGUAGE ScopedTypeVariables  #-}
+{-# LANGUAGE TemplateHaskell      #-}
+{-# LANGUAGE TypeSynonymInstances #-}
 
 module DuplicateCache (
     DuplicateCache (..)
     , HashPath (..)
     , DupeCount (..)
+    , DuplicateCacheT
+    , DuplicateCacheC (..)
     , update
     , open
     , list
     , dupeCount
     , listDupes
+    , listDupesF
     , listPath
+    , listF
+    , listPathF
+    , runFOnDB
 ) where
 
 import           Index                        (FileHash, IndexChange (..))
@@ -20,9 +30,9 @@ import           Data.Stream.Monadic.Pipes    as P
 import           Control.Applicative
 import           Control.Exception
 import           Control.Monad
+import           Control.Monad.Trans.Free
 import           Control.Monad.Trans.Resource
 import qualified Data.ByteString              as B
-import           Data.Maybe
 import           Data.Serialize               as S
 import           Data.Text                    as T
 import           Data.Text.Encoding           as E
@@ -37,11 +47,40 @@ data HashPath = HashPath { getFileHash :: !FileHash, getFilePath :: !FilePath }
 
 data DupeCount = None | ZeroDupe !FilePath | ManyDupe  deriving (Show)
 
+class Monad m => DuplicateCacheC m where
+  listC :: Producer HashPath m ()
+  listDupesC :: FileHash -> Producer HashPath m ()
+
+data DuplicateCacheF m next
+  = List (Producer HashPath m () -> next)
+  | ListHash FileHash (Producer HashPath m () -> next)
+  | ListPath FilePath (Producer HashPath m () -> next)
+  deriving (Functor)
+
+type DuplicateCacheT m = FreeT (DuplicateCacheF m) m
+
+runFOnDB :: MonadResource m => DuplicateCache -> DuplicateCacheT m a -> m a
+runFOnDB cache = go
+  where
+    go = runFreeT >=> interpret
+    interpret x = case x of
+      Free (List f) -> go . f $ list cache
+      Free (ListHash hash f) -> go . f $ listDupes cache hash
+      Free (ListPath path f) -> go . f $ listPath cache path
+      Pure r -> return r
+
+listF :: Monad m => DuplicateCacheT m (Producer HashPath m ())
+listF = liftF $ List id
+
+listPathF :: Monad m => FilePath -> DuplicateCacheT m (Producer HashPath m ())
+listPathF path = liftF $ ListPath path id
+
+listDupesF :: Monad m => FileHash -> DuplicateCacheT m (Producer HashPath m ())
+listDupesF hash = liftF $ ListHash hash id
+
 instance Serialize HashPath where
   put (HashPath hash path) = S.put hash >> S.put path
   get = liftA2 HashPath S.get S.get
-
-logTag = "DuplicateCache"
 
 open :: DB -> DuplicateCache
 open db = DuplicateCache db defaultReadOptions defaultWriteOptions
@@ -55,10 +94,10 @@ update cache = forever $ await >>= go
 
 add :: MonadResource m => DuplicateCache -> FilePath -> FileHash -> m ()
 add cache@(DuplicateCache db _ writeOptions) path hash = do
-    count <- dupeCount cache hash
+    n <- dupeCount cache hash
     add'
     liftIO $ putStr "+ " >> putStrLn path
-    case count of
+    case n of
       None -> return ()
       (ZeroDupe otherPath) -> addPath cache path hash >> addPath cache otherPath hash
       ManyDupe -> addPath cache path hash
@@ -68,9 +107,9 @@ add cache@(DuplicateCache db _ writeOptions) path hash = do
 remove :: MonadResource m => DuplicateCache -> FilePath -> FileHash -> m ()
 remove cache path hash = do
     remove' cache
-    count <- dupeCount cache hash
+    n <- dupeCount cache hash
     liftIO $ putStr "- " >> putStrLn path
-    case count of
+    case n of
       None -> return ()
       (ZeroDupe otherPath) -> removePath cache path >> removePath cache otherPath
       ManyDupe -> removePath cache path
@@ -85,8 +124,8 @@ removePath (DuplicateCache db _ writeOptions) path = DB.delete db writeOptions (
 
 producerFromIterator :: MonadResource m => DB -> ReadOptions -> (Iterator -> Producer a m ()) -> Producer a m ()
 producerFromIterator db opts f = do
-    (rk, iter) <- lift $ iterOpen' db opts
-    res <- f iter
+    (rk, iterator) <- lift $ iterOpen' db opts
+    res <- f iterator
     lift $ release rk
     return res
 
@@ -122,13 +161,6 @@ listPath (DuplicateCache db readOptions _) path = producerFromIterator db readOp
     go iterator = P.fromStream (entrySlice iterator (pathKeyRange path) Asc) >-> convert
     convert :: (Monad m) => Pipe Entry HashPath m ()
     convert = forever $ await >>= \(key, value) -> yield (HashPath (fromPathValue value) (fromPathKey key))
-
-zeroToNothing :: (Eq a, Num a) => a -> Maybe a
-zeroToNothing 0 = Nothing
-zeroToNothing a = Just a
-
-nothingToZero :: (Num a) => Maybe a -> a
-nothingToZero = fromMaybe 0
 
 pathKeyPrefix :: B.ByteString
 pathKeyPrefix = B.singleton pathKeyPrefixValue

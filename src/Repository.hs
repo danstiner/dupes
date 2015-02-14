@@ -88,7 +88,7 @@ create path = do
     createStore repoPath
   where
     repoPath = repoDirFor path
-    createStore path = DBB.withDB (path </> "store") (DB.defaultOptions {createIfMissing=True}) (const $ return ())
+    createStore path' = DBB.withDB (path' </> "store") (DB.defaultOptions {createIfMissing=True}) (const $ return ())
 
 withRepository :: MonadResource m => Repository -> (RepositoryHandle -> m a) -> m a
 withRepository r f = open r >>= f

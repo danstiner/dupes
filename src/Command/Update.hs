@@ -9,9 +9,6 @@ import           Repository
 import           Control.Monad.Trans.Resource
 import           Options.Applicative
 
-logTag :: String
-logTag = "Command.Update"
-
 data Options = Options
   { _optQuiet :: Bool }
 
@@ -27,6 +24,4 @@ parser = Options
      <> help "Only print warning and error messages.")
 
 run :: Options -> IO ()
-run _ = do
-  r <- get
-  runResourceT $ withRepository r update
+run _ = get >>= \r -> runResourceT (withRepository r update)

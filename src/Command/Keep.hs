@@ -6,9 +6,11 @@ module Command.Keep (
   , run
 ) where
 
+import           Command.Common
 import           DuplicateCache
 import           Repository                   as R
 
+import           Control.Exception
 import           Control.Monad
 import           Control.Monad.Trans.Resource
 import           Data.List
@@ -30,18 +32,15 @@ parser = Options
       ( argument str (metavar "PATHSPEC") )
 
 run :: Options -> IO ()
-run opt = mapM_ (canonicalizePath >=> keepPath) (optPaths opt)
+run opt = keepDuplicatesUnder (optPaths opt)
 
-keepPath :: FilePath -> IO ()
-keepPath path = R.runEffect $ keepPathEffect path
+keepDuplicatesUnder :: [FilePath] -> IO ()
+keepDuplicatesUnder = mapM canonicalizePath >=> R.runEffect . keepDuplicatesUnderEffect
+
+keepDuplicatesUnderEffect :: MonadResource m => [FilePath] -> RepositoryHandle -> Effect m ()
+keepDuplicatesUnderEffect paths r = adapt r (findDuplicatesOutside paths) >-> printPaths
+
+findDuplicatesOutside :: Monad m => [FilePath] -> Producer HashPath (DuplicateCacheT m) ()
+findDuplicatesOutside paths = assert False undefined -- sequence_ $ map duplicatesUnderButOutside paths
   where
-    keepPathEffect :: MonadResource m => FilePath ->  RepositoryHandle -> Effect m ()
-    keepPathEffect path r = dupesOf (getCache r) path (DuplicateCache.listPath (getCache r) path) >-> printPath
-
-dupesOf :: MonadResource m => DuplicateCache -> FilePath -> Producer HashPath m () -> Producer HashPath m ()
-dupesOf r pathToKeep p = for p body
-  where
-    body (HashPath hash path) = listDupes r hash >-> P.filter (\(HashPath _ p) -> p /= path && not (pathToKeep `isPrefixOf` p))
-
-printPath :: MonadIO m => Consumer HashPath m ()
-printPath = P.map getFilePath >-> P.print
+    pathIsAKeeper path = any (`isPrefixOf` path) paths
