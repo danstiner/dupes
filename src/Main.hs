@@ -14,7 +14,7 @@ main :: IO ()
 main = execParser opts >>= runWithOptions where
   parser = helper <*> optionParser
   desc = fullDesc
-         <> progDesc "Collection of utilities for content-addressed storage inspired by git"
+         <> progDesc "Utility for dealing with large sets of duplicated files"
   opts = info parser desc
 
 runWithOptions :: Options -> IO ()

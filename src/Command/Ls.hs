@@ -20,7 +20,7 @@ parser :: Parser Options
 parser = Options
   <$> switch
       ( long "all"
-     <> help "Show not just duplicate files." )
+     <> help "Show all indexed files, not just duplicates." )
 
 parserInfo :: ParserInfo Options
 parserInfo = info parser
