@@ -7,7 +7,7 @@ data Options = Options
   { optCommand :: Commands.Command }
 
 optionParser :: Parser Options
-optionParser = Options <$> subparser Commands.commands
+optionParser = Options <$> hsubparser Commands.commands
 
 main :: IO ()
 main = execParser opts >>= run where
