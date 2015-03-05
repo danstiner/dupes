@@ -46,10 +46,12 @@ run opt@(Options {optSuffixes=False}) = remove opt $ Paths (optPathSpecs opt)
 
 remove :: Options -> Mode -> IO ()
 
-remove _ (Paths paths) = removeDupes . matchingAnyOf $ map PathSpec.parse paths
+remove _ (Paths paths) = removeDupes . matchingAnyOf $ pathSpecs
   where
     matchingAnyOf :: [PathSpec] -> Condition
     matchingAnyOf = Any <$> map Matches
+    pathSpecs :: [PathSpec]
+    pathSpecs = map PathSpec.parse paths
 
 remove _ Suffixes = removeDupes' (Holds hasPrefixDupe)
   where

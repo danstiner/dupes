@@ -88,8 +88,8 @@ evalPure :: Condition -> File -> Bool
 evalPure condition file = runIdentity $ eval condition file
 
 eval :: Monad m => ConditionM m -> File -> m Bool
-eval (All conditions)  file = allM (flip eval file) conditions
-eval (Any conditions)  file = anyM (flip eval file) conditions
+eval (All conditions)  file = allM (`eval` file) conditions
+eval (Any conditions)  file = anyM (`eval` file) conditions
 eval (Matches spec)    file = return $ PathSpec.matches spec (getFilePath file)
 eval (Not condition)   file = liftM not (eval condition file)
 eval (Holds predicate) file = predicate file
