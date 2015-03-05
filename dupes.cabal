@@ -35,9 +35,11 @@ executable dupes
                      , errors
                      , filepath
                      , free
+                     , Glob
                      , hslogger
                      , leveldb-haskell >= 0.6
                      , MissingH
+                     , mmorph
                      , mtl
                      , optparse-applicative >= 0.10
                      , pipes
@@ -45,7 +47,10 @@ executable dupes
                      , text
                      , transformers == 0.3.*
                      , unix
-                     , mmorph
+
+                     , HUnit
+                     , QuickCheck >= 2.7
+                     , HTF
 
 Test-suite pure
   Type:              exitcode-stdio-1.0
@@ -67,22 +72,22 @@ Test-suite pure
                      , errors
                      , filepath
                      , free
+                     , Glob
                      , hslogger
                      , leveldb-haskell
                      , MissingH
+                     , mmorph
                      , mtl
+                     , optparse-applicative >= 0.10
                      , pipes
                      , resourcet
                      , text
                      , transformers
                      , unix
-                     , mmorph
 
                      , HUnit
                      , QuickCheck >= 2.7
-                     , test-framework
-                     , test-framework-hunit
-                     , test-framework-quickcheck2
+                     , HTF
 
 Test-suite external
   Type:           exitcode-stdio-1.0

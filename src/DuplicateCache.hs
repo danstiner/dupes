@@ -20,7 +20,7 @@ module DuplicateCache (
     , listPath
     , listF
     , listPathF
-    , runFOnDB
+    , runOnDB
 ) where
 
 import           Index                        (FileHash, IndexChange (..))
@@ -59,8 +59,8 @@ data DuplicateCacheF m next
 
 type DuplicateCacheT m = FreeT (DuplicateCacheF m) m
 
-runFOnDB :: MonadResource m => DuplicateCache -> DuplicateCacheT m a -> m a
-runFOnDB cache = go
+runOnDB :: MonadResource m => DuplicateCache -> DuplicateCacheT m a -> m a
+runOnDB cache = go
   where
     go = runFreeT >=> interpret
     interpret x = case x of

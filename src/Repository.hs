@@ -1,3 +1,4 @@
+{-# OPTIONS_GHC -F -pgmF htfpp #-}
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE RankNTypes       #-}
 
@@ -13,6 +14,7 @@ module Repository (
   , find
   , isRepository
   , Repository.runEffect
+  , htf_thisModulesTests
   ) where
 
 import           DuplicateCache               (DuplicateCache)
@@ -22,6 +24,7 @@ import qualified FileAccess
 import           Index                        (Index)
 import qualified Index
 
+import           Data.Either.Compat
 import           Control.Monad
 import           Control.Monad.Trans.Resource
 import           Database.LevelDB             (Options (..))
@@ -32,6 +35,9 @@ import           System.Directory
 import           System.FilePath
 import           System.Log.Logger
 
+import Test.Framework
+import Test.HUnit
+
 logTag :: String
 logTag = "Repository"
 
@@ -40,7 +46,7 @@ data Repository = Repository { getPath :: FilePath, getStore :: Store }
 data RepositoryHandle = RepositoryHandle { getIndex :: Index, getCache :: DuplicateCache }
 
 get :: IO Repository
-get = findPath >>= repoAt
+get = findPath >>= getRepoAt
 
 findPath :: IO FilePath
 findPath = getCurrentDirectory >>= findRepo
@@ -64,13 +70,13 @@ find path = isRepository path >>= pathIsRepo
     reachedRootPath = return $ Left "Neither path or any of its parents are a repository"
 
 isRepository :: FilePath -> FileAccess Bool
-isRepository = FileAccess.doesDirectoryExist . repoDirFor
+isRepository = FileAccess.doesDirectoryExist . repositorySubdir
 
-repoDirFor :: FilePath -> FilePath
-repoDirFor = (</> ".dupes")
+repositorySubdir :: FilePath -> FilePath
+repositorySubdir = (</> ".dupes")
 
-repoAt :: FilePath -> IO Repository
-repoAt path = return $ Repository path (Store (repoDirFor path </> "store"))
+getRepoAt :: FilePath -> IO Repository
+getRepoAt path = return $ Repository path (Store (repositorySubdir path </> "store"))
 
 update :: MonadResource m => RepositoryHandle -> m ()
 update r = Pipes.runEffect $ Index.update (getIndex r) >-> DuplicateCache.update (getCache r)
@@ -86,8 +92,9 @@ create path = do
   unless exists $ do
     createDirectory repoPath
     createStore repoPath
+    infoM logTag ("Initialized empty repository at " ++ repoPath)
   where
-    repoPath = repoDirFor path
+    repoPath = repositorySubdir path
     createStore path' = DBB.withDB (path' </> "store") (DB.defaultOptions {createIfMissing=True}) (const $ return ())
 
 withRepository :: MonadResource m => Repository -> (RepositoryHandle -> m a) -> m a
@@ -101,3 +108,40 @@ runEffectWith r effect = runRepositoryAction (Pipes.runEffect . effect)
   where
     runRepositoryAction :: (RepositoryHandle -> ResourceT IO a) -> IO a
     runRepositoryAction action = runResourceT $ withRepository r action
+
+
+test_isRepository = True @=? result
+  where
+    result = FileAccess.runPure filesystem $ isRepository "/path"
+    filesystem = testRepoDirAt "/path/"
+
+test_isNotRepository = False @=? result
+  where
+    result = FileAccess.runPure filesystem $ isRepository "/path"
+    filesystem = []
+
+test_findWhenDirectoryIsRepo = expected @=? actual
+  where
+    expected = Right "/path"
+    actual = FileAccess.runPure filesystem $ find "/path"
+    filesystem = testRepoDirAt "/path/"
+
+test_findWhenParentIsRepo = expected @=? actual
+  where
+    expected = Right "/path"
+    actual = FileAccess.runPure filesystem $ find "/path/inner"
+    filesystem = testRepoDirAt "/path/"
+
+test_findWhenRootIsRepo = expected @=? actual
+  where
+    expected = Right "/"
+    actual = FileAccess.runPure filesystem $ find "/path"
+    filesystem = testRepoDirAt "/"
+
+test_findWhenNoRepo = True @=? isLeft result
+  where
+    result = FileAccess.runPure filesystem $ find "/path"
+    filesystem = ["/path", "/"]
+
+testRepoDirAt :: FilePath -> [FilePath]
+testRepoDirAt path = [path </> ".dupes"]

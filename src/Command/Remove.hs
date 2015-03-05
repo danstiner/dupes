@@ -1,34 +1,31 @@
+{-# OPTIONS_GHC -F -pgmF htfpp #-}
 {-# LANGUAGE Rank2Types #-}
 
 module Command.Remove (
     Options
   , parserInfo
   , run
+  , htf_thisModulesTests
 ) where
 
-import           Command.Common
-import           DuplicateCache
-import           Repository                   as R
+import           Dedupe
+import           PathSpec
 
 import           Control.Applicative
-import           Control.Exception
-import           Control.Monad
-import           Control.Monad.Free
-import           Control.Monad.Trans.Resource
-import           Data.List
+import           Data.List           (isPrefixOf)
 import           Options.Applicative
 import           Pipes
-import qualified Pipes.Prelude                as P
-import           System.Directory
-import           System.FilePath.Posix
+import qualified Pipes.Prelude       as P
+import           System.FilePath
 
+import Test.Framework
 
 data Options = Options
-  { optPrefixes :: Bool
-  , optPaths    :: [FilePath]  }
+  { optSuffixes  :: Bool
+  , optPathSpecs :: [PathSpecString]  }
 
 data Mode
-  = Prefixes
+  = Suffixes
   | Paths [FilePath]
 
 parserInfo :: ParserInfo Options
@@ -38,71 +35,47 @@ parserInfo = info parser
 parser :: Parser Options
 parser = Options
   <$> switch
-      ( long "prefix"
-     <> help "Remove duplicate whose names names are prefixes of each other" )
+      ( long "suffixes"
+     <> help "Remove files whose name is a suffix of a duplicate in the same directory" )
   <*> many
       ( argument str (metavar "PATHSPEC") )
 
 run :: Options -> IO ()
-run opt@(Options {optPrefixes=True})  = run' opt Prefixes
-run opt@(Options {optPrefixes=False}) = run' opt $ Paths (optPaths opt)
+run opt@(Options {optSuffixes=True})  = remove opt Suffixes
+run opt@(Options {optSuffixes=False}) = remove opt $ Paths (optPathSpecs opt)
 
-run' :: Options -> Mode -> IO ()
-run' _ Prefixes = R.runEffect printPrefixesWithDuplicates
-run' _ (Paths paths) = printPathsWithDuplicatesOutside paths
+remove :: Options -> Mode -> IO ()
 
-printPrefixesWithDuplicates :: MonadResource m => RepositoryHandle -> Effect m ()
-printPrefixesWithDuplicates handle = f handle >-> printPaths
-
-f :: MonadResource m => RepositoryHandle -> Producer HashPath m ()
-f handle = assert False undefined -- a' $ a handle prefixesWithDuplicates
-
--- a :: (DuplicateCacheC c, MonadResource m) => RepositoryHandle -> Producer HashPath c () -> Producer HashPath m ()
--- a handle = runFOnDB (getCache handle)
-
-a' :: Monad m => m (Producer HashPath m ()) -> Producer HashPath m ()
-a' action = do
-  result <- lift $ action
-  result
-
-prefixesWithDuplicates :: DuplicateCacheC m => Producer HashPath m ()
-prefixesWithDuplicates = DuplicateCache.listC >-> filterDuplicates' isPrefixWithDuplicates
+remove _ (Paths paths) = removeDupes . matchingAnyOf $ map PathSpec.parse paths
   where
-    isPrefixWithDuplicates source = P.any (source `hashPathIsPrefixOf`)
-    hashPathIsPrefixOf a b = getFilePath a `pathIsPrefixOf` getFilePath b
-    pathIsPrefixOf p1 p2 =
-      let (name1,ext1) = splitExtension p1
-          (name2,ext2) = splitExtension p2 in
-        name1 `isPrefixOf` name2 && ext1 == ext2
+    matchingAnyOf :: [PathSpec] -> Condition
+    matchingAnyOf = Any <$> map Matches
 
-printPathsWithDuplicatesOutside :: [FilePath] -> IO ()
-printPathsWithDuplicatesOutside = mapM canonicalizePath >=> R.runEffect . printPathsWithDuplicatesOutsideEffect
-
-printPathsWithDuplicatesOutsideEffect :: MonadResource m => [FilePath] -> RepositoryHandle -> Effect m ()
-printPathsWithDuplicatesOutsideEffect paths r = f'' (f' paths r) >-> printPaths
-
-f'' :: MonadResource m => m (Producer HashPath m ()) -> Producer HashPath m ()
-f'' action = do
-  result <- lift action
-  result
-
-f' :: MonadResource m => [FilePath] -> RepositoryHandle -> m (Producer HashPath m ())
-f' paths r = return $ hoist (adapt' r) $ filesWithDupesOutside paths
-
-adapt'' :: MonadResource m => RepositoryHandle -> DuplicateCacheT m (Producer HashPath m ()) -> m (Producer HashPath m ())
-adapt'' = adapt'
-
--- l :: Monad m => t m (u m a)
-
-
-filesWithDupesOutside :: Monad m => [FilePath] ->  Producer HashPath (DuplicateCacheT m) ()
-filesWithDupesOutside paths = mapM_ filesUnderPathWithDupesOutside paths
-  -- assert False undefined -- return $ sequence_ things
+remove _ Suffixes = removeDupes' (Holds hasPrefixDupe)
   where
-    filesUnderPathWithDupesOutside :: Monad m => FilePath -> Producer HashPath (DuplicateCacheT m) ()
-    filesUnderPathWithDupesOutside path = do
-      list <- lift $ DuplicateCache.listPathF path
-      hoist lift list >-> filterDuplicates hasDupesOutside
-      -- assert False undefined -- return (list >-> filterDupe)
-    hasDupesOutside _ = P.any (isOutside . getFilePath)
-    isOutside path = all (not . (`isPrefixOf` path)) paths
+    hasPrefixDupe file = dupes file >>= lift . P.any (`fileBaseNameIsPrefixOf` file)
+    fileBaseNameIsPrefixOf a b = getFilePath a `baseNameIsPrefixOf` getFilePath b
+
+prop_baseNameIsPrefixOf_nameWithSuffix :: FilePath -> String -> Bool
+prop_baseNameIsPrefixOf_nameWithSuffix path suffix =
+    (validPath ++ ".ext") `baseNameIsPrefixOf` (validPath ++ nameSuffix ++ ".ext")
+  where
+    validPath = filter (not . isExtSeparator) path
+    nameSuffix = filter (not . isExtSeparator) $ filter (not . isPathSeparator) suffix
+
+test_baseNameIsNotPrefixOf_differentDirectoriesSameName =
+  assertBool $ not ("/parent.ext" `baseNameIsPrefixOf` "/parent/file.ext")
+
+test_baseNameIsNotPrefixOf_differentExtensions =
+  assertBool $ not ("file.ext" `baseNameIsPrefixOf` "file.ext2")
+
+test_baseNameIsNotPrefixOf_multiSegmentExtension =
+  assertBool $ not ("file.gz" `baseNameIsPrefixOf` "file.tar.gz")
+
+baseNameIsPrefixOf :: FilePath -> FilePath -> Bool
+baseNameIsPrefixOf path1 path2 =
+  let (dir1, filename1) = splitFileName path1
+      (dir2, filename2) = splitFileName path2
+      (basename1, ext1) = splitExtensions filename1
+      (basename2, ext2) = splitExtensions filename2 in
+    basename1 `isPrefixOf` basename2 && ext1 == ext2 && dir1 `equalFilePath` dir2

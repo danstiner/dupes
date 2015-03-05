@@ -6,21 +6,13 @@ module Command.Keep (
   , run
 ) where
 
-import           Command.Common
-import           DuplicateCache
-import           Repository                   as R
+import           Dedupe
+import           PathSpec
 
-import           Control.Exception
-import           Control.Monad
-import           Control.Monad.Trans.Resource
-import           Data.List
 import           Options.Applicative
-import           Pipes
-import qualified Pipes.Prelude                as P
-import           System.Directory
 
 data Options = Options
-  { optPaths :: [FilePath]  }
+  { optPathSpecs :: [PathSpecString]  }
 
 parserInfo :: ParserInfo Options
 parserInfo = info parser
@@ -32,15 +24,10 @@ parser = Options
       ( argument str (metavar "PATHSPEC") )
 
 run :: Options -> IO ()
-run opt = keepDuplicatesUnder (optPaths opt)
+run opt = keep (map PathSpec.parse $ optPathSpecs opt)
 
-keepDuplicatesUnder :: [FilePath] -> IO ()
-keepDuplicatesUnder = mapM canonicalizePath >=> R.runEffect . keepDuplicatesUnderEffect
-
-keepDuplicatesUnderEffect :: MonadResource m => [FilePath] -> RepositoryHandle -> Effect m ()
-keepDuplicatesUnderEffect paths r = adapt r (findDuplicatesOutside paths) >-> printPaths
-
-findDuplicatesOutside :: Monad m => [FilePath] -> Producer HashPath (DuplicateCacheT m) ()
-findDuplicatesOutside paths = assert False undefined -- sequence_ $ map duplicatesUnderButOutside paths
+keep :: [PathSpec] -> IO ()
+keep = removeDupes . notMatching
   where
-    pathIsAKeeper path = any (`isPrefixOf` path) paths
+    notMatching :: [PathSpec] -> Condition
+    notMatching = All <$> map (Not . Matches)

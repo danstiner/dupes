@@ -7,10 +7,6 @@ module Command.Init (
 import           Options.Applicative
 import           Repository
 import           System.Directory
-import           System.Log.Logger
-
-logTag :: String
-logTag = "Command.Init"
 
 data Options = Options
   { _optQuiet :: Bool }
@@ -27,9 +23,4 @@ parser = Options
      <> help "Only print warning and error messages.")
 
 run :: Options -> IO ()
-run _ = getCurrentDirectory >>= createRepository
-
-createRepository :: FilePath -> IO ()
-createRepository path = do
-  Repository.create path
-  infoM logTag ("Initialized empty repository at " ++ path)
+run _ = getCurrentDirectory >>= Repository.create

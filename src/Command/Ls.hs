@@ -6,7 +6,7 @@ module Command.Ls (
 
 import           DuplicateCache
 import           Index
-import           Repository                   as R
+import           Repository
 
 import           Control.Monad.Trans.Resource
 import           Options.Applicative
@@ -27,17 +27,17 @@ parserInfo = info parser
   (progDesc "Show information about files in the duplicate index")
 
 run :: Options -> IO ()
-run (Options {optAll=True}) = R.runEffect printIndex
-run (Options {optAll=False}) = R.runEffect printDuplicates
+run (Options {optAll=True}) = Repository.runEffect printIndex
+run (Options {optAll=False}) = Repository.runEffect printDuplicates
 
 printIndex :: RepositoryHandle -> Effect (ResourceT IO) ()
-printIndex repository = listIndexEntries >-> getEntryPath >-> P.print
+printIndex repository = listIndexEntries >-> getEntryPath >-> P.stdoutLn
   where
     listIndexEntries = Index.list $ getIndex repository
     getEntryPath = P.map indexEntryPath
 
 printDuplicates :: RepositoryHandle -> Effect (ResourceT IO) ()
-printDuplicates repository = listDuplicates >-> toString >-> P.print
+printDuplicates repository = listDuplicates >-> toString >-> P.stdoutLn
   where
     listDuplicates = DuplicateCache.list (getCache repository)
     toString = P.map stringify

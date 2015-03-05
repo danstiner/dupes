@@ -1,10 +1,10 @@
+{-# OPTIONS_GHC -F -pgmF htfpp #-}
 module Main where
 
-import           Test.Repository
-
-import           Test.Framework  (defaultMain, testGroup)
+import Test.Framework
+import {-@ HTF_TESTS @-} Command.Remove
+import {-@ HTF_TESTS @-} Dedupe
+import {-@ HTF_TESTS @-} Repository
 
 main :: IO ()
-main = defaultMain tests
-  where
-    tests = [testGroup "Repository" Test.Repository.tests]
+main = htfMain htf_importedTests
