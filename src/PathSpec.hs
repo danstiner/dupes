@@ -5,9 +5,9 @@ module PathSpec (
   , parse
 ) where
 
-import qualified          System.FilePath.Glob as Glob
-import System.FilePath
-import Data.List
+import           Data.List
+import           System.FilePath
+import qualified System.FilePath.Glob as Glob
 
 type PathSpecString = String
 

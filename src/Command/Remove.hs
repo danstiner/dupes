@@ -18,7 +18,7 @@ import           Pipes
 import qualified Pipes.Prelude       as P
 import           System.FilePath
 
-import Test.Framework
+import           Test.Framework
 
 data Options = Options
   { optSuffixes  :: Bool

@@ -15,15 +15,15 @@ module Dedupe (
 ) where
 
 import           PathSpec
-import Prompt
+import           Prompt
 
-import Control.Exception
+import           Control.Exception
 import           Control.Monad.Identity
 import           Control.Monad.Trans.Free
 import           Pipes
-import qualified Pipes.Prelude as P
+import qualified Pipes.Prelude            as P
 
-import Test.Framework
+import           Test.Framework
 
 newtype File = File { getFilePath :: FilePath } deriving (Show)
 

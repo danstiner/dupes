@@ -24,9 +24,9 @@ import qualified FileAccess
 import           Index                        (Index)
 import qualified Index
 
-import           Data.Either.Compat
 import           Control.Monad
 import           Control.Monad.Trans.Resource
+import           Data.Either.Compat
 import           Database.LevelDB             (Options (..))
 import qualified Database.LevelDB             as DB
 import qualified Database.LevelDB.Base        as DBB
@@ -35,8 +35,8 @@ import           System.Directory
 import           System.FilePath
 import           System.Log.Logger
 
-import Test.Framework
-import Test.HUnit
+import           Test.Framework
+import           Test.HUnit
 
 logTag :: String
 logTag = "Repository"
@@ -108,7 +108,6 @@ runEffectWith r effect = runRepositoryAction (Pipes.runEffect . effect)
   where
     runRepositoryAction :: (RepositoryHandle -> ResourceT IO a) -> IO a
     runRepositoryAction action = runResourceT $ withRepository r action
-
 
 test_isRepository = True @=? result
   where

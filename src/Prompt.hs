@@ -4,9 +4,9 @@
 
 module Prompt (module Prompt) where
 
+import           Control.Exception
 import           Control.Monad.Free
 import           Control.Monad.Free.TH
-import Control.Exception
 
 class Monad m => PromptM m where
 
