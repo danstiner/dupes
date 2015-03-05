@@ -1,6 +1,6 @@
 module Command.Commands (
     Command (..)
-  , parser
+  , commands
   , run
 ) where
 
@@ -19,14 +19,13 @@ data Command
   | Remove Remove.Options
   | Update Update.Options
 
-parser :: Parser Command
-parser = subparser (
+commands :: Mod CommandFields Command
+commands =
      command "init"   (fmap Init   Init.parserInfo)
   <> command "keep"   (fmap Keep   Keep.parserInfo)
   <> command "ls"     (fmap Ls     Ls.parserInfo)
   <> command "remove" (fmap Remove Remove.parserInfo)
   <> command "update" (fmap Update Update.parserInfo)
-  )
 
 run :: Command -> IO ()
 run (Init opt)   = Init.run opt
