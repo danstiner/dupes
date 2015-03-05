@@ -21,9 +21,9 @@ data Command
 
 parser :: Parser Command
 parser = subparser (
-     command "init"   (fmap Init Init.parserInfo)
-  <> command "keep"   (fmap Keep Keep.parserInfo)
-  <> command "ls"     (fmap Ls Ls.parserInfo)
+     command "init"   (fmap Init   Init.parserInfo)
+  <> command "keep"   (fmap Keep   Keep.parserInfo)
+  <> command "ls"     (fmap Ls     Ls.parserInfo)
   <> command "remove" (fmap Remove Remove.parserInfo)
   <> command "update" (fmap Update Update.parserInfo)
   )
