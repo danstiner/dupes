@@ -32,6 +32,7 @@ import qualified Database.LevelDB             as DB
 import qualified Database.LevelDB.Base        as DBB
 import           Pipes
 import           System.Directory
+import           System.Exit
 import           System.FilePath
 import           System.Log.Logger
 
@@ -56,7 +57,7 @@ findRepo path =
     FileAccess.runIO (find path) >>= either noRepoFound return
   where
     noRepoFound = errorAndCrash
-    errorAndCrash msg = errorM logTag msg >> fail msg
+    errorAndCrash msg = errorM logTag msg >> exitFailure
 
 find :: FilePath -> FileAccess (Either String FilePath)
 find path = isRepository path >>= pathIsRepo
@@ -67,7 +68,7 @@ find path = isRepository path >>= pathIsRepo
       if path == parent
         then reachedRootPath
         else find parent
-    reachedRootPath = return $ Left "Neither path or any of its parents are a repository"
+    reachedRootPath = return $ Left "Neither path nor any of its parents are a repository"
 
 isRepository :: FilePath -> FileAccess Bool
 isRepository = FileAccess.doesDirectoryExist . repositorySubdir
