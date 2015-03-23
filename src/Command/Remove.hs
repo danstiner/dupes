@@ -26,7 +26,7 @@ data Options = Options
 
 data Mode
   = Suffixes
-  | Paths [FilePath]
+  | PathSpecs [PathSpec]
 
 parserInfo :: ParserInfo Options
 parserInfo = info parser
@@ -41,19 +41,18 @@ parser = Options
       ( argument str (metavar "PATHSPEC") )
 
 run :: Options -> IO ()
-run opt@(Options {optSuffixes=True})  = remove opt Suffixes
-run opt@(Options {optSuffixes=False}) = remove opt $ Paths (optPathSpecs opt)
+run     (Options {optSuffixes=True})  = remove Suffixes
+run opt@(Options {optSuffixes=False}) = remove (PathSpecs (parsePathSpecs opt))
 
-remove :: Options -> Mode -> IO ()
+parsePathSpecs :: Options -> [PathSpec]
+parsePathSpecs = map PathSpec.parse . optPathSpecs
 
-remove _ (Paths paths) = removeDupes . matchingAnyOf $ pathSpecs
+remove :: Mode -> IO ()
+remove (PathSpecs pathSpecs) = removeDupes . matchingAnyOf $ pathSpecs
   where
     matchingAnyOf :: [PathSpec] -> Condition
     matchingAnyOf = Any <$> map Matches
-    pathSpecs :: [PathSpec]
-    pathSpecs = map PathSpec.parse paths
-
-remove _ Suffixes = removeDupes' (Holds hasPrefixDupe)
+remove Suffixes = removeDupes' (Holds hasPrefixDupe)
   where
     hasPrefixDupe file = dupes file >>= lift . P.any (`fileBaseNameIsPrefixOf` file)
     fileBaseNameIsPrefixOf a b = getFilePath a `baseNameIsPrefixOf` getFilePath b

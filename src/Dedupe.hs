@@ -94,13 +94,6 @@ eval (Matches spec)    file = return $ PathSpec.matches spec (getFilePath file)
 eval (Not condition)   file = liftM not (eval condition file)
 eval (Holds predicate) file = predicate file
 
--- eval :: Monad m => ConditionM m -> Pipe File File m
--- eval (All conditions)  file = allM (flip eval file) conditions
--- eval (Any conditions)  file = anyM (flip eval file) conditions
--- eval (Matches spec)    file = return $ PathSpec.matches spec (getFilePath file)
--- eval (Not condition)   file = liftM not (eval condition file)
--- eval (Holds predicate) file = predicate file
-
 allM :: Monad m => (a -> m Bool) -> [a] -> m Bool
 allM f xs = liftM and (mapM f xs)
 
