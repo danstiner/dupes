@@ -16,7 +16,7 @@ data Options = Options
 
 parserInfo :: ParserInfo Options
 parserInfo = info parser
-  (progDesc "Discard all duplicates that have at least one copy in the specified pathspec(s)")
+  (progDesc "Keep specified files, but delete any duplicates of them")
 
 parser :: Parser Options
 parser = Options

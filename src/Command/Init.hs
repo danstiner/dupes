@@ -13,7 +13,7 @@ data Options = Options
 
 parserInfo :: ParserInfo Options
 parserInfo = info parser
-  (progDesc "Create repository in the current directory if one does not already exist")
+  (progDesc "Create a repository")
 
 parser :: Parser Options
 parser = Options
