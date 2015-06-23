@@ -14,7 +14,7 @@ data Options = Options
 
 parserInfo :: ParserInfo Options
 parserInfo = info parser
-  (progDesc "Update entries in the duplicate file index to match the filesystem.")
+  (progDesc "Update index to match working directory")
 
 parser :: Parser Options
 parser = Options

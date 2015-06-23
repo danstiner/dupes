@@ -30,7 +30,7 @@ data Mode
 
 parserInfo :: ParserInfo Options
 parserInfo = info parser
-  (progDesc "Delete duplicates")
+  (progDesc "Delete specified files which are duplicates")
 
 parser :: Parser Options
 parser = Options
