@@ -24,7 +24,7 @@ parser = Options
       ( argument str (metavar "PATHSPEC") )
 
 run :: Options -> IO ()
-run opt = keep (map PathSpec.parse $ optPathSpecs opt)
+run = keep . map PathSpec.parse . optPathSpecs
 
 keep :: [PathSpec] -> IO ()
 keep = removeDupes . notMatching
