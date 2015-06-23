@@ -42,7 +42,7 @@ parser = Options
 
 run :: Options -> IO ()
 run     (Options {optSuffixes=True})  = remove Suffixes
-run opt@(Options {optSuffixes=False}) = remove (PathSpecs (parsePathSpecs opt))
+run opt@(Options {optSuffixes=False}) = remove . PathSpecs $ parsePathSpecs opt
 
 parsePathSpecs :: Options -> [PathSpec]
 parsePathSpecs = map PathSpec.parse . optPathSpecs
