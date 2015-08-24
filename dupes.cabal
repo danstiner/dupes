@@ -19,10 +19,9 @@ executable dupes
   Main-Is:           Main.hs
   GHC-Options:       -Wall -threaded -fno-warn-unused-binds -fno-ignore-asserts
   GHC-Prof-Options:  -fprof-auto "-with-rtsopts=-N -p -s -i0.1"
-  Build-Depends:       base >= 4.5 && < 4.8
+  Build-Depends:       base >= 4.5 && <= 5
                      , base-compat
                      , base16-bytestring
-                     , base32-bytestring
                      , bytestring >= 0.10.4.0
                      , cereal
                      , containers
@@ -37,7 +36,7 @@ executable dupes
                      , free
                      , Glob
                      , hslogger
-                     , leveldb-haskell >= 0.6
+                     , monad-logger
                      , MissingH
                      , mmorph
                      , mtl
@@ -45,12 +44,12 @@ executable dupes
                      , pipes
                      , resourcet
                      , text
-                     , transformers == 0.3.*
-                     , unix
+                     , transformers >= 0.3
 
                      , HUnit
                      , QuickCheck >= 2.7
                      , HTF
+                     , sqlite-simple
 
 Test-suite pure
   Type:              exitcode-stdio-1.0
@@ -59,7 +58,6 @@ Test-suite pure
   Build-Depends:       base >= 4 && < 5
                      , base-compat
                      , base16-bytestring
-                     , base32-bytestring
                      , bytestring >= 0.10.4.0
                      , cereal
                      , containers
@@ -74,7 +72,6 @@ Test-suite pure
                      , free
                      , Glob
                      , hslogger
-                     , leveldb-haskell
                      , MissingH
                      , mmorph
                      , mtl
@@ -83,7 +80,6 @@ Test-suite pure
                      , resourcet
                      , text
                      , transformers
-                     , unix
 
                      , HUnit
                      , QuickCheck >= 2.7
@@ -96,7 +92,6 @@ Test-suite external
   GHC-Options:    -threaded -O
   Build-Depends:  base >= 4 && < 5
                   , base16-bytestring
-                  , base32-bytestring
                   , bytestring >= 0.10.4.0
                   , cereal
                   , containers
@@ -122,7 +117,7 @@ Test-suite external
                   , test-framework
                   , test-framework-hunit
                   , test-framework-quickcheck2
-
+                  , sqlite-simple
 
 source-repository head
   type: git

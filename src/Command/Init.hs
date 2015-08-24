@@ -6,7 +6,7 @@ module Command.Init (
 
 import           Options.Applicative
 import           Repository
-import           System.Directory
+import Control.Monad (void)
 
 data Options = Options
   { _optQuiet :: Bool }
@@ -23,4 +23,4 @@ parser = Options
      <> help "Only print warning and error messages.")
 
 run :: Options -> IO ()
-run _ = getCurrentDirectory >>= Repository.create
+run _ = void Repository.create

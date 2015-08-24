@@ -1,35 +1,22 @@
 {-# OPTIONS_GHC -F -pgmF htfpp #-}
-{-# LANGUAGE FlexibleContexts #-}
-{-# LANGUAGE RankNTypes       #-}
 
 module Repository (
     Store (..)
   , Repository (..)
-  , RepositoryHandle (..)
+  , create
   , get
   , findPath
-  , update
-  , withRepository
-  , create
   , find
   , isRepository
-  , Repository.runEffect
   , htf_thisModulesTests
   ) where
 
-import           DuplicateCache               (DuplicateCache)
-import qualified DuplicateCache
 import           FileAccess                   (FileAccess)
 import qualified FileAccess
-import           Index                        (Index)
-import qualified Index
 
 import           Control.Monad
 import           Control.Monad.Trans.Resource
 import           Data.Either.Compat
-import           Database.LevelDB             (Options (..))
-import qualified Database.LevelDB             as DB
-import qualified Database.LevelDB.Base        as DBB
 import           Pipes
 import           System.Directory
 import           System.Exit
@@ -43,8 +30,21 @@ logTag :: String
 logTag = "Repository"
 
 newtype Store = Store { getStorePath :: FilePath }
+
 data Repository = Repository { getPath :: FilePath, getStore :: Store }
-data RepositoryHandle = RepositoryHandle { getIndex :: Index, getCache :: DuplicateCache }
+
+create :: IO Repository
+create = getCurrentDirectory >>= createAt
+
+createAt :: FilePath -> IO Repository
+createAt path = do
+    exists <- FileAccess.runIO $ isRepository path
+    unless exists $ do
+      createDirectory storePath
+      infoM logTag ("Initialized empty repository at " ++ path)
+    getRepoAt path
+  where
+    storePath = repositorySubdir path
 
 get :: IO Repository
 get = findPath >>= getRepoAt
@@ -79,41 +79,10 @@ repositorySubdir = (</> ".dupes")
 getRepoAt :: FilePath -> IO Repository
 getRepoAt path = return $ Repository path (Store (repositorySubdir path </> "store"))
 
-update :: MonadResource m => RepositoryHandle -> m ()
-update r = Pipes.runEffect $ Index.update (getIndex r) >-> DuplicateCache.update (getCache r)
-
-open :: MonadResource m => Repository -> m RepositoryHandle
-open (Repository path (Store store)) = do
-  db <- DB.open store DB.defaultOptions
-  return $ RepositoryHandle (Index.open db path) (DuplicateCache.open db)
-
-create :: FilePath -> IO ()
-create path = do
-  exists <- FileAccess.runIO $ isRepository path
-  unless exists $ do
-    createDirectory repoPath
-    createStore repoPath
-    infoM logTag ("Initialized empty repository at " ++ repoPath)
-  where
-    repoPath = repositorySubdir path
-    createStore path' = DBB.withDB (path' </> "store") (DB.defaultOptions {createIfMissing=True}) (const $ return ())
-
-withRepository :: MonadResource m => Repository -> (RepositoryHandle -> m a) -> m a
-withRepository r f = open r >>= f
-
-runEffect :: (RepositoryHandle -> Effect (ResourceT IO) a) -> IO a
-runEffect f = get >>= \r -> runEffectWith r f
-
-runEffectWith :: Repository -> (RepositoryHandle -> Effect (ResourceT IO) a) -> IO a
-runEffectWith r effect = runRepositoryAction (Pipes.runEffect . effect)
-  where
-    runRepositoryAction :: (RepositoryHandle -> ResourceT IO a) -> IO a
-    runRepositoryAction action = runResourceT $ withRepository r action
-
 test_isRepository = True @=? result
   where
     result = FileAccess.runPure filesystem $ isRepository "/path"
-    filesystem = testRepoDirAt "/path/"
+    filesystem = testRepoDirAt "/path"
 
 test_isNotRepository = False @=? result
   where
@@ -124,13 +93,13 @@ test_findWhenDirectoryIsRepo = expected @=? actual
   where
     expected = Right "/path"
     actual = FileAccess.runPure filesystem $ find "/path"
-    filesystem = testRepoDirAt "/path/"
+    filesystem = testRepoDirAt "/path"
 
 test_findWhenParentIsRepo = expected @=? actual
   where
     expected = Right "/path"
     actual = FileAccess.runPure filesystem $ find "/path/inner"
-    filesystem = testRepoDirAt "/path/"
+    filesystem = testRepoDirAt "/path"
 
 test_findWhenRootIsRepo = expected @=? actual
   where
@@ -138,6 +107,7 @@ test_findWhenRootIsRepo = expected @=? actual
     actual = FileAccess.runPure filesystem $ find "/path"
     filesystem = testRepoDirAt "/"
 
+test_findWhenNoRepo :: Assertion
 test_findWhenNoRepo = True @=? isLeft result
   where
     result = FileAccess.runPure filesystem $ find "/path"
