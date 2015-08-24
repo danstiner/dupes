@@ -9,6 +9,7 @@
 *.sublime-workspace
 .hsenv
 .cabal-sandbox/
+.stack-work/
 cabal.sandbox.config
 cabal.config
 .HTF/
