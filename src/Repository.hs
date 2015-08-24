@@ -34,20 +34,16 @@ newtype Store = Store { getStorePath :: FilePath }
 data Repository = Repository { getPath :: FilePath, getStore :: Store }
 
 create :: IO Repository
-create = getCurrentDirectory >>= createAt
+create = getCurrentDirectory >>= FileAccess.runIO . createAt
 
-createAt :: FilePath -> IO Repository
+createAt :: FilePath -> FileAccess Repository
 createAt path = do
-    exists <- FileAccess.runIO $ isRepository path
-    unless exists $ do
-      createDirectory storePath
-      infoM logTag ("Initialized empty repository at " ++ path)
-    getRepoAt path
-  where
-    storePath = repositorySubdir path
+  let storePath = repositorySubdir path
+  FileAccess.createDirectoryIfMissing storePath
+  return $ getRepoAt path
 
 get :: IO Repository
-get = findPath >>= getRepoAt
+get = findPath >>= return . getRepoAt
 
 findPath :: IO FilePath
 findPath = getCurrentDirectory >>= findRepo
@@ -76,8 +72,8 @@ isRepository = FileAccess.doesDirectoryExist . repositorySubdir
 repositorySubdir :: FilePath -> FilePath
 repositorySubdir = (</> ".dupes")
 
-getRepoAt :: FilePath -> IO Repository
-getRepoAt path = return $ Repository path (Store (repositorySubdir path </> "store"))
+getRepoAt :: FilePath -> Repository
+getRepoAt path = Repository path (Store (repositorySubdir path </> "store"))
 
 test_isRepository = True @=? result
   where
@@ -112,6 +108,22 @@ test_findWhenNoRepo = True @=? isLeft result
   where
     result = FileAccess.runPure filesystem $ find "/path"
     filesystem = ["/path", "/"]
+
+test_createAt_createsRepository :: Assertion
+test_createAt_createsRepository = True @=? result
+  where
+    filesystem = ["/path", "/"]
+    result = FileAccess.runPure filesystem $ do
+      createAt "/path"
+      isRepository "/path"
+
+test_createAt_isIdempotent :: Assertion
+test_createAt_isIdempotent = True @=? result
+  where
+    filesystem = ["/path", "/"] ++ testRepoDirAt "/path"
+    result = FileAccess.runPure filesystem $ do
+      createAt "/path"
+      isRepository "/path"
 
 testRepoDirAt :: FilePath -> [FilePath]
 testRepoDirAt path = [path </> ".dupes"]
