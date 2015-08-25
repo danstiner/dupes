@@ -62,7 +62,7 @@ findFrom = return . eitherFailedOrFound <=< findM isRepository <=< FileAccess.pa
     eitherFailedOrFound = maybe failedToFind Right
     failedToFind = Left "Neither path nor any of its parents are a repository"
 
-findM :: Monad m => (a -> m Bool) -> [a] -> m (Maybe a)
+findM :: (Monad m, Functor m) => (a -> m Bool) -> [a] -> m (Maybe a)
 findM f = fmap listToMaybe . filterM f
 
 isRepository :: FilePath -> FileAccess Bool
