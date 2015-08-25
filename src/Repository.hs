@@ -4,9 +4,8 @@ module Repository (
     Store (..)
   , Repository (..)
   , create
-  , get
-  , findPath
   , find
+  , findFrom
   , isRepository
   , htf_thisModulesTests
   ) where
@@ -14,6 +13,8 @@ module Repository (
 import           FileAccess                   (FileAccess)
 import qualified FileAccess
 
+import Data.Maybe (listToMaybe)
+import qualified Data.List as List
 import           Control.Monad
 import           Control.Monad.Trans.Resource
 import           Data.Either.Compat
@@ -42,29 +43,27 @@ createAt path = do
   FileAccess.createDirectoryIfMissing storePath
   return $ getRepoAt path
 
-get :: IO Repository
-get = findPath >>= return . getRepoAt
+find :: IO Repository
+find = findPath >>= return . getRepoAt
 
 findPath :: IO FilePath
 findPath = getCurrentDirectory >>= findRepo
 
 findRepo :: FilePath -> IO FilePath
 findRepo path =
-    FileAccess.runIO (find path) >>= either noRepoFound return
+    FileAccess.runIO (findFrom path) >>= either noRepoFound return
   where
     noRepoFound = errorAndCrash
     errorAndCrash msg = errorM logTag msg >> exitFailure
 
-find :: FilePath -> FileAccess (Either String FilePath)
-find path = isRepository path >>= pathIsRepo
+findFrom :: FilePath -> FileAccess (Either String FilePath)
+findFrom = return . eitherFailedOrFound <=< findM isRepository <=< FileAccess.parentDirectories
   where
-    pathIsRepo True  = return $ Right path
-    pathIsRepo False = do
-      parent <- FileAccess.parentDirectory path
-      if path == parent
-        then reachedRootPath
-        else find parent
-    reachedRootPath = return $ Left "Neither path nor any of its parents are a repository"
+    eitherFailedOrFound = maybe failedToFind Right
+    failedToFind = Left "Neither path nor any of its parents are a repository"
+
+findM :: Monad m => (a -> m Bool) -> [a] -> m (Maybe a)
+findM f = fmap listToMaybe . filterM f
 
 isRepository :: FilePath -> FileAccess Bool
 isRepository = FileAccess.doesDirectoryExist . repositorySubdir
@@ -88,25 +87,25 @@ test_isNotRepository = False @=? result
 test_findWhenDirectoryIsRepo = expected @=? actual
   where
     expected = Right "/path"
-    actual = FileAccess.runPure filesystem $ find "/path"
+    actual = FileAccess.runPure filesystem $ findFrom "/path"
     filesystem = testRepoDirAt "/path"
 
 test_findWhenParentIsRepo = expected @=? actual
   where
     expected = Right "/path"
-    actual = FileAccess.runPure filesystem $ find "/path/inner"
+    actual = FileAccess.runPure filesystem $ findFrom "/path/inner"
     filesystem = testRepoDirAt "/path"
 
 test_findWhenRootIsRepo = expected @=? actual
   where
     expected = Right "/"
-    actual = FileAccess.runPure filesystem $ find "/path"
+    actual = FileAccess.runPure filesystem $ findFrom "/path"
     filesystem = testRepoDirAt "/"
 
 test_findWhenNoRepo :: Assertion
 test_findWhenNoRepo = True @=? isLeft result
   where
-    result = FileAccess.runPure filesystem $ find "/path"
+    result = FileAccess.runPure filesystem $ findFrom "/path"
     filesystem = ["/path", "/"]
 
 test_createAt_createsRepository :: Assertion

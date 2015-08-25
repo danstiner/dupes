@@ -2,7 +2,7 @@
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE TemplateHaskell  #-}
 
-module FileAccess (module FileAccess) where
+module FileAccess (module FileAccess, parentDirectories) where
 
 import           Control.Monad.Free
 import           Control.Monad.Free.TH
@@ -30,3 +30,10 @@ runPure paths (Free (DoesDirectoryExist path f)) = runPure paths . f $ path `ele
 runPure paths (Free (ParentDirectory path f)) = runPure paths . f $ takeDirectory path
 runPure paths (Free (CreateDirectoryIfMissing path f)) = runPure (path : paths) f
 runPure _ (Pure a) = a
+
+parentDirectories :: FilePath -> FileAccess [FilePath]
+parentDirectories path = do
+  parent <- FileAccess.parentDirectory path
+  if path == parent
+    then return [path]
+    else fmap (path :) (parentDirectories parent)
