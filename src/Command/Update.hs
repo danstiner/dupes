@@ -4,7 +4,8 @@ module Command.Update (
     , run
     ) where
 
-import           Repository
+import qualified Repository
+import qualified Store
 
 import           Control.Monad.Trans.Resource
 import           Options.Applicative
@@ -24,4 +25,4 @@ parser = Options
      <> help "Only print warning and error messages.")
 
 run :: Options -> IO ()
-run _ = get >>= \r -> runResourceT (withRepository r update)
+run _ = Repository.find >>= Store.update
