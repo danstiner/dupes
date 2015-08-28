@@ -18,7 +18,6 @@ import qualified Data.List as List
 import           Control.Monad
 import           Control.Monad.Trans.Resource
 import           Data.Either.Compat
-import           Pipes
 import           System.Directory
 import           System.Exit
 import           System.FilePath
