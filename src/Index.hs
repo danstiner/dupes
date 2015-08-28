@@ -5,7 +5,7 @@
 module Index (
     Index
   , update
-  , open
+  , get
   , list
   , IndexChange (..)
   , IndexEntry (..)
@@ -91,8 +91,8 @@ instance Serialize FileHash where
   put (FileHash hash) = S.put hash
   get = fmap FileHash S.get
 
-open :: DB -> FilePath -> Index
-open db = Index db defaultReadOptions defaultWriteOptions
+get :: Repository -> Index
+get db = Index db defaultReadOptions defaultWriteOptions
 
 update :: MonadResource m => Index -> Producer IndexChange m ()
 update i = diff cmp (walk $ indexPath i) (list i) >-> update' i
