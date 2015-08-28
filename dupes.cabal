@@ -92,6 +92,7 @@ Test-suite external
   GHC-Options:    -threaded -O
   Build-Depends:  base >= 4 && < 5
                   , base16-bytestring
+                  , base-compat
                   , bytestring >= 0.10.4.0
                   , cereal
                   , containers
@@ -113,10 +114,8 @@ Test-suite external
                   , transformers
 
                   , HUnit
-                  , QuickCheck
-                  , test-framework
-                  , test-framework-hunit
-                  , test-framework-quickcheck2
+                  , QuickCheck >= 2.7
+                  , HTF
                   , sqlite-simple
 
 source-repository head

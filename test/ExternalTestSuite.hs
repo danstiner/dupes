@@ -1,8 +1,8 @@
+{-# OPTIONS_GHC -F -pgmF htfpp #-}
 module Main where
 
-import           Test.Framework (defaultMain, testGroup)
+import {-@ HTF_TESTS @-} Database
+import                   Test.Framework
 
 main :: IO ()
-main = defaultMain tests
-  where
-    tests = [ ]
+main = htfMain htf_importedTests
