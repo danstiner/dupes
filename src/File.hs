@@ -1,5 +1,4 @@
-module File (
-    File (..)
-  ) where
+module File (File(..)) where
 
-newtype File = File { getFilePath :: FilePath } deriving (Show)
+newtype File = File { getFilePath :: FilePath }
+  deriving Show

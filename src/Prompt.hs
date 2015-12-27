@@ -8,14 +8,15 @@ import           Control.Exception
 import           Control.Monad.Free
 import           Control.Monad.Free.TH
 
-class Monad m => PromptM m where
+class Monad m => PromptM m
 
 data Choice = Choice Int
-data Response = Finished | Choose Choice
 
-data PromptF next
-  = Ask [Choice] (Response -> next)
-  deriving (Functor)
+data Response = Finished
+              | Choose Choice
+
+data PromptF next = Ask [Choice] (Response -> next)
+  deriving Functor
 
 type Prompt = Free PromptF
 

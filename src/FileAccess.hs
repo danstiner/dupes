@@ -9,11 +9,10 @@ import           Control.Monad.Free.TH
 import           System.Directory      as Directory
 import           System.FilePath       as FilePath
 
-data FileAccessF next
-  = DoesDirectoryExist FilePath (Bool -> next)
-  | ParentDirectory FilePath (FilePath -> next)
-  | CreateDirectoryIfMissing FilePath (next)
-  deriving (Functor)
+data FileAccessF next = DoesDirectoryExist FilePath (Bool -> next)
+                      | ParentDirectory FilePath (FilePath -> next)
+                      | CreateDirectoryIfMissing FilePath (next)
+  deriving Functor
 
 type FileAccess = Free FileAccessF
 
@@ -22,7 +21,8 @@ makeFree ''FileAccessF
 runIO :: FileAccess a -> IO a
 runIO (Free (DoesDirectoryExist path f)) = Directory.doesDirectoryExist path >>= runIO . f
 runIO (Free (ParentDirectory path f)) = runIO . f $ FilePath.takeDirectory path
-runIO (Free (CreateDirectoryIfMissing path f)) = Directory.createDirectoryIfMissing False path >> runIO f 
+runIO (Free (CreateDirectoryIfMissing path f)) = Directory.createDirectoryIfMissing False path >> runIO
+                                                                                                    f
 runIO (Pure a) = return a
 
 runPure :: [FilePath] -> FileAccess a -> a

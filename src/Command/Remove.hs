@@ -1,12 +1,7 @@
 {-# OPTIONS_GHC -F -pgmF htfpp #-}
 {-# LANGUAGE Rank2Types #-}
 
-module Command.Remove (
-    Options
-  , parserInfo
-  , run
-  , htf_thisModulesTests
-) where
+module Command.Remove (Options, parserInfo, run, htf_thisModulesTests) where
 
 import           Dedupe
 import           PathSpec
@@ -20,29 +15,24 @@ import           System.FilePath
 
 import           Test.Framework
 
-data Options = Options
-  { optSuffixes  :: Bool
-  , optPathSpecs :: [PathSpecString]  }
+data Options = Options { optSuffixes :: Bool, optPathSpecs :: [PathSpecString] }
 
-data Mode
-  = Suffixes
-  | PathSpecs [PathSpec]
+data Mode = Suffixes
+          | PathSpecs [PathSpec]
 
 parserInfo :: ParserInfo Options
-parserInfo = info parser
-  (progDesc "Delete specified files which are duplicates")
+parserInfo = info parser (progDesc "Delete specified files which are duplicates")
 
 parser :: Parser Options
-parser = Options
-  <$> switch
-      ( long "suffixes"
-     <> help "Remove files whose name is a suffix of a duplicate in the same directory" )
-  <*> many
-      ( argument str (metavar "PATHSPEC") )
+parser = Options <$> switch
+                       (long "suffixes"
+                        <> help
+                             "Remove files whose name is a suffix of a duplicate in the same directory")
+                 <*> many (argument str (metavar "PATHSPEC"))
 
 run :: Options -> IO ()
-run     (Options {optSuffixes=True})  = remove Suffixes
-run opt@(Options {optSuffixes=False}) = remove . PathSpecs $ parsePathSpecs opt
+run (Options { optSuffixes = True }) = remove Suffixes
+run opt@(Options { optSuffixes = False }) = remove . PathSpecs $ parsePathSpecs opt
 
 parsePathSpecs :: Options -> [PathSpec]
 parsePathSpecs = map PathSpec.parse . optPathSpecs
@@ -59,7 +49,7 @@ remove Suffixes = removeDupes' (Holds hasPrefixDupe)
 
 prop_baseNameIsPrefixOf_nameWithSuffix :: FilePath -> String -> Bool
 prop_baseNameIsPrefixOf_nameWithSuffix path suffix =
-    (validPath ++ ".ext") `baseNameIsPrefixOf` (validPath ++ nameSuffix ++ ".ext")
+  (validPath ++ ".ext") `baseNameIsPrefixOf` (validPath ++ nameSuffix ++ ".ext")
   where
     validPath = filter (not . isExtSeparator) path
     nameSuffix = filter (not . isExtSeparator) $ filter (not . isPathSeparator) suffix
@@ -78,5 +68,5 @@ baseNameIsPrefixOf path1 path2 =
   let (dir1, filename1) = splitFileName path1
       (dir2, filename2) = splitFileName path2
       (basename1, ext1) = splitExtensions filename1
-      (basename2, ext2) = splitExtensions filename2 in
-    basename1 `isPrefixOf` basename2 && ext1 == ext2 && dir1 `equalFilePath` dir2
+      (basename2, ext2) = splitExtensions filename2
+  in basename1 `isPrefixOf` basename2 && ext1 == ext2 && dir1 `equalFilePath` dir2

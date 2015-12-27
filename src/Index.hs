@@ -3,14 +3,14 @@
 {-# LANGUAGE RankNTypes                 #-}
 
 module Index (
-    Index
-  , update
-  , get
-  , list
-  , IndexChange (..)
-  , IndexEntry (..)
-  , FileHash
-) where
+    Index,
+    update,
+    get,
+    list,
+    IndexChange(..),
+    IndexEntry(..),
+    FileHash,
+    ) where
 
 import           Logging
 
@@ -47,23 +47,38 @@ import           System.Posix.Types
 logTag :: String
 logTag = "Index"
 
-newtype FileHash = FileHash B.ByteString deriving (Eq, Ord, Generic)
+newtype FileHash = FileHash B.ByteString
+  deriving (Eq, Ord, Generic)
 
-instance NFData FileHash where rnf = genericRnf
+instance NFData FileHash where
+  rnf = genericRnf
 
-data Index = Index { getDb :: DB, getReadOptions :: ReadOptions, getWriteOptions :: WriteOptions, indexPath :: FilePath }
+data Index =
+       Index
+         { getDb           :: DB
+         , getReadOptions  :: ReadOptions
+         , getWriteOptions :: WriteOptions
+         , indexPath       :: FilePath
+         }
 
 data IndexEntry = IndexEntry { indexEntryPath :: FilePath, indexFileInfo :: FileInfo }
 
-data FileInfo
-  = UnixFileInfo { mtime :: EpochTime, ctime :: EpochTime, inode :: FileID, size :: FileOffset, uid :: CUid, gid :: CGid, getFileHash :: FileHash }
+data FileInfo =
+       UnixFileInfo
+         { mtime       :: EpochTime
+         , ctime       :: EpochTime
+         , inode       :: FileID
+         , size        :: FileOffset
+         , uid         :: CUid
+         , gid         :: CGid
+         , getFileHash :: FileHash
+         }
   deriving (Eq, Ord, Show)
 
-data IndexChange
-  = Insert FilePath FileHash
-  | Remove FilePath FileHash
-  | Unchanged FilePath FileHash
-  deriving (Show)
+data IndexChange = Insert FilePath FileHash
+                 | Remove FilePath FileHash
+                 | Unchanged FilePath FileHash
+  deriving Show
 
 instance Show FileHash where
   show (FileHash hash) = C.unpack $ Base16.encode hash
@@ -85,7 +100,14 @@ instance Serialize FileInfo where
     uid' <- S.get
     gid' <- S.get
     hash <- S.get
-    return $ UnixFileInfo (CTime mtime') (CTime ctime') (CIno inode') (COff size') (CUid uid') (CGid gid') hash
+    return $ UnixFileInfo
+               (CTime mtime')
+               (CTime ctime')
+               (CIno inode')
+               (COff size')
+               (CUid uid')
+               (CGid gid')
+               hash
 
 instance Serialize FileHash where
   put (FileHash hash) = S.put hash
@@ -103,7 +125,14 @@ cmp (FileEntry filepath filestat) (IndexEntry indexpath indexstat) =
 cmp _ _ = LT
 
 compareIgnoringHash :: FileInfo -> FileInfo -> Ordering
-compareIgnoringHash = mconcat [comparing mtime, comparing ctime, comparing inode, comparing size, comparing uid, comparing gid]
+compareIgnoringHash = mconcat
+                        [ comparing mtime
+                        , comparing ctime
+                        , comparing inode
+                        , comparing size
+                        , comparing uid
+                        , comparing gid
+                        ]
 
 keyRange :: KeyRange
 keyRange = KeyRange keyPrefix (\k -> compare (B.head k) keyPrefixValue)
@@ -124,12 +153,19 @@ toValue :: FileInfo -> Value
 toValue = encode
 
 fromValue :: Value -> FileInfo
-fromValue v = case decode v of
-  Left _ -> assert False undefined
-  Right stat -> stat
+fromValue v =
+  case decode v of
+    Left _     -> assert False undefined
+    Right stat -> stat
 
 toFileInfo :: FileStatus -> FileHash -> FileInfo
-toFileInfo s = UnixFileInfo (modificationTime s) (statusChangeTime s) (fileID s) (fileSize s) (fileOwner s) (fileGroup s)
+toFileInfo s = UnixFileInfo
+                 (modificationTime s)
+                 (statusChangeTime s)
+                 (fileID s)
+                 (fileSize s)
+                 (fileOwner s)
+                 (fileGroup s)
 
 toFileInfo' :: FileStatus -> FileInfo
 toFileInfo' s = toFileInfo s nullHash
@@ -138,10 +174,10 @@ toFileInfo' s = toFileInfo s nullHash
 
 producerFromIterator :: MonadResource m => DB -> ReadOptions -> (Iterator -> Producer a m ()) -> Producer a m ()
 producerFromIterator db opts f = do
-    (rk, iter) <- lift $ iterOpen' db opts
-    res <- f iter
-    lift $ release rk
-    return res
+  (rk, iter) <- lift $ iterOpen' db opts
+  res <- f iter
+  lift $ release rk
+  return res
 
 list :: MonadResource m => Index -> Producer IndexEntry m ()
 list (Index db readOptions _ _) = producerFromIterator db readOptions go
@@ -149,21 +185,23 @@ list (Index db readOptions _ _) = producerFromIterator db readOptions go
     go :: (Applicative m, MonadIO m) => Iterator -> Producer IndexEntry m ()
     go iterator = P.fromStream (entrySlice iterator keyRange Asc) >-> convert
     convert :: (Monad m) => Pipe Entry IndexEntry m ()
-    convert = forever $ await >>= \(key, value) -> yield (IndexEntry (fromKey key) (fromValue value))
+    convert = forever $ await >>= \(key, value) ->
+                          yield (IndexEntry (fromKey key) (fromValue value))
 
 update' :: MonadResource m => Index -> Pipe (SequenceDifference PathEntry IndexEntry) IndexChange m ()
 update' (Index db _ writeOptions _) = forever $ await >>= go
   where
     go (LeftOnly a) = do
-        result <- liftIO $ hashFile (getPath a)
-        case result of
-          Left ex -> liftIO $ errorM logTag ex
-          Right hash -> do
-            lift $ DB.put db writeOptions (toKey $ getPath a) (toValue $ toFileInfo (getStatus a) hash)
-            yield $ Insert (getPath a) hash
+      result <- liftIO $ hashFile (getPath a)
+      case result of
+        Left ex -> liftIO $ errorM logTag ex
+        Right hash -> do
+          lift $ DB.put db writeOptions (toKey $ getPath a)
+                   (toValue $ toFileInfo (getStatus a) hash)
+          yield $ Insert (getPath a) hash
     go (RightOnly b) = do
-        lift $ DB.delete db writeOptions $ toKey $ indexEntryPath b
-        yield $ Remove (indexEntryPath b) (getFileHash $ indexFileInfo b)
+      lift $ DB.delete db writeOptions $ toKey $ indexEntryPath b
+      yield $ Remove (indexEntryPath b) (getFileHash $ indexFileInfo b)
     go (Common _ b) = yield $ Unchanged (indexEntryPath b) (getFileHash $ indexFileInfo b)
 
 hashFile :: MonadIO m => FilePath -> m (Either String FileHash)

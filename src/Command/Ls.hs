@@ -1,8 +1,4 @@
-module Command.Ls (
-    Options
-  , parserInfo
-  , run
-) where
+module Command.Ls (Options, parserInfo, run) where
 
 import           DuplicateCache
 import           Index
@@ -13,22 +9,19 @@ import           Options.Applicative
 import           Pipes
 import qualified Pipes.Prelude                as P
 
-data Options = Options
-  { optAll :: Bool }
+data Options = Options { optAll :: Bool }
 
 parser :: Parser Options
 parser = Options
-  <$> switch
-      ( long "all"
-     <> help "Show all indexed files, not just duplicates." )
+         <$> switch (long "all"
+                     <> help "Show all indexed files, not just duplicates.")
 
 parserInfo :: ParserInfo Options
-parserInfo = info parser
-  (progDesc "Show information about files in the duplicate index")
+parserInfo = info parser (progDesc "Show information about files in the duplicate index")
 
 run :: Options -> IO ()
-run (Options {optAll=True}) = Repository.runEffect printIndex
-run (Options {optAll=False}) = Repository.runEffect printDuplicates
+run (Options { optAll = True }) = Repository.runEffect printIndex
+run (Options { optAll = False }) = Repository.runEffect printDuplicates
 
 printIndex :: RepositoryHandle -> Effect (ResourceT IO) ()
 printIndex repository = listIndexEntries >-> getEntryPath >-> P.stdoutLn

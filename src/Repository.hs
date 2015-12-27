@@ -1,23 +1,23 @@
 {-# OPTIONS_GHC -F -pgmF htfpp #-}
 
 module Repository (
-    Store (..)
-  , Repository (..)
-  , create
-  , find
-  , findFrom
-  , isRepository
-  , htf_thisModulesTests
-  ) where
+    Store(..),
+    Repository(..),
+    create,
+    find,
+    findFrom,
+    isRepository,
+    htf_thisModulesTests,
+    ) where
 
 import           FileAccess                   (FileAccess)
 import qualified FileAccess
 
-import Data.Maybe (listToMaybe)
-import qualified Data.List as List
 import           Control.Monad
 import           Control.Monad.Trans.Resource
 import           Data.Either.Compat
+import qualified Data.List                    as List
+import           Data.Maybe                   (listToMaybe)
 import           System.Directory
 import           System.Exit
 import           System.FilePath
@@ -50,7 +50,7 @@ findPath = getCurrentDirectory >>= findRepo
 
 findRepo :: FilePath -> IO FilePath
 findRepo path =
-    FileAccess.runIO (findFrom path) >>= either noRepoFound return
+  FileAccess.runIO (findFrom path) >>= either noRepoFound return
   where
     noRepoFound = errorAndCrash
     errorAndCrash msg = errorM logTag msg >> exitFailure

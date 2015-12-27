@@ -1,5 +1,3 @@
-module Store (
-    update
-  ) where
+module Store (update) where
 
 update = undefined

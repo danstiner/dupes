@@ -3,16 +3,16 @@
 {-# LANGUAGE RankNTypes    #-}
 
 module Dedupe (
-    Condition
-  , ConditionM (..)
-  , dupes
-  , DupesT
-  , File (..)
-  , htf_thisModulesTests
-  , Predicate
-  , removeDupes
-  , removeDupes'
-) where
+    Condition,
+    ConditionM(..),
+    dupes,
+    DupesT,
+    File(..),
+    htf_thisModulesTests,
+    Predicate,
+    removeDupes,
+    removeDupes',
+    ) where
 
 import           Condition
 import           File
@@ -27,15 +27,12 @@ import qualified Pipes.Prelude            as P
 
 import           Test.Framework
 
-data DupesF m next
-  = List (Producer File m () -> next)
-  deriving (Functor)
+data DupesF m next = List (Producer File m () -> next)
+  deriving Functor
 
 type DupeSet m = Producer File m ()
 
 type DupesT m = FreeT (DupesF m) m
-
-
 
 interactive :: PromptM m => ConditionM m
 interactive = assert False undefined
@@ -48,18 +45,17 @@ removeDupes condition = runEffect $ hoist runDB (dupesByCondition condition) >->
 
 -- forall sets of dupes containing files matching the condition, remove non-matching dupe files
 dupesByCondition :: (Monad m, Monad n) => ConditionM n -> Producer File (DupesT m) ()
-dupesByCondition condition = listPossiblyMatchingSets condition >-> filterExactSets condition >-> concatM
+dupesByCondition condition = listPossiblyMatchingSets condition >->
+                             filterExactSets condition >->
+                             concatM
 
-listPossiblyMatchingSets ::(Monad m, Monad n) => ConditionM n -> Producer (DupeSet m) (DupesT m) ()
+listPossiblyMatchingSets :: (Monad m, Monad n) => ConditionM n -> Producer (DupeSet m) (DupesT m) ()
 listPossiblyMatchingSets = assert False undefined
 
 filterExactSets :: (Monad m, Monad n) => ConditionM n -> Pipe (DupeSet m) (DupeSet m) (DupesT m) ()
 filterExactSets condition = assert False undefined
-  -- forever $ do
-  -- file <- await
-  -- matches <- lift $ eval condition file
-  -- when (matches) $ yield file
 
+-- forever $ do file <- await matches <- lift $ eval condition file when (matches) $ yield file
 concatM :: Pipe (Producer a m ()) a (DupesT m) ()
 concatM =
   assert False undefined

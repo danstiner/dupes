@@ -1,8 +1,4 @@
-module Logging (
-    logLefts
-  , register
-  , module System.Log.Logger
-) where
+module Logging (logLefts, register, module System.Log.Logger) where
 
 import           Data.Either               as Either
 import           System.IO

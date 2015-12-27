@@ -1,29 +1,25 @@
 {-# OPTIONS_GHC -F -pgmF htfpp #-}
 
-module Condition (
-    Condition
-  , ConditionM (..)
-  , Predicate
-  ) where
+module Condition (Condition, ConditionM(..), Predicate) where
 
-import File
-import PathSpec
+import           File
+import           PathSpec
 
-import Control.Monad.Identity
+import           Control.Monad.Identity
 
-import Test.Framework
+import           Test.Framework
 
 type Predicate = PredicateM Identity
+
 type PredicateM m = File -> m Bool
 
 type Condition = ConditionM Identity
 
-data ConditionM m
-  = All [ConditionM m]
-  | Any [ConditionM m]
-  | Holds (PredicateM m)
-  | Matches PathSpec
-  | Not (ConditionM m)
+data ConditionM m = All [ConditionM m]
+                  | Any [ConditionM m]
+                  | Holds (PredicateM m)
+                  | Matches PathSpec
+                  | Not (ConditionM m)
 
 test_condition_all_false = assertBool . not $ evalPure condition (File path)
   where
@@ -66,10 +62,10 @@ evalPure :: Condition -> File -> Bool
 evalPure condition file = runIdentity $ eval condition file
 
 eval :: Monad m => ConditionM m -> File -> m Bool
-eval (All conditions)  file = allM (`eval` file) conditions
-eval (Any conditions)  file = anyM (`eval` file) conditions
-eval (Matches spec)    file = return $ PathSpec.matches spec (getFilePath file)
-eval (Not condition)   file = liftM not (eval condition file)
+eval (All conditions) file = allM (`eval` file) conditions
+eval (Any conditions) file = anyM (`eval` file) conditions
+eval (Matches spec) file = return $ PathSpec.matches spec (getFilePath file)
+eval (Not condition) file = liftM not (eval condition file)
 eval (Holds predicate) file = predicate file
 
 allM :: Monad m => (a -> m Bool) -> [a] -> m Bool
