@@ -1,4 +1,4 @@
-module Command.Ls (Options, parserInfo, run) where
+module Command.List (Options, parserInfo, run) where
 
 import           DuplicateCache
 import           Index
