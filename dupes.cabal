@@ -85,10 +85,10 @@ Test-suite pure
                      , QuickCheck >= 2.7
                      , HTF
 
-Test-suite external
+Test-suite integration
   Type:           exitcode-stdio-1.0
   Hs-Source-Dirs: src test
-  Main-Is:        ExternalTestSuite.hs
+  Main-Is:        IntegrationTestSuite.hs
   GHC-Options:    -threaded -O
   Build-Depends:  base >= 4 && < 5
                   , base16-bytestring
