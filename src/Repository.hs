@@ -23,7 +23,6 @@ import           System.Exit
 import           System.FilePath
 import           System.Log.Logger
 
-import           Test.Tasty
 import           Test.Tasty.HUnit
 import           Test.Tasty.TH
 

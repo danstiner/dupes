@@ -14,11 +14,13 @@ build-type:          Simple
 cabal-version:       >=1.9.2
 tested-with:         GHC==7.6.3, GHC==7.8.2
 
-executable dupes
+library
   Hs-Source-Dirs:    src
-  Main-Is:           Main.hs
+  Exposed-Modules:   Repository
+                   , Store
+                   , Logging
+                   , FileAccess
   GHC-Options:       -Wall -threaded -fno-warn-unused-binds -fno-ignore-asserts
-  GHC-Prof-Options:  -fprof-auto "-with-rtsopts=-N -p -s -i0.1"
   Build-Depends:       base >= 4.5 && <= 5
                      , base-compat
                      , base16-bytestring
@@ -40,7 +42,6 @@ executable dupes
                      , MissingH
                      , mmorph
                      , mtl
-                     , optparse-applicative >= 0.10
                      , pipes
                      , resourcet
                      , text
@@ -49,80 +50,37 @@ executable dupes
                      , HUnit
                      , QuickCheck >= 2.7
                      , sqlite-simple
-                     , tasty
                      , tasty-th
                      , tasty-hunit
+
+executable dupes
+  Hs-Source-Dirs:    executable
+  Main-Is:           Main.hs
+  Other-Modules:     Command.Commands
+                   , Command.Init
+                   , Command.Update
+  GHC-Options:       -threaded -O -Wall -fno-warn-unused-binds -fno-ignore-asserts
+  Build-Depends:     base >= 4.5 && <= 5
+                     , dupes
+                     , optparse-applicative >= 0.10
+                     , resourcet
 
 Test-suite pure
   Type:              exitcode-stdio-1.0
-  Hs-Source-Dirs:    src test
+  Hs-Source-Dirs:    test
   Main-Is:           TestSuite.hs
   Build-Depends:       base >= 4 && < 5
-                     , base-compat
-                     , base16-bytestring
-                     , bytestring >= 0.10.4.0
-                     , cereal
-                     , containers
-                     , cryptohash
-                     , data-ordlist
-                     , deepseq
-                     , deepseq-generics
-                     , digest
-                     , directory
-                     , errors
-                     , filepath
-                     , free
-                     , Glob
-                     , hslogger
-                     , MissingH
-                     , mmorph
-                     , mtl
-                     , optparse-applicative >= 0.10
-                     , pipes
-                     , resourcet
-                     , text
-                     , transformers
-
-                     , HUnit
-                     , QuickCheck >= 2.7
+                     , dupes
                      , tasty
-                     , tasty-th
-                     , tasty-hunit
 
 Test-suite integration
   Type:           exitcode-stdio-1.0
-  Hs-Source-Dirs: src test
+  Hs-Source-Dirs: test
   Main-Is:        IntegrationTestSuite.hs
   GHC-Options:    -threaded -O
   Build-Depends:  base >= 4 && < 5
-                  , base16-bytestring
-                  , base-compat
-                  , bytestring >= 0.10.4.0
-                  , cereal
-                  , containers
-                  , cryptohash
-                  , data-ordlist
-                  , deepseq
-                  , deepseq-generics
-                  , digest
-                  , directory
-                  , errors
-                  , filepath
-                  , free
-                  , hslogger
-                  , MissingH
-                  , mtl
-                  , resourcet
-                  , temporary
-                  , text
-                  , transformers
-
-                  , HUnit
-                  , QuickCheck >= 2.7
-                  , sqlite-simple
+                  , dupes
                   , tasty
-                  , tasty-th
-                  , tasty-hunit
 
 source-repository head
   type: git
