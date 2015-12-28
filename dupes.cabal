@@ -20,6 +20,7 @@ library
                    , Store
                    , Logging
                    , FileAccess
+                   , PathSpec
   GHC-Options:       -Wall -threaded -fno-warn-unused-binds -fno-ignore-asserts
   Build-Depends:       base >= 4.5 && <= 5
                      , base-compat

@@ -1,8 +1,13 @@
-module PathSpec (PathSpec, PathSpecString, matches, parse) where
+{-# LANGUAGE TemplateHaskell #-}
+
+module PathSpec (PathSpec, PathSpecString, matches, parse, pureTestGroup) where
 
 import           Data.List
 import           System.FilePath
 import qualified System.FilePath.Glob as Glob
+
+import           Test.Tasty.HUnit
+import           Test.Tasty.TH
 
 type PathSpecString = String
 
@@ -15,3 +20,7 @@ parse = PathSpec "" . Glob.compile
 matches :: PathSpec -> FilePath -> Bool
 matches spec path =
   maybe False (Glob.match (glob spec)) $ stripPrefix (directoryPrefix spec) (normalise path)
+
+case_matches_exact_path = assert (matches (parse "foo/bar") "foo/bar")
+
+pureTestGroup = $(testGroupGenerator)
