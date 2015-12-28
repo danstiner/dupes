@@ -1,6 +1,12 @@
 {-# LANGUAGE TemplateHaskell #-}
 
-module PathSpec (PathSpec, PathSpecString, matches, parse, pureTestGroup) where
+module PathSpec (
+    PathSpec,
+    PathSpecString,
+    matches,
+    parse,
+    pureTestGroup,
+    ) where
 
 import           Data.List
 import           System.FilePath
