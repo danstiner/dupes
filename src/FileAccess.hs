@@ -2,7 +2,7 @@
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE TemplateHaskell  #-}
 
-module FileAccess (module FileAccess, parentDirectories) where
+module FileAccess (module FileAccess) where
 
 import           Control.Monad.Free
 import           Control.Monad.Free.TH
