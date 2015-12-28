@@ -2,9 +2,8 @@ module Main where
 
 import qualified Repository
 
-import Test.Framework                    (defaultMain, testGroup)
-import Test.Framework.Providers.HUnit
-import Test.HUnit                        hiding (Test)
+import           Test.Tasty (defaultMain, testGroup)
 
 main :: IO ()
-main = defaultMain [ Repository.pureTestGroup ]
+main = defaultMain $
+  testGroup "Pure tests" [Repository.pureTestGroup]

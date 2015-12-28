@@ -23,9 +23,9 @@ import           System.Exit
 import           System.FilePath
 import           System.Log.Logger
 
-import Test.Framework.TH
-import           Test.HUnit
-import Test.Framework.Providers.HUnit
+import           Test.Tasty
+import           Test.Tasty.HUnit
+import           Test.Tasty.TH
 
 logTag :: String
 logTag = "Repository"

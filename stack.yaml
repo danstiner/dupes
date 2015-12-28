@@ -1,5 +1,5 @@
 flags: {}
 packages:
 - '.'
-extra-deps: []
-resolver: lts-3.2
+extra-deps: ['tasty-hunit-adapter-1.1']
+resolver: lts-3.19

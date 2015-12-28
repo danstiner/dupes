@@ -1,8 +1,6 @@
 module Main where
 
-import Test.Framework                    (defaultMain, testGroup)
-import Test.Framework.Providers.HUnit
-import Test.HUnit                        hiding (Test)
+import           Test.Tasty (defaultMain, testGroup)
 
 main :: IO ()
-main = defaultMain []
+main = defaultMain $ testGroup "Integration tests" []

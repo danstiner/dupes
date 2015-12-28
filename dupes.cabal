@@ -49,9 +49,9 @@ executable dupes
                      , HUnit
                      , QuickCheck >= 2.7
                      , sqlite-simple
-                     , test-framework
-                     , test-framework-th
-                     , test-framework-hunit
+                     , tasty
+                     , tasty-th
+                     , tasty-hunit
 
 Test-suite pure
   Type:              exitcode-stdio-1.0
@@ -85,9 +85,9 @@ Test-suite pure
 
                      , HUnit
                      , QuickCheck >= 2.7
-                     , test-framework
-                     , test-framework-hunit
-                     , test-framework-th
+                     , tasty
+                     , tasty-th
+                     , tasty-hunit
 
 Test-suite integration
   Type:           exitcode-stdio-1.0
@@ -120,9 +120,9 @@ Test-suite integration
                   , HUnit
                   , QuickCheck >= 2.7
                   , sqlite-simple
-                  , test-framework
-                  , test-framework-th
-                  , test-framework-hunit
+                  , tasty
+                  , tasty-th
+                  , tasty-hunit
 
 source-repository head
   type: git
