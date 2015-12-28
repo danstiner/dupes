@@ -43,7 +43,7 @@ createAt path = do
   return $ getRepoAt path
 
 find :: IO Repository
-find = findPath >>= return . getRepoAt
+find = getRepoAt <$> findPath
 
 findPath :: IO FilePath
 findPath = getCurrentDirectory >>= findRepo
