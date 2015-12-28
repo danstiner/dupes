@@ -1,4 +1,4 @@
-{-# OPTIONS_GHC -F -pgmF htfpp #-}
+{-# LANGUAGE TemplateHaskell #-}
 
 module Repository (
     Store(..),
@@ -7,7 +7,7 @@ module Repository (
     find,
     findFrom,
     isRepository,
-    htf_thisModulesTests,
+    pureTestGroup,
     ) where
 
 import           FileAccess                   (FileAccess)
@@ -23,8 +23,9 @@ import           System.Exit
 import           System.FilePath
 import           System.Log.Logger
 
-import           Test.Framework
+import Test.Framework.TH
 import           Test.HUnit
+import Test.Framework.Providers.HUnit
 
 logTag :: String
 logTag = "Repository"
@@ -73,55 +74,54 @@ repositorySubdir = (</> ".dupes")
 getRepoAt :: FilePath -> Repository
 getRepoAt path = Repository path (Store (repositorySubdir path </> "store"))
 
-test_isRepository = True @=? result
+case_isRepository_for_repo_path_is_True = True @=? result
   where
     result = FileAccess.runPure filesystem $ isRepository "/path"
-    filesystem = testRepoDirAt "/path"
+    filesystem = fakeRepoDirAt "/path"
 
-test_isNotRepository = False @=? result
+case_isRepository_for_non_repo_path_is_False = False @=? result
   where
     result = FileAccess.runPure filesystem $ isRepository "/path"
     filesystem = []
 
-test_findWhenDirectoryIsRepo = expected @=? actual
+case_findFrom_when_directory_is_repository = expected @=? actual
   where
     expected = Right "/path"
     actual = FileAccess.runPure filesystem $ findFrom "/path"
-    filesystem = testRepoDirAt "/path"
+    filesystem = fakeRepoDirAt "/path"
 
-test_findWhenParentIsRepo = expected @=? actual
+case_findFrom_when_parent_directory_is_repository = expected @=? actual
   where
     expected = Right "/path"
     actual = FileAccess.runPure filesystem $ findFrom "/path/inner"
-    filesystem = testRepoDirAt "/path"
+    filesystem = fakeRepoDirAt "/path"
 
-test_findWhenRootIsRepo = expected @=? actual
+case_findFrom_when_root_is_repository = expected @=? actual
   where
     expected = Right "/"
     actual = FileAccess.runPure filesystem $ findFrom "/path"
-    filesystem = testRepoDirAt "/"
+    filesystem = fakeRepoDirAt "/"
 
-test_findWhenNoRepo :: Assertion
-test_findWhenNoRepo = True @=? isLeft result
+case_findFrom_when_no_repo_isLeft = True @=? isLeft result
   where
     result = FileAccess.runPure filesystem $ findFrom "/path"
     filesystem = ["/path", "/"]
 
-test_createAt_createsRepository :: Assertion
-test_createAt_createsRepository = True @=? result
+case_createAt_creates_a_repository = True @=? result
   where
     filesystem = ["/path", "/"]
     result = FileAccess.runPure filesystem $ do
       createAt "/path"
       isRepository "/path"
 
-test_createAt_isIdempotent :: Assertion
-test_createAt_isIdempotent = True @=? result
+case_createAt_is_idempotent = True @=? result
   where
-    filesystem = ["/path", "/"] ++ testRepoDirAt "/path"
+    filesystem = ["/path", "/"] ++ fakeRepoDirAt "/path"
     result = FileAccess.runPure filesystem $ do
       createAt "/path"
       isRepository "/path"
 
-testRepoDirAt :: FilePath -> [FilePath]
-testRepoDirAt path = [path </> ".dupes"]
+fakeRepoDirAt :: FilePath -> [FilePath]
+fakeRepoDirAt path = [path </> ".dupes"]
+
+pureTestGroup = $(testGroupGenerator)

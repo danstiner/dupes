@@ -48,8 +48,10 @@ executable dupes
 
                      , HUnit
                      , QuickCheck >= 2.7
-                     , HTF
                      , sqlite-simple
+                     , test-framework
+                     , test-framework-th
+                     , test-framework-hunit
 
 Test-suite pure
   Type:              exitcode-stdio-1.0
@@ -83,7 +85,9 @@ Test-suite pure
 
                      , HUnit
                      , QuickCheck >= 2.7
-                     , HTF
+                     , test-framework
+                     , test-framework-hunit
+                     , test-framework-th
 
 Test-suite integration
   Type:           exitcode-stdio-1.0
@@ -115,8 +119,10 @@ Test-suite integration
 
                   , HUnit
                   , QuickCheck >= 2.7
-                  , HTF
                   , sqlite-simple
+                  , test-framework
+                  , test-framework-th
+                  , test-framework-hunit
 
 source-repository head
   type: git

@@ -1,9 +1,8 @@
-{-# OPTIONS_GHC -F -pgmF htfpp #-}
-
 module Main where
 
-import           Database
-import           Test.Framework
+import Test.Framework                    (defaultMain, testGroup)
+import Test.Framework.Providers.HUnit
+import Test.HUnit                        hiding (Test)
 
 main :: IO ()
-main = htfMain htf_importedTests
+main = defaultMain []
