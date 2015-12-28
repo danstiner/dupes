@@ -60,7 +60,7 @@ executable dupes
   Other-Modules:     Command.Commands
                    , Command.Init
                    , Command.Update
-  GHC-Options:       -threaded -O -Wall -fno-warn-unused-binds -fno-ignore-asserts
+  GHC-Options:       -threaded -Wall -fno-warn-unused-binds -fno-ignore-asserts
   Build-Depends:     base >= 4.5 && <= 5
                      , dupes
                      , optparse-applicative >= 0.10
@@ -78,7 +78,7 @@ Test-suite integration
   Type:           exitcode-stdio-1.0
   Hs-Source-Dirs: test
   Main-Is:        IntegrationTestSuite.hs
-  GHC-Options:    -threaded -O
+  GHC-Options:    -threaded
   Build-Depends:  base >= 4 && < 5
                   , dupes
                   , tasty
