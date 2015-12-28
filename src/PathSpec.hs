@@ -23,4 +23,6 @@ matches spec path =
 
 case_matches_exact_path = assert (matches (parse "foo/bar") "foo/bar")
 
+case_matches_simple_asterisk_glob = assert (matches (parse "foo/*") "foo/bar")
+
 pureTestGroup = $(testGroupGenerator)
