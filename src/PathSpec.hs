@@ -25,4 +25,6 @@ case_matches_exact_path = assert (matches (parse "foo/bar") "foo/bar")
 
 case_matches_simple_asterisk_glob = assert (matches (parse "foo/*") "foo/bar")
 
+case_matches_fails_for_negated_path = assert $ not (matches (parse "~foo/bar") "foo/bar")
+
 pureTestGroup = $(testGroupGenerator)
