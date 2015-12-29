@@ -13,6 +13,7 @@ module Repository (
 import           FileAccess                   (FileAccess)
 import qualified FileAccess
 
+import           Control.Applicative
 import           Control.Monad
 import           Control.Monad.Trans.Resource
 import           Data.Either.Compat
