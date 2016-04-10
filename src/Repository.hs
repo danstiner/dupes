@@ -5,7 +5,6 @@ module Repository (
     Repository(..),
     create,
     find,
-    findFrom,
     isRepository,
     pureTestGroup,
     ) where
