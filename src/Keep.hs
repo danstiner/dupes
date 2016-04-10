@@ -6,12 +6,13 @@ import Control.Applicative
 import Control.Monad
 import Pipes
 import qualified Pipes.Prelude as P
+import qualified Control.DeepSeq as DeepSeq
 
 import           Test.Tasty.HUnit
 import           Test.Tasty.QuickCheck
 import           Test.Tasty.TH
 
-data Which = LeftOnly | RightOnly | Both
+data Which = LeftOnly | RightOnly | Both deriving (Show)
 
 instance Arbitrary Which where
   arbitrary = elements [LeftOnly, RightOnly, Both]
@@ -39,5 +40,8 @@ prop_filter_keeps_at_least_one (NonEmpty xs) = forAll (filterArbitrarily xs) (no
     filterArbitrarily xs = do
       arbitraryWhich <- const . const <$> arbitrary
       return $ filterListKeeping arbitraryWhich xs
+
+prop_filter_terminates :: [Int] -> Which -> Bool
+prop_filter_terminates xs which = seq (filterListKeeping (const . const which) xs) True
 
 pureTests = $(testGroupGenerator)
