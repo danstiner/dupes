@@ -1,21 +1,24 @@
+{-# LANGUAGE RankNTypes      #-}
 {-# LANGUAGE TemplateHaskell #-}
-{-# LANGUAGE RankNTypes #-}
 
-module Keep ( pureTests ) where
+module Keep (pureTests) where
 
-import Control.Applicative
-import Control.Monad
-import Pipes
-import Pipes.Parse
-import Pipes.Parse.Ext
-import qualified Pipes.Prelude as P
-import qualified Control.DeepSeq as DeepSeq
+import           Control.Applicative
+import qualified Control.DeepSeq       as DeepSeq
+import           Control.Monad
+import           Pipes
+import           Pipes.Parse
+import           Pipes.Parse.Ext
+import qualified Pipes.Prelude         as P
 
 import           Test.Tasty.HUnit
 import           Test.Tasty.QuickCheck
 import           Test.Tasty.TH
 
-data Which = LeftOnly | RightOnly | Both deriving (Show)
+data Which = LeftOnly
+           | RightOnly
+           | Both
+  deriving Show
 
 instance Arbitrary Which where
   arbitrary = elements [LeftOnly, RightOnly, Both]
@@ -29,7 +32,8 @@ keepWhichParser which = do
       drawB <- draw
       case drawB of
         Nothing -> return (Just a)
-        Just b -> case which a b of
+        Just b ->
+          case which a b of
             LeftOnly  -> return (Just a)
             RightOnly -> return (Just b)
             Both      -> unDraw b *> return (Just a)
@@ -38,7 +42,7 @@ filterKeeping :: (Monad m) => (a -> a -> Which) -> Producer a m () -> Producer a
 filterKeeping which = parsedForever_ (keepWhichParser which)
 
 filterListKeeping :: (a -> a -> Which) -> [a] -> [a]
-filterListKeeping which xs = P.toList (filterKeeping which (each xs)) 
+filterListKeeping which xs = P.toList (filterKeeping which (each xs))
 
 prop_filter_keep_both_is_id :: [Int] -> Bool
 prop_filter_keep_both_is_id xs = filterListKeeping (const . const Both) xs == xs
