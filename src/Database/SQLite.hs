@@ -10,8 +10,9 @@ import           Test.Tasty.HUnit
 import           Test.Tasty.TH
 
 import           Repository             (Repository)
+import qualified Repository
 
-data DB = DB
+data DBConnection = DBConnection
 
 data TestField = TestField Int String
   deriving Show
@@ -19,10 +20,17 @@ data TestField = TestField Int String
 instance SQLite.FromRow TestField where
   fromRow = TestField <$> SQLite.field <*> SQLite.field
 
-open :: Repository -> IO DB
-open r = undefined
+open :: Repository -> IO DBConnection
+open r = return DBConnection
+
+close :: DBConnection -> IO ()
+close c = return ()
 
 case_connection_open_and_close = do
+  connection <- open =<< Repository.create
+  close connection
+
+case_sql_insert_a_value = do
   connection <- SQLite.open ":memory:"
   SQLite.execute_ connection
     (SQLite.Query $ T.pack "CREATE TABLE test (id INTEGER PRIMARY KEY, str text)")
