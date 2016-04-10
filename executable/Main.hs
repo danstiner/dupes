@@ -1,9 +1,10 @@
-import qualified Command.Commands    as Commands
+import Commands (Command)
+import qualified Commands
 import           Logging
 
 import           Options.Applicative
 
-data Options = Options { optCommand :: Commands.Command }
+data Options = Options { optCommand :: Command }
 
 optionParser :: Parser Options
 optionParser = Options <$> hsubparser Commands.commands

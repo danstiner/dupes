@@ -62,7 +62,7 @@ library
 executable dupes
   Hs-Source-Dirs:    executable
   Main-Is:           Main.hs
-  Other-Modules:     Command.Commands
+  Other-Modules:     Commands
                    , Command.Init
                    , Command.Update
   GHC-Options:       -threaded -Wall -fno-warn-unused-binds -fno-ignore-asserts

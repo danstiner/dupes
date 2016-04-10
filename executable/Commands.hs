@@ -1,4 +1,4 @@
-module Command.Commands (Command(..), commands, run) where
+module Commands (Command(..), commands, run) where
 
 import qualified Command.Init        as Init
 import qualified Command.Update      as Update
