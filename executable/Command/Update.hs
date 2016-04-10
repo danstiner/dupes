@@ -19,4 +19,4 @@ parser = Options
                 <> help "Only print warning and error messages.")
 
 run :: Options -> IO ()
-run _ = Repository.find >>= Store.update
+run _ = Repository.find >>= Store.update >>= putStr . show
