@@ -44,17 +44,17 @@ createAt path = do
   return $ getRepoAt path
 
 find :: IO Repository
-find = getRepoAt <$> findPath
+find = getRepoAt <$> findFromCurrentDirectory
 
-findPath :: IO FilePath
-findPath = getCurrentDirectory >>= findRepo
-
-findRepo :: FilePath -> IO FilePath
-findRepo path =
-  FileAccess.runIO (findFrom path) >>= either noRepoFound return
+findFromCurrentDirectory :: IO FilePath
+findFromCurrentDirectory =
+    getCurrentDirectory >>= findFromIO >>= either noRepoFound return
   where
     noRepoFound = errorAndCrash
-    errorAndCrash msg = errorM logTag msg >> exitFailure
+    errorAndCrash msg = errorM logTag ("Failed to find repository from current directory: " ++ msg) >> exitFailure
+
+findFromIO :: FilePath -> IO (Either String FilePath)
+findFromIO = FileAccess.runIO . findFrom
 
 findFrom :: FilePath -> FileAccess (Either String FilePath)
 findFrom = return . eitherFailedOrFound <=< findM isRepository <=< FileAccess.parentDirectories
