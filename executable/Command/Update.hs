@@ -3,7 +3,6 @@ module Command.Update (Options, parserInfo, run) where
 import qualified Repository
 import qualified Store
 
-import           Control.Monad.Trans.Resource
 import           Options.Applicative
 
 data Options = Options { _optQuiet :: Bool }
