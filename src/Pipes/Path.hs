@@ -9,7 +9,7 @@ import           Pipes
 import           System.Directory
 import           System.FilePath
 import           System.IO
-import           System.Posix.Files
+import           System.PosixCompat.Files
 
 data PathEntry = FileEntry FilePath FileStatus
                | DirectoryStart FilePath
@@ -44,7 +44,7 @@ recurse (path, status)
                                                                                              , ".."
                                                                                              ])
                                                                                   contents
-          (errors, statuses) <- fmap partitionEithers . liftIO $ mapM getStatus' normalContents
+          (errors, statuses) <- fmap partitionEithers . liftIO $ mapM tryGetStatusWithPath' normalContents
           mapM_ printEx errors
           mapM_ recurse . sortBy comparePaths $ map addDirSlash statuses
   | otherwise = yield (FileEntry path status)
@@ -58,7 +58,7 @@ recurse (path, status)
 tryGetStatus :: FilePath -> IO (Either SomeException FileStatus)
 tryGetStatus = try . getSymbolicLinkStatus
 
-getStatus' :: FilePath -> IO (Either SomeException (FilePath, FileStatus))
-getStatus' path = do
+tryGetStatusWithPath' :: FilePath -> IO (Either SomeException (FilePath, FileStatus))
+tryGetStatusWithPath' path = do
   status <- tryGetStatus path
   return (fmap (\s -> (path, s)) status)

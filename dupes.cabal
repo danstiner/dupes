@@ -24,6 +24,8 @@ library
                    , Database.SQLite
                    , Keep
   Other-Modules:     Pipes.Parse.Ext
+                   , Pipes.Difference
+                   , Pipes.Path
   GHC-Options:       -Wall -fno-warn-unused-binds -fno-ignore-asserts
   Build-Depends:       base >= 4.5 && <= 5
                      , base-compat
@@ -51,6 +53,7 @@ library
                      , resourcet
                      , text
                      , transformers >= 0.3
+                     , unix-compat
 
                      , HUnit
                      , QuickCheck >= 2.7
