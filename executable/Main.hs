@@ -1,4 +1,4 @@
-import Commands (Command)
+import           Commands            (Command)
 import qualified Commands
 import           Logging
 
