@@ -25,7 +25,7 @@ filterListKeeping which [a] = [a]
 
 --P.toList (filterKeeping which <-< each as)
 
-prop_filter_always_keeping_both_is_id :: [Int] -> Bool
-prop_filter_always_keeping_both_is_id xs = filterListKeeping (const . const Both) xs == xs
+prop_filter_keep_both_is_id :: [Int] -> Bool
+prop_filter_keep_both_is_id xs = filterListKeeping (const . const Both) xs == xs
 
 pureTests = $(testGroupGenerator)
