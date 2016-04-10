@@ -47,7 +47,7 @@ find = getRepoAt <$> findFromCurrentDirectory
 
 findFromCurrentDirectory :: IO FilePath
 findFromCurrentDirectory =
-    getCurrentDirectory >>= findFromIO >>= either noRepoFound return
+  getCurrentDirectory >>= findFromIO >>= either noRepoFound return
   where
     noRepoFound = errorAndCrash
     errorAndCrash msg = errorM logTag ("Failed to find repository from current directory: " ++ msg) >> exitFailure
