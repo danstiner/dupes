@@ -46,6 +46,7 @@ library
                      , mmorph
                      , mtl
                      , pipes
+                     , pipes-parse
                      , resourcet
                      , text
                      , transformers >= 0.3
