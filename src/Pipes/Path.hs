@@ -35,6 +35,7 @@ walk path = do
 recurse :: MonadIO m => (FilePath, FileStatus) -> Producer PathEntry m ()
 recurse (path, status)
   | isDirectory status = do
+      yield (DirectoryStart path)
       result <- liftIO ((try $ getDirectoryContents path) :: IO (Either SomeException [FilePath]))
       case result of
         Left ex -> liftIO $ hPrint stderr ex
@@ -47,6 +48,10 @@ recurse (path, status)
           (errors, statuses) <- fmap partitionEithers . liftIO $ mapM tryGetStatusWithPath' normalContents
           mapM_ printEx errors
           mapM_ recurse . sortBy comparePaths $ map addDirSlash statuses
+      dirStatusEither <- liftIO $ tryGetStatus path
+      case dirStatusEither of
+        Left error -> printEx error
+        Right dirStatus -> yield (DirectoryEnd path dirStatus)
   | otherwise = yield (FileEntry path status)
   where
     printEx = liftIO . hPrint stderr
