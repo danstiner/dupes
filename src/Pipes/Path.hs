@@ -1,10 +1,10 @@
 module Pipes.Path (PathEntry(..), walk, getPath, getStatus) where
 
 import           Control.Exception
-import qualified Data.ByteString.Char8 as C
+import qualified Data.ByteString.Char8    as C
 import           Data.Either
 import           Data.List
-import           Data.Ord              (comparing)
+import           Data.Ord                 (comparing)
 import           Pipes
 import           System.Directory
 import           System.FilePath
@@ -45,12 +45,13 @@ recurse (path, status)
                                                                                              , ".."
                                                                                              ])
                                                                                   contents
-          (errors, statuses) <- fmap partitionEithers . liftIO $ mapM tryGetStatusWithPath' normalContents
+          (errors, statuses) <- fmap partitionEithers . liftIO $ mapM tryGetStatusWithPath'
+                                                                   normalContents
           mapM_ printEx errors
           mapM_ recurse . sortBy comparePaths $ map addDirSlash statuses
       dirStatusEither <- liftIO $ tryGetStatus path
       case dirStatusEither of
-        Left error -> printEx error
+        Left error      -> printEx error
         Right dirStatus -> yield (DirectoryEnd path dirStatus)
   | otherwise = yield (FileEntry path status)
   where
