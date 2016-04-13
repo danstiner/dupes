@@ -44,8 +44,8 @@ filterKeeping which = parsedForever_ (keepWhichParser which)
 filterListKeeping :: (a -> a -> Which) -> [a] -> [a]
 filterListKeeping which xs = P.toList (filterKeeping which (each xs))
 
-prop_filter_keep_both_is_id :: [Int] -> Bool
-prop_filter_keep_both_is_id xs = filterListKeeping (const . const Both) xs == xs
+prop_filter_keeping_both_is_identity :: [Int] -> Bool
+prop_filter_keeping_both_is_identity xs = filterListKeeping (const . const Both) xs == xs
 
 prop_filter_keeps_at_least_one :: NonEmptyList Int -> Property
 prop_filter_keeps_at_least_one (NonEmpty xs) = forAll (filterArbitrarily xs) (not . null)
