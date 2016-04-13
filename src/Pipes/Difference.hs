@@ -27,4 +27,3 @@ diff compare' = go
         LT -> yield (LeftOnly lval) >> goLeft l (rval, r)
         GT -> yield (RightOnly rval) >> goRight r (lval, l)
         EQ -> yield (Common lval rval) >> go l r
-{-# INLINABLE diff #-}
