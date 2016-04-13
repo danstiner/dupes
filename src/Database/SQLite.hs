@@ -14,12 +14,6 @@ import qualified Repository
 
 data DBConnection = DBConnection
 
-data TestField = TestField Int String
-  deriving Show
-
-instance SQLite.FromRow TestField where
-  fromRow = TestField <$> SQLite.field <*> SQLite.field
-
 open :: Repository -> IO DBConnection
 open r = return DBConnection
 
@@ -29,6 +23,12 @@ close c = return ()
 case_connection_open_and_close = do
   connection <- open =<< Repository.create
   close connection
+
+data TestField = TestField Int String
+  deriving Show
+
+instance SQLite.FromRow TestField where
+  fromRow = TestField <$> SQLite.field <*> SQLite.field
 
 case_sql_insert_a_value = do
   connection <- SQLite.open ":memory:"
