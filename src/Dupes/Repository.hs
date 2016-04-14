@@ -35,8 +35,8 @@ create = getCurrentDirectory >>= FileAccess.runIO . createAt
 
 createAt :: FilePath -> FileAccess Repository
 createAt path = do
-  let storePath = repositorySubdir path
-  FileAccess.createDirectoryIfMissing storePath
+  let repositoryPath = repositorySubdir path
+  FileAccess.createDirectoryIfMissing repositoryPath
   return $ getRepoAt path
 
 find :: IO Repository
