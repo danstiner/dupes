@@ -31,7 +31,7 @@ logTag = "Repository"
 
 newtype Store = Store { getStorePath :: FilePath }
 
-data Repository = Repository { getPath :: FilePath, getStore :: Store }
+data Repository = Repository { getWorkingDirectory :: FilePath, getStore :: Store }
 
 create :: IO Repository
 create = getCurrentDirectory >>= FileAccess.runIO . createAt
