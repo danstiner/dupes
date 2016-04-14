@@ -1,6 +1,6 @@
 module Command.Update (Options, parserInfo, run) where
 
-import qualified Repository
+import qualified Dupes.Repository as Repository
 import qualified Store
 
 import           Options.Applicative

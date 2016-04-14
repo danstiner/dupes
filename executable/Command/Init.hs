@@ -2,7 +2,7 @@ module Command.Init (Options, parserInfo, run) where
 
 import           Control.Monad       (void)
 import           Options.Applicative
-import           Repository
+import           Dupes.Repository as Repository
 
 data Options = Options { _optQuiet :: Bool }
 

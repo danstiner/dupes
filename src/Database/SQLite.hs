@@ -9,8 +9,8 @@ import qualified Database.SQLite.Simple as SQLite
 import           Test.Tasty.HUnit
 import           Test.Tasty.TH
 
-import           Repository             (Repository)
-import qualified Repository
+import           Dupes.Repository             (Repository)
+import qualified Dupes.Repository as Repository
 
 data DBConnection = DBConnection
 

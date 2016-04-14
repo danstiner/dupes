@@ -1,6 +1,6 @@
 {-# LANGUAGE TemplateHaskell #-}
 
-module Repository (
+module Dupes.Repository (
     Store(..),
     Repository(..),
     create,

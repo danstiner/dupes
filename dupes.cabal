@@ -16,7 +16,7 @@ tested-with:         GHC==7.8.4, GHC==7.10.2, GHC == 7.11.*
 
 library
   Hs-Source-Dirs:    src
-  Exposed-Modules:   Repository
+  Exposed-Modules:   Dupes.Repository
                    , Store
                    , Logging
                    , FileAccess
