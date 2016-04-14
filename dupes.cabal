@@ -79,7 +79,7 @@ executable dupes
 Test-suite pure
   Type:              exitcode-stdio-1.0
   Hs-Source-Dirs:    test
-  Main-Is:           TestSuite.hs
+  Main-Is:           PureTestSuite.hs
   Build-Depends:       base >= 4 && < 5
                      , dupes
                      , tasty
