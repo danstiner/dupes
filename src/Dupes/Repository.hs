@@ -1,7 +1,6 @@
 {-# LANGUAGE TemplateHaskell #-}
 
 module Dupes.Repository (
-    Store(..),
     Repository(..),
     create,
     find,
@@ -29,9 +28,7 @@ import           Test.Tasty.TH
 logTag :: String
 logTag = "Repository"
 
-newtype Store = Store { getStorePath :: FilePath }
-
-data Repository = Repository { getWorkingDirectory :: FilePath, getStore :: Store }
+data Repository = Repository { getWorkingDirectory :: FilePath, getPath :: FilePath }
 
 create :: IO Repository
 create = getCurrentDirectory >>= FileAccess.runIO . createAt
@@ -71,7 +68,7 @@ repositorySubdir :: FilePath -> FilePath
 repositorySubdir = (</> ".dupes")
 
 getRepoAt :: FilePath -> Repository
-getRepoAt path = Repository path (Store (repositorySubdir path </> "store"))
+getRepoAt path = Repository path (repositorySubdir path)
 
 case_isRepository_for_repo_path_is_True = True @=? result
   where
