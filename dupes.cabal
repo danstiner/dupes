@@ -18,6 +18,7 @@ library
   Hs-Source-Dirs:    src
   Exposed-Modules:   Dupes.Repository
                    , Dupes.Actions
+                   , Dupes.FileHash
                    , Store
                    , Logging
                    , FileAccess
@@ -35,7 +36,7 @@ library
                      , bytestring >= 0.10.4.0
                      , cereal
                      , containers
-                     , cryptohash
+                     , cryptonite
                      , data-ordlist
                      , deepseq
                      , deepseq-generics

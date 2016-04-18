@@ -14,24 +14,17 @@ module Index (
 
 import           Logging
 
-import           Data.Stream.Monadic.Pipes    as P
-import           Pipes.Difference
-import           Pipes.Path
-
 import           Control.Applicative
 import           Control.DeepSeq
 import           Control.DeepSeq.Generics     (genericRnf)
-import           Control.Exception
 import           Control.Monad
 import           Control.Monad.Trans.Resource
-import qualified Crypto.Hash.SHA1             as SHA1
-import qualified Data.ByteString              as B
 import qualified Data.ByteString.Base16       as Base16
 import qualified Data.ByteString.Char8        as C
-import qualified Data.ByteString.Lazy         as L
 import           Data.Monoid
 import           Data.Ord                     (comparing)
 import           Data.Serialize               as S
+import           Data.Stream.Monadic.Pipes    as P
 import           Data.Text                    as T
 import           Data.Text.Encoding           as E
 import           Data.Word
@@ -40,6 +33,8 @@ import           Database.LevelDB.Streaming
 import           Foreign.C.Types
 import           GHC.Generics                 (Generic)
 import           Pipes
+import           Pipes.Difference
+import           Pipes.Path
 import           System.IO
 import           System.Posix.Files
 import           System.Posix.Types
@@ -203,14 +198,3 @@ update' (Index db _ writeOptions _) = forever $ await >>= go
       lift $ DB.delete db writeOptions $ toKey $ indexEntryPath b
       yield $ Remove (indexEntryPath b) (getFileHash $ indexFileInfo b)
     go (Common _ b) = yield $ Unchanged (indexEntryPath b) (getFileHash $ indexFileInfo b)
-
-hashFile :: MonadIO m => FilePath -> m (Either String FileHash)
-hashFile path = liftIO (calc `catch` errorMessage)
-  where
-    calc = withBinaryFile path ReadMode $ \hnd -> do
-      c <- L.hGetContents hnd
-      let key = calcHash c
-      key `deepseq` return (Right key)
-    errorMessage :: IOException -> IO (Either String FileHash)
-    errorMessage = return . Left . show
-    calcHash c = FileHash $! SHA1.hashlazy c
