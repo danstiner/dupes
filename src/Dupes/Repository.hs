@@ -43,7 +43,7 @@ findFrom :: FilePath -> IO (Maybe Repository)
 findFrom path = (fmap . fmap) getAt (findPathFrom path)
 
 isRepository :: FilePath -> IO Bool
-isRepository = FileAccess.runIO . isF
+isRepository = FileAccess.runIO . isRepositoryF
 
 initializeF :: FilePath -> FileAccess Repository
 initializeF path = do
@@ -55,13 +55,13 @@ findPathFrom :: FilePath -> IO (Maybe FilePath)
 findPathFrom = FileAccess.runIO . findPathFromF
 
 findPathFromF :: FilePath -> FileAccess (Maybe FilePath)
-findPathFromF = findM isF <=< FileAccess.parentDirectories
+findPathFromF = findM isRepositoryF <=< FileAccess.parentDirectories
 
 findM :: (Monad m, Functor m) => (a -> m Bool) -> [a] -> m (Maybe a)
 findM f = fmap listToMaybe . filterM f
 
-isF :: FilePath -> FileAccess Bool
-isF = FileAccess.doesDirectoryExist . repositorySubdirectory
+isRepositoryF :: FilePath -> FileAccess Bool
+isRepositoryF = FileAccess.doesDirectoryExist . repositorySubdirectory
 
 repositorySubdirectory :: FilePath -> FilePath
 repositorySubdirectory = (</> ".dupes")
@@ -74,7 +74,7 @@ update = undefined
 
 case_isRepository_for_repository_is_True = True @=? result
   where
-    result = FileAccess.runPure filesystem $ isF "/path"
+    result = FileAccess.runPure filesystem $ isRepositoryF "/path"
     filesystem = fakeRepositoryAt "/path"
 
 case_findFrom_when_directory_is_repository = expected @=? actual
@@ -105,18 +105,18 @@ case_initialize_creates_a_repository = True @=? result
     filesystem = ["/path", "/"]
     result = FileAccess.runPure filesystem $ do
       _ <- initializeF "/path"
-      isF "/path"
+      isRepositoryF "/path"
 
 case_initialize_is_idempotent = True @=? result
   where
     filesystem = ["/path", "/"] ++ fakeRepositoryAt "/path"
     result = FileAccess.runPure filesystem $ do
       _ <- initializeF "/path"
-      isF "/path"
+      isRepositoryF "/path"
 
 case_isRepository_for_non_repo_path_is_False = False @=? result
   where
-    result = FileAccess.runPure filesystem $ isF "/path"
+    result = FileAccess.runPure filesystem $ isRepositoryF "/path"
     filesystem = []
 
 fakeRepositoryAt :: FilePath -> [FilePath]
