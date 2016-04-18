@@ -1,20 +1,24 @@
+{-# LANGUAGE TemplateHaskell #-}
+
 module Command.Init (Options, parserInfo, run) where
 
-import           Control.Monad       (void)
+import           Dupes.Repository    as Repository
+import           Logging
 import           Options.Applicative
-import           Dupes.Repository as Repository
+import           System.Directory
 
-data Options = Options { _optQuiet :: Bool }
+data Options = Options { }
 
 parserInfo :: ParserInfo Options
 parserInfo = info parser (progDesc "Create a repository")
 
 parser :: Parser Options
-parser = Options
-         <$> switch
-               (long "quiet"
-                <> short 'q'
-                <> help "Only print warning and error messages.")
+parser = pure Options
 
 run :: Options -> IO ()
-run _ = void Repository.create
+run options = getCurrentDirectory >>= findFromOrInitialize >>= printResult
+  where
+    printResult repository = noticeM $(logTag) ("Repository at: " ++ show repository)
+
+findFromOrInitialize :: FilePath -> IO Repository
+findFromOrInitialize path = findFrom path >>= maybe (initialize path) return

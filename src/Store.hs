@@ -2,7 +2,7 @@
 
 module Store (update, pureTests) where
 
-import           Dupes.Repository    (Repository)
+import           Dupes.Repository (Repository)
 
 import           Test.Tasty.TH
 

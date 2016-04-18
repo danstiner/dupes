@@ -17,6 +17,7 @@ tested-with:         GHC==7.8.4, GHC==7.10.2, GHC == 7.11.*
 library
   Hs-Source-Dirs:    src
   Exposed-Modules:   Dupes.Repository
+                   , Dupes.Actions
                    , Store
                    , Logging
                    , FileAccess
@@ -56,6 +57,8 @@ library
                      , text
                      , transformers >= 0.3
                      , unix-compat
+                     , temporary
+                     , template-haskell
 
                      , HUnit
                      , QuickCheck >= 2.7
@@ -70,11 +73,16 @@ executable dupes
   Other-Modules:     Commands
                    , Command.Init
                    , Command.Update
+                   , Strings
   GHC-Options:       -threaded -Wall -fno-warn-unused-binds -fno-ignore-asserts
   Build-Depends:     base >= 4.5 && <= 5
                      , dupes
                      , optparse-applicative >= 0.10
                      , resourcet
+                     , directory
+                     , pipes
+                     , pipes-safe
+                     , interpolate
 
 Test-suite pure
   Type:              exitcode-stdio-1.0

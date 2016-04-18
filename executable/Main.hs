@@ -19,5 +19,5 @@ main = execParser opts >>= run
 
 run :: Options -> IO ()
 run options = do
-  Logging.register ERROR
+  Logging.register
   Commands.run (optCommand options)
