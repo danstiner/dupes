@@ -22,7 +22,7 @@ hashFile :: FilePath -> IO (Either String FileHash)
 hashFile path = (Right <$> fileHash) `catch` returnIOException
   where
     fileHash = withBinaryFile path ReadMode hashHandle
-    hashHandle handle = FileHash . hashlazy <$!> L.hGetContents handle
+    hashHandle handle = (FileHash . hashlazy) <$!> L.hGetContents handle
     returnIOException :: IOException -> IO (Either String FileHash)
     returnIOException = return . Left . show
 
