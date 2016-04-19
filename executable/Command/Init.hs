@@ -18,7 +18,7 @@ parser :: Parser Options
 parser = pure Options
 
 run :: Options -> IO ()
-run options = getCurrentDirectory >>= findFromOrInitialize >>= printResult
+run _ = getCurrentDirectory >>= findFromOrInitialize >>= printResult
   where
     printResult repository = noticeM $(logTag) [i|Repository at: #{show repository}|]
 
