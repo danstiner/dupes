@@ -58,18 +58,6 @@ data Index =
 
 data IndexEntry = IndexEntry { indexEntryPath :: FilePath, indexFileInfo :: FileInfo }
 
-data FileInfo =
-       UnixFileInfo
-         { mtime       :: EpochTime
-         , ctime       :: EpochTime
-         , inode       :: FileID
-         , size        :: FileOffset
-         , uid         :: CUid
-         , gid         :: CGid
-         , getFileHash :: FileHash
-         }
-  deriving (Eq, Ord, Show)
-
 data IndexChange = Insert FilePath FileHash
                  | Remove FilePath FileHash
                  | Unchanged FilePath FileHash
