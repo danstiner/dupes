@@ -67,9 +67,6 @@ repositorySubdirectory = (</> ".dupes")
 getAt :: FilePath -> Repository
 getAt path = Repository (WorkingDirectory.construct path) (Index (repositorySubdirectory path))
 
-update :: Repository -> Producer UpdatedEntry (SafeT IO) ()
-update = undefined
-
 case_isRepository_for_repository_is_True = True @=? result
   where
     result = FileAccess.runPure filesystem $ isRepositoryF "/path"
