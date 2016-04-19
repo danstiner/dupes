@@ -23,7 +23,7 @@ parser :: Parser Options
 parser = pure Options
 
 run :: Options -> IO ()
-run options = getCurrentDirectory >>= Repository.findFrom >>= updateOrExit
+run _ = getCurrentDirectory >>= Repository.findFrom >>= updateOrExit
   where
     updateOrExit x =
       case x of
