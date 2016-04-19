@@ -4,11 +4,11 @@ import           System.PosixCompat
 
 data FileStat =
        FileStat
-         { mtime    :: EpochTime
-         , ctime    :: EpochTime
-         , inode    :: FileID
-         , size     :: FileOffset
-         , uid      :: UserID
-         , gid      :: GroupID
+         { mtime :: EpochTime
+         , ctime :: EpochTime
+         , inode :: FileID
+         , size  :: FileOffset
+         , uid   :: UserID
+         , gid   :: GroupID
          }
   deriving (Eq, Ord, Show)
