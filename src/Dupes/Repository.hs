@@ -30,8 +30,6 @@ import           Test.Tasty.TH
 data Repository = Repository { workingDirectory :: WorkingDirectory, index :: Index }
   deriving Show
 
-data UpdatedEntry = UpdatedEntry
-
 initialize :: FilePath -> IO Repository
 initialize = FileAccess.runIO . initializeF
 
