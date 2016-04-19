@@ -60,6 +60,7 @@ library
                      , unix-compat
                      , temporary
                      , template-haskell
+                     , interpolate
 
                      , HUnit
                      , QuickCheck >= 2.7
