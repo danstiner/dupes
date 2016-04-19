@@ -5,13 +5,12 @@ module Database.SQLite (open, integrationTests) where
 import           Control.Applicative
 import qualified Data.Text              as T
 import qualified Database.SQLite.Simple as SQLite
-import           System.IO.Temp
-
-import           Test.Tasty.HUnit
-import           Test.Tasty.TH
-
 import           Dupes.Repository       (Repository)
 import qualified Dupes.Repository       as Repository
+import           System.IO.Temp
+import           Test
+import           Test.Tasty.HUnit
+import           Test.Tasty.TH
 
 data DBConnection = DBConnection
 
@@ -21,7 +20,7 @@ open r = return DBConnection
 close :: DBConnection -> IO ()
 close c = return ()
 
-case_connection_open_and_close = withSystemTempDirectory "test" $ \path -> do
+case_connection_open_and_close = withSystemTempDirectory $(tempNameTemplate) $ \path -> do
   connection <- open =<< Repository.initialize path
   close connection
 

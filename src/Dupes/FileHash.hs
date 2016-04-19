@@ -15,6 +15,7 @@ import           Data.String.Interpolate
 import           System.FilePath
 import           System.IO
 import           System.IO.Temp
+import           Test
 import           Test.Tasty.HUnit
 import           Test.Tasty.TH
 
@@ -29,7 +30,7 @@ hashFile path = (Right <$> fileHash) `catch` returnIOException
     returnIOException :: IOException -> IO (Either String FileHash)
     returnIOException = return . Left . show
 
-case_hashFile_empty_file_is_correct = withSystemTempFile "template" $ \path handle -> do
+case_hashFile_empty_file_is_correct = withSystemTempFile $(tempNameTemplate) $ \path handle -> do
   hClose handle
   result <- hashFile path
   Right sha1OfEmptyFile @=? result
@@ -37,7 +38,7 @@ case_hashFile_empty_file_is_correct = withSystemTempFile "template" $ \path hand
     sha1OfEmptyFile = fileHashFromHexString "da39a3ee5e6b4b0d3255bfef95601890afd80709"
     fileHashFromHexString = FileHash . fromJust . digestFromByteString . fst . Base16.decode
 
-case_hashFile_exclusively_locked_file_is_Left = withSystemTempFile "template" $ \path _ -> do
+case_hashFile_exclusively_locked_file_is_Left = withSystemTempFile $(tempNameTemplate) $ \path _ -> do
   result <- hashFile path
   assertBool [i|Expected result to be a Left but was #{show result}|] (isLeft result)
 
