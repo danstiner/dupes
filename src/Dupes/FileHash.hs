@@ -2,7 +2,7 @@
 {-# LANGUAGE QuasiQuotes       #-}
 {-# LANGUAGE TemplateHaskell   #-}
 
-module Dupes.FileHash (hashFile, integrationTests) where
+module Dupes.FileHash (FileHash, hashFile, integrationTests) where
 
 import           Control.Exception
 import           Control.Monad
