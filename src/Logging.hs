@@ -43,4 +43,4 @@ exitErrorM :: String -> String -> IO ()
 exitErrorM logTag message = errorM logTag message >> exitFailure
 
 logTag :: Q Exp
-logTag = fmap loc_module qLocation >>= \mod -> return (LitE (StringL mod))
+logTag = (LitE . StringL) <$> fmap loc_module qLocation
