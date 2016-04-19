@@ -11,6 +11,7 @@ import qualified Dupes.Repository        as Repository
 import           Logging
 import           Options.Applicative
 import           Pipes
+import qualified Pipes.Prelude           as P
 import           Pipes.Safe
 import           System.Directory
 
@@ -31,4 +32,4 @@ run _ = getCurrentDirectory >>= Repository.findFrom >>= updateOrExit
         Nothing -> exitErrorM $(logTag)
                      [i|Neither path nor any of its parents have a #{appName} index|]
     update path = runSafeT . runEffect $ Actions.update path >-> printUpdateEntry
-    printUpdateEntry = undefined
+    printUpdateEntry = P.print
