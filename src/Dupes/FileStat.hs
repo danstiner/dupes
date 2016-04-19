@@ -1,16 +1,14 @@
-module Dupes.FileInfo (FileInfo) where
+module Dupes.FileStat (FileStat) where
 
-import           Dupes.FileHash
 import           System.PosixCompat
 
-data FileInfo =
-       FileInfo
+data FileStat =
+       FileStat
          { mtime    :: EpochTime
          , ctime    :: EpochTime
          , inode    :: FileID
          , size     :: FileOffset
          , uid      :: UserID
          , gid      :: GroupID
-         , fileHash :: FileHash
          }
   deriving (Eq, Ord, Show)

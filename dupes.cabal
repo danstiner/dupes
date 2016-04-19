@@ -19,7 +19,7 @@ library
   Exposed-Modules:   Dupes.Repository
                    , Dupes.Actions
                    , Dupes.FileHash
-                   , Dupes.FileInfo
+                   , Dupes.FileStat
                    , Store
                    , Logging
                    , FileAccess
