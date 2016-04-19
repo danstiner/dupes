@@ -21,6 +21,7 @@ library
                    , Dupes.FileHash
                    , Dupes.FileStat
                    , Dupes.WorkingDirectory
+                   , Dupes.Index
                    , Store
                    , Logging
                    , FileAccess

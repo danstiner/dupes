@@ -14,6 +14,7 @@ import           Control.Monad.Trans.Resource
 import           Data.Either.Compat
 import qualified Data.List                    as List
 import           Data.Maybe
+import           Dupes.Index                  as Index
 import           Dupes.WorkingDirectory       as WorkingDirectory
 import           FileAccess                   (FileAccess)
 import qualified FileAccess
@@ -25,9 +26,6 @@ import           System.FilePath
 
 import           Test.Tasty.HUnit
 import           Test.Tasty.TH
-
-newtype Index = Index { unIndex :: FilePath }
-  deriving Show
 
 data Repository = Repository { workingDirectory :: WorkingDirectory, index :: Index }
   deriving Show
@@ -65,7 +63,8 @@ repositorySubdirectory :: FilePath -> FilePath
 repositorySubdirectory = (</> ".dupes")
 
 getAt :: FilePath -> Repository
-getAt path = Repository (WorkingDirectory.construct path) (Index (repositorySubdirectory path))
+getAt path = Repository (WorkingDirectory.construct path)
+               (Index.construct (repositorySubdirectory path))
 
 case_isRepository_for_repository_is_True = True @=? result
   where
