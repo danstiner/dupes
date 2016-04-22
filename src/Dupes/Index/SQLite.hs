@@ -12,6 +12,7 @@ import           Database.SQLite.Simple.ToField
 import           Dupes.FileHash                   as FileHash hiding (integrationTests)
 import           Dupes.FileStat                   as FileStat
 import           Pipes
+import qualified Pipes.Prelude                    as P
 import           Pipes.Safe
 import qualified Pipes.SQLite.Simple              as PSQLite
 import           Test.Tasty.HUnit
@@ -52,18 +53,19 @@ createTableQuery =
 queryString :: String -> Query
 queryString = Query . T.pack
 
-listDupes :: Connection -> Producer (FileHash, FilePath) (SafeT IO) ()
+listDupes :: Connection -> Producer (FilePath, FileHash) (SafeT IO) ()
 listDupes connection = PSQLite.query connection query ()
   where
     query :: Query
     query =
       queryString
         [i|
-        SELECT hash, self.path
-        FROM #{tableName}
-        INNER JOIN #{tableName} as self ON hash = self.hash
-        GROUP BY hash
-        HAVING count(hash) > 1|]
+        SELECT entry.path, grouping.hash
+        FROM (SELECT hash
+              FROM #{tableName}
+              GROUP BY hash
+              HAVING count() > 1) AS grouping
+        JOIN #{tableName} as entry ON entry.hash = grouping.hash|]
 
 containsPathWithStat :: Connection -> WorkingDirectoryPath -> FileStat -> IO Bool
 containsPathWithStat connection path stat = do
@@ -115,5 +117,18 @@ case_add_then_contains = SQLite.withConnection ":memory:" $ \connection -> do
     path = WorkingDirectoryPath "file"
     stat = FileStat.create
     entry = FileCacheEntry path stat FileHash.nullHash
+
+case_add_dupes_then_list = SQLite.withConnection ":memory:" $ \connection -> do
+  SQLite.execute_ connection createTableQuery
+  addEntry connection entry1
+  addEntry connection entry2
+  dupes <- runSafeT $ P.toListM (listDupes connection)
+  2 @=? length dupes
+  where
+    path1 = WorkingDirectoryPath "file1"
+    path2 = WorkingDirectoryPath "file2"
+    stat = FileStat.create
+    entry1 = FileCacheEntry path1 stat FileHash.nullHash
+    entry2 = FileCacheEntry path2 stat FileHash.nullHash
 
 integrationTests = $(testGroupGenerator)
