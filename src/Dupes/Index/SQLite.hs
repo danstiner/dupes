@@ -78,7 +78,7 @@ updateEntry connection entry@(FileCacheEntry path _ _) = do
   maybeEntry <- getEntryByPath connection path
   case maybeEntry of
     Just _  -> return ()
-    Nothing -> insertEntry connection entry
+    Nothing -> addEntry connection entry
 
 getEntryByPath :: Connection -> WorkingDirectoryPath -> IO (Maybe FileCacheEntry)
 getEntryByPath connection path =
@@ -91,19 +91,29 @@ getEntryByPath connection path =
         FROM #{tableName}
         WHERE path = ?|]
 
-insertEntry :: Connection -> FileCacheEntry -> IO ()
-insertEntry connection = execute connection query
+addEntry :: Connection -> FileCacheEntry -> IO ()
+addEntry connection = execute connection query
   where
     query :: Query
     query = Query $ T.pack [i|INSERT INTO #{tableName} (path, stat, hash) VALUES (?, ?, ?)|]
 
-case_insert_then_get = SQLite.withConnection ":memory:" $ \connection -> do
+case_add_then_get = SQLite.withConnection ":memory:" $ \connection -> do
   SQLite.execute_ connection createTableQuery
-  insertEntry connection entry
+  addEntry connection entry
   maybeEntry' <- getEntryByPath connection path
   Just entry @=? maybeEntry'
   where
     path = WorkingDirectoryPath "file"
     entry = FileCacheEntry path FileStat.create FileHash.nullHash
+
+case_add_then_contains = SQLite.withConnection ":memory:" $ \connection -> do
+  SQLite.execute_ connection createTableQuery
+  addEntry connection entry
+  contained <- containsPathWithStat connection path stat
+  assertBool "Contains should be true after add" contained
+  where
+    path = WorkingDirectoryPath "file"
+    stat = FileStat.create
+    entry = FileCacheEntry path stat FileHash.nullHash
 
 integrationTests = $(testGroupGenerator)
