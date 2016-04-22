@@ -1,5 +1,6 @@
-{-# LANGUAGE QuasiQuotes     #-}
-{-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE QuasiQuotes       #-}
+{-# LANGUAGE TemplateHaskell   #-}
 
 module Dupes.Index.SQLite (integrationTests) where
 
@@ -76,11 +77,18 @@ containsPathWithStat connection path stat = do
       Nothing                         -> False
 
 updateEntry :: Connection -> FileCacheEntry -> IO ()
-updateEntry connection entry@(FileCacheEntry path _ _) = do
+updateEntry connection entry@(FileCacheEntry path stat hash) = do
   maybeEntry <- getEntryByPath connection path
   case maybeEntry of
-    Just _  -> return ()
+    Just _  -> SQLite.execute connection updateQuery (stat, hash, path)
     Nothing -> addEntry connection entry
+
+  where
+    updateQuery = queryString
+                    [i|
+        UPDATE #{tableName}
+        SET stat = ?, hash = ?
+        WHERE path = ?|]
 
 getEntryByPath :: Connection -> WorkingDirectoryPath -> IO (Maybe FileCacheEntry)
 getEntryByPath connection path =
@@ -139,5 +147,16 @@ case_update_with_no_previous_entry_adds = SQLite.withConnection ":memory:" $ \co
   where
     path = WorkingDirectoryPath "file"
     entry = FileCacheEntry path FileStat.create FileHash.nullHash
+
+case_update_with_previous_entry_updates = SQLite.withConnection ":memory:" $ \connection -> do
+  SQLite.execute_ connection createTableQuery
+  addEntry connection entryPrevious
+  updateEntry connection entryNew
+  maybeEntry' <- getEntryByPath connection path
+  Just entryNew @=? maybeEntry'
+  where
+    path = WorkingDirectoryPath "file"
+    entryPrevious = FileCacheEntry path FileStat.create (FileHash.hashByteString "0")
+    entryNew = FileCacheEntry path FileStat.create (FileHash.hashByteString "1")
 
 integrationTests = $(testGroupGenerator)

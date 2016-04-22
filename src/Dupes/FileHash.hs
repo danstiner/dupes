@@ -7,6 +7,7 @@ module Dupes.FileHash (
     toByteString,
     hashFile,
     nullHash,
+    hashByteString,
     integrationTests,
     ) where
 
@@ -58,10 +59,10 @@ case_hashFile_empty_file_is_correct = withSystemTempFile $(tempNameTemplate) $ \
   Right nullHash @=? result
 
 nullHash :: FileHash
-nullHash = fileHashFromHexString "da39a3ee5e6b4b0d3255bfef95601890afd80709"
+nullHash = hashByteString ""
 
-fileHashFromHexString :: B.ByteString -> FileHash
-fileHashFromHexString = FileHash . fromJust . digestFromByteString . fst . Base16.decode
+hashByteString :: B.ByteString -> FileHash
+hashByteString = FileHash . hash
 
 case_hashFile_exclusively_locked_file_is_Left = withSystemTempFile $(tempNameTemplate) $ \path _ -> do
   result <- hashFile path
