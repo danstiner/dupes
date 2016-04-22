@@ -131,4 +131,13 @@ case_add_dupes_then_list = SQLite.withConnection ":memory:" $ \connection -> do
     entry1 = FileCacheEntry path1 stat FileHash.nullHash
     entry2 = FileCacheEntry path2 stat FileHash.nullHash
 
+case_update_with_no_previous_entry_adds = SQLite.withConnection ":memory:" $ \connection -> do
+  SQLite.execute_ connection createTableQuery
+  updateEntry connection entry
+  maybeEntry' <- getEntryByPath connection path
+  Just entry @=? maybeEntry'
+  where
+    path = WorkingDirectoryPath "file"
+    entry = FileCacheEntry path FileStat.create FileHash.nullHash
+
 integrationTests = $(testGroupGenerator)
