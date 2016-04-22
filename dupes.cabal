@@ -22,6 +22,7 @@ library
                    , Dupes.FileStat
                    , Dupes.WorkingDirectory
                    , Dupes.Index
+                   , Dupes.Index.SQLite
                    , Store
                    , Logging
                    , FileAccess
@@ -65,6 +66,8 @@ library
                      , temporary
                      , template-haskell
                      , interpolate
+                     , memory
+                     , binary
 
                      , HUnit
                      , QuickCheck >= 2.7

@@ -27,7 +27,7 @@ import           System.FilePath
 import           Test.Tasty.HUnit
 import           Test.Tasty.TH
 
-data Repository = Repository { workingDirectory :: WorkingDirectory, index :: Index }
+data Repository = Repository { workingDirectory :: WorkingDirectory, indexPath :: IndexPath }
   deriving Show
 
 initialize :: FilePath -> IO Repository

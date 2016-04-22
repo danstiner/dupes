@@ -1,9 +1,22 @@
-module Dupes.FileStat (FileStat) where
+module Dupes.FileStat (FileStat, UnixFileStat(..), create, toByteString) where
 
+import           Data.Binary
+import qualified Data.ByteString                  as B
+import           Database.SQLite.Simple.FromField
+import           Database.SQLite.Simple.ToField
 import           System.PosixCompat
 
-data FileStat =
-       FileStat
+newtype FileStat = FileStat B.ByteString
+  deriving (Eq, Ord, Show)
+
+instance FromField FileStat where
+  fromField field = FileStat <$> fromField field
+
+instance ToField FileStat where
+  toField = toField . toByteString
+
+data UnixFileStat =
+       UnixFileStat
          { mtime :: EpochTime
          , ctime :: EpochTime
          , inode :: FileID
@@ -11,4 +24,18 @@ data FileStat =
          , uid   :: UserID
          , gid   :: GroupID
          }
-  deriving (Eq, Ord, Show)
+
+create :: FileStat
+create = FileStat B.empty
+
+fromUnixFileStat :: UnixFileStat -> FileStat
+fromUnixFileStat = undefined
+
+toByteString :: FileStat -> B.ByteString
+toByteString (FileStat bs) = bs
+
+instance Binary FileStat where
+  put (FileStat bs) = put bs
+  get = FileStat <$> get
+
+prop_encode_decode_is_id = undefined
