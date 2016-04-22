@@ -59,8 +59,9 @@ case_hashFile_empty_file_is_correct = withSystemTempFile $(tempNameTemplate) $ \
 
 nullHash :: FileHash
 nullHash = fileHashFromHexString "da39a3ee5e6b4b0d3255bfef95601890afd80709"
-  where
-    fileHashFromHexString = FileHash . fromJust . digestFromByteString . fst . Base16.decode
+
+fileHashFromHexString :: B.ByteString -> FileHash
+fileHashFromHexString = FileHash . fromJust . digestFromByteString . fst . Base16.decode
 
 case_hashFile_exclusively_locked_file_is_Left = withSystemTempFile $(tempNameTemplate) $ \path _ -> do
   result <- hashFile path
