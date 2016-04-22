@@ -3,8 +3,6 @@
 
 module Dupes.Index.SQLite (integrationTests) where
 
-import           Control.Applicative
-import           Control.Monad.IO.Class
 import           Data.Maybe
 import           Data.String.Interpolate
 import qualified Data.Text                        as T
@@ -12,12 +10,10 @@ import           Database.SQLite.Simple           as SQLite
 import           Database.SQLite.Simple.FromField
 import           Database.SQLite.Simple.ToField
 import           Dupes.FileHash                   as FileHash hiding (integrationTests)
-import           Dupes.FileStat                   as FileStat hiding (integrationTests)
+import           Dupes.FileStat                   as FileStat
 import           Pipes
 import           Pipes.Safe
 import qualified Pipes.SQLite.Simple              as PSQLite
-import           System.IO.Temp
-import           Test
 import           Test.Tasty.HUnit
 import           Test.Tasty.TH
 
