@@ -1,7 +1,15 @@
-module Dupes.Index (IndexPath, construct) where
+{-# LANGUAGE TemplateHaskell #-}
 
+module Dupes.Index (IndexPath, withIndex, updateFile, construct) where
+
+import           Control.Monad.Catch
 import           Control.Monad.IO.Class
 import           Database.SQLite        as SQLite
+import           Dupes.FileHash         as FileHash
+import           Dupes.FileStat         as FileStat
+import           Dupes.Index.SQLite     as IndexImpl
+import           Logging
+import           System.FilePath
 
 data Index = Index SQLite.Connection
 
@@ -9,10 +17,23 @@ newtype IndexPath = IndexPath FilePath
   deriving Show
 
 construct :: FilePath -> IndexPath
-construct = IndexPath
+construct = IndexPath . (</> "index.sqlite")
 
-withIndex :: MonadIO m => IndexPath -> (Index -> m a) -> m a
-withIndex (IndexPath path) f = SQLite.with path (f . Index)
+withIndex :: (MonadMask m, MonadIO m) => IndexPath -> (Index -> m a) -> m a
+withIndex (IndexPath path) f = SQLite.with path
+                                 (\connection ->
+                                    liftIO (IndexImpl.initialize connection) >> (f . Index)
+                                                                                  connection)
 
 updateFile :: Index -> FilePath -> IO ()
-updateFile (Index connection) = undefined
+updateFile (Index connection) path = do
+  entry <- computeEntry path
+  IndexImpl.updateEntry connection entry
+
+  where
+    computeEntry :: FilePath -> IO FileCacheEntry
+    computeEntry path = do
+      maybeHash <- FileHash.hashFile path
+      case maybeHash of
+        Left errorMsg -> exitErrorM $(logTag) (path ++ ": " ++ errorMsg) >> return undefined
+        Right hash    -> return (FileCacheEntry (WorkingDirectoryPath path) FileStat.create hash)

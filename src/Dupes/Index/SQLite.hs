@@ -2,7 +2,13 @@
 {-# LANGUAGE QuasiQuotes       #-}
 {-# LANGUAGE TemplateHaskell   #-}
 
-module Dupes.Index.SQLite (integrationTests) where
+module Dupes.Index.SQLite (
+    FileCacheEntry(..),
+    WorkingDirectoryPath(..),
+    updateEntry,
+    initialize,
+    integrationTests,
+    ) where
 
 import           Data.Maybe
 import           Data.String.Interpolate
@@ -40,16 +46,19 @@ instance ToRow FileCacheEntry where
 tableName :: String
 tableName = "FileCache"
 
-createTableQuery :: Query
-createTableQuery =
-  queryString
-    [i|
-    CREATE TABLE #{tableName} (
-        path TEXT PRIMARY KEY ASC,
-        stat BLOB,
-        hash BLOB)
-            WITHOUT ROWID;
-    CREATE INDEX hash_idx ON Index (hash);|]
+initialize :: Connection -> IO ()
+initialize connection = SQLite.execute_ connection createTableQuery
+  where
+    createTableQuery :: Query
+    createTableQuery =
+      queryString
+        [i|
+        CREATE TABLE IF NOT EXISTS #{tableName} (
+            path TEXT PRIMARY KEY ASC,
+            stat BLOB,
+            hash BLOB)
+                WITHOUT ROWID;
+        CREATE INDEX hash_idx ON Index (hash);|]
 
 queryString :: String -> Query
 queryString = Query . T.pack
@@ -108,7 +117,7 @@ addEntry connection = execute connection query
     query = Query $ T.pack [i|INSERT INTO #{tableName} (path, stat, hash) VALUES (?, ?, ?)|]
 
 case_add_then_get = SQLite.withConnection ":memory:" $ \connection -> do
-  SQLite.execute_ connection createTableQuery
+  initialize connection
   addEntry connection entry
   maybeEntry' <- getEntryByPath connection path
   Just entry @=? maybeEntry'
@@ -117,7 +126,7 @@ case_add_then_get = SQLite.withConnection ":memory:" $ \connection -> do
     entry = FileCacheEntry path FileStat.create FileHash.nullHash
 
 case_add_then_contains = SQLite.withConnection ":memory:" $ \connection -> do
-  SQLite.execute_ connection createTableQuery
+  initialize connection
   addEntry connection entry
   contained <- containsPathWithStat connection path stat
   assertBool "Contains should be true after add" contained
@@ -127,7 +136,7 @@ case_add_then_contains = SQLite.withConnection ":memory:" $ \connection -> do
     entry = FileCacheEntry path stat FileHash.nullHash
 
 case_add_dupes_then_list = SQLite.withConnection ":memory:" $ \connection -> do
-  SQLite.execute_ connection createTableQuery
+  initialize connection
   addEntry connection entry1
   addEntry connection entry2
   dupes <- runSafeT $ P.toListM (listDupes connection)
@@ -140,7 +149,7 @@ case_add_dupes_then_list = SQLite.withConnection ":memory:" $ \connection -> do
     entry2 = FileCacheEntry path2 stat FileHash.nullHash
 
 case_update_with_no_previous_entry_adds = SQLite.withConnection ":memory:" $ \connection -> do
-  SQLite.execute_ connection createTableQuery
+  initialize connection
   updateEntry connection entry
   maybeEntry' <- getEntryByPath connection path
   Just entry @=? maybeEntry'
@@ -149,7 +158,7 @@ case_update_with_no_previous_entry_adds = SQLite.withConnection ":memory:" $ \co
     entry = FileCacheEntry path FileStat.create FileHash.nullHash
 
 case_update_with_previous_entry_updates = SQLite.withConnection ":memory:" $ \connection -> do
-  SQLite.execute_ connection createTableQuery
+  initialize connection
   addEntry connection entryPrevious
   updateEntry connection entryNew
   maybeEntry' <- getEntryByPath connection path

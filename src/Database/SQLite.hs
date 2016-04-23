@@ -3,6 +3,7 @@
 module Database.SQLite (with, Connection, integrationTests) where
 
 import           Control.Applicative
+import           Control.Monad.Catch
 import           Control.Monad.IO.Class
 import qualified Data.Text              as T
 import           Database.SQLite.Simple as SQLite
@@ -11,12 +12,10 @@ import           Test
 import           Test.Tasty.HUnit
 import           Test.Tasty.TH
 
-with :: MonadIO m => FilePath -> (Connection -> m a) -> m a
-with = undefined
+with :: (MonadMask m, MonadIO m) => FilePath -> (Connection -> m a) -> m a
+with path = bracket (liftIO $ open path) (liftIO . close)
 
-case_connection_open_and_close = withSystemTempFile $(tempNameTemplate) $ \path _ -> do
-  connection <- open path
-  close connection
+case_with = withSystemTempFile $(tempNameTemplate) $ \path _ -> with path (const (return ()))
 
 data TestField = TestField Int String
   deriving Show
