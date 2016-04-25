@@ -24,12 +24,9 @@ parser :: Parser Options
 parser = pure Options
 
 run :: Options -> IO ()
-run _ = getCurrentDirectory >>= Repository.findFrom >>= updateOrExit
+run _ = getCurrentDirectory >>= Repository.findFrom >>= maybe errorNoIndex update
   where
-    updateOrExit x =
-      case x of
-        Just repository -> update repository
-        Nothing -> exitErrorM $(logTag)
+    errorNoIndex = exitErrorM $(logTag)
                      [i|Neither path nor any of its parents have a #{appName} index|]
     update path = runSafeT . runEffect $ Actions.update path >-> printUpdateEntry
     printUpdateEntry = P.print
