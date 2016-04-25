@@ -21,39 +21,39 @@ data ConditionM m = All [ConditionM m]
                   | Matches PathSpec
                   | Not (ConditionM m)
 
-test_condition_all_false = assertBool . not $ evalPure condition (File path)
+case_condition_all_for_some_false_is_false = assertBool . not $ evalPure condition (File path)
   where
     condition = All [false, true]
     false = Not true
     true = Matches (PathSpec.parse path)
     path = "file"
 
-test_condition_all_true = assertBool $ evalPure condition (File path)
+case_condition_all_for_all_true_is_true = assertBool $ evalPure condition (File path)
   where
     condition = All [true, true]
     true = Matches (PathSpec.parse path)
     path = "file"
 
-test_condition_any_true = assertBool $ evalPure condition (File path)
+case_condition_any_true = assertBool $ evalPure condition (File path)
   where
     condition = Any [false, true]
     false = Not true
     true = Matches (PathSpec.parse path)
     path = "file"
 
-test_condition_any_false = assertBool . not $ evalPure condition (File path)
+case_condition_any_false = assertBool . not $ evalPure condition (File path)
   where
     condition = Any [false, false]
     false = Not true
     true = Matches (PathSpec.parse path)
     path = "file"
 
-test_condition_matchingPathSpec = assertBool $ evalPure condition (File path)
+case_condition_matchingPathSpec = assertBool $ evalPure condition (File path)
   where
     condition = Matches (PathSpec.parse path)
     path = "file"
 
-test_condition_holds = assertBool $ evalPure condition (File path)
+case_condition_holds = assertBool $ evalPure condition (File path)
   where
     condition = Holds (const $ return True)
     path = "file"

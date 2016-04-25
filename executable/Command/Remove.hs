@@ -54,13 +54,13 @@ prop_baseNameIsPrefixOf_nameWithSuffix path suffix =
     validPath = filter (not . isExtSeparator) path
     nameSuffix = filter (not . isExtSeparator) $ filter (not . isPathSeparator) suffix
 
-test_baseNameIsNotPrefixOf_differentDirectoriesSameName =
+case_baseNameIsNotPrefixOf_differentDirectoriesSameName =
   assertBool $ not ("/parent.ext" `baseNameIsPrefixOf` "/parent/file.ext")
 
-test_baseNameIsNotPrefixOf_differentExtensions =
+case_baseNameIsNotPrefixOf_differentExtensions =
   assertBool $ not ("file.ext" `baseNameIsPrefixOf` "file.ext2")
 
-test_baseNameIsNotPrefixOf_multiSegmentExtension =
+case_baseNameIsNotPrefixOf_multiSegmentExtension =
   assertBool $ not ("file.gz" `baseNameIsPrefixOf` "file.tar.gz")
 
 baseNameIsPrefixOf :: FilePath -> FilePath -> Bool
