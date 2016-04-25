@@ -83,6 +83,7 @@ executable dupes
   Other-Modules:     Commands
                    , Command.Init
                    , Command.Update
+                   , Command.List
                    , Strings
   GHC-Options:       -threaded -Wall -fno-warn-unused-binds -fno-ignore-asserts
   Build-Depends:     base >= 4.5 && <= 5

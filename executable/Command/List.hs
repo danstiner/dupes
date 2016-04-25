@@ -1,13 +1,19 @@
+{-# LANGUAGE QuasiQuotes     #-}
+{-# LANGUAGE TemplateHaskell #-}
+
 module Command.List (Options, parserInfo, run) where
 
-import           DuplicateCache
-import           Index
-import           Repository
-
-import           Control.Monad.Trans.Resource
+import           Data.String.Interpolate
+import qualified Dupes.Actions           as Actions
+import           Dupes.Repository        (Repository)
+import qualified Dupes.Repository        as Repository
+import           Logging
 import           Options.Applicative
 import           Pipes
-import qualified Pipes.Prelude                as P
+import qualified Pipes.Prelude           as P
+import           Pipes.Safe
+import           Strings
+import           System.Directory
 
 data Options = Options { optAll :: Bool }
 
@@ -20,18 +26,17 @@ parserInfo :: ParserInfo Options
 parserInfo = info parser (progDesc "Show information about files in the duplicate index")
 
 run :: Options -> IO ()
-run (Options { optAll = True }) = Repository.runEffect printIndex
-run (Options { optAll = False }) = Repository.runEffect printDuplicates
-
-printIndex :: RepositoryHandle -> Effect (ResourceT IO) ()
-printIndex repository = listIndexEntries >-> getEntryPath >-> P.stdoutLn
+run options = getCurrentDirectory >>= Repository.findFrom >>= maybe errorNoIndex (list options)
   where
-    listIndexEntries = Index.list $ getIndex repository
-    getEntryPath = P.map indexEntryPath
+    errorNoIndex = exitErrorM $(logTag)
+                     [i|Neither path nor any of its parents have a #{appName} index|]
 
-printDuplicates :: RepositoryHandle -> Effect (ResourceT IO) ()
-printDuplicates repository = listDuplicates >-> toString >-> P.stdoutLn
-  where
-    listDuplicates = DuplicateCache.list (getCache repository)
-    toString = P.map stringify
-    stringify (HashPath hash path) = show hash ++ "\t" ++ path
+list :: Options -> Repository -> IO ()
+list (Options { optAll = True }) = printIndex
+list (Options { optAll = False }) = printDuplicates
+
+printIndex :: Repository -> IO ()
+printIndex repository = runSafeT . runEffect $ Actions.listAll repository >-> P.print
+
+printDuplicates :: Repository -> IO ()
+printDuplicates repository = runSafeT . runEffect $ Actions.listDuplicates repository >-> P.print

@@ -1,6 +1,7 @@
-module Dupes.Actions (update) where
+module Dupes.Actions (update, listAll, listDuplicates) where
 
-import           Dupes.Index            as Index
+import           Dupes.FileHash         (FileHash)
+import qualified Dupes.Index            as Index
 import           Dupes.Repository
 import           Dupes.WorkingDirectory
 import           Pipes
@@ -12,7 +13,7 @@ data UpdatedIndexEntry = UpdatedIndexEntry FilePath
   deriving Show
 
 update :: Repository -> Producer UpdatedIndexEntry (SafeT IO) ()
-update repository = hoist liftBase $ withIndex (indexPath repository) $ \index ->
+update repository = hoist liftBase $ Index.withIndex (indexPath repository) $ \index ->
   walk (workingDirectory repository) >->
   P.filter isFileEntry >->
   P.map Path.getPath >->
@@ -20,3 +21,9 @@ update repository = hoist liftBase $ withIndex (indexPath repository) $ \index -
   where
     isFileEntry (Path.FileEntry _ _) = True
     isFileEntry _ = False
+
+listAll :: Repository -> Producer FilePath (SafeT IO) ()
+listAll repository = Index.withIndex (indexPath repository) Index.listAll
+
+listDuplicates :: Repository -> Producer (FilePath, FileHash) (SafeT IO) ()
+listDuplicates repository = Index.withIndex (indexPath repository) Index.listDuplicates

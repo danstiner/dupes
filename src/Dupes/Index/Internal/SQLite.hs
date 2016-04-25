@@ -7,6 +7,7 @@ module Dupes.Index.Internal.SQLite (
     WorkingDirectoryPath(..),
     updateEntry,
     initialize,
+    listDuplicates,
     integrationTests,
     ) where
 
@@ -63,8 +64,8 @@ initialize connection = SQLite.execute_ connection createTableQuery
 queryString :: String -> Query
 queryString = Query . T.pack
 
-listDupes :: Connection -> Producer (FilePath, FileHash) (SafeT IO) ()
-listDupes connection = PSQLite.query connection query ()
+listDuplicates :: Connection -> Producer (FilePath, FileHash) (SafeT IO) ()
+listDuplicates connection = PSQLite.query connection query ()
   where
     query :: Query
     query =
@@ -139,7 +140,7 @@ case_add_dupes_then_list = SQLite.withConnection ":memory:" $ \connection -> do
   initialize connection
   addEntry connection entry1
   addEntry connection entry2
-  dupes <- runSafeT $ P.toListM (listDupes connection)
+  dupes <- runSafeT $ P.toListM (listDuplicates connection)
   2 @=? length dupes
   where
     path1 = WorkingDirectoryPath "file1"
