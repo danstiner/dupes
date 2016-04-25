@@ -2,7 +2,7 @@
 {-# LANGUAGE QuasiQuotes       #-}
 {-# LANGUAGE TemplateHaskell   #-}
 
-module Dupes.Index.SQLite (
+module Dupes.Index.Internal.SQLite (
     FileCacheEntry(..),
     WorkingDirectoryPath(..),
     updateEntry,

@@ -22,7 +22,7 @@ library
                    , Dupes.FileStat
                    , Dupes.WorkingDirectory
                    , Dupes.Index
-                   , Dupes.Index.SQLite
+                   , Dupes.Index.Internal.SQLite
                    , Store
                    , Logging
                    , FileAccess

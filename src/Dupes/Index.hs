@@ -4,10 +4,10 @@ module Dupes.Index (IndexPath, withIndex, updateFile, construct) where
 
 import           Control.Monad.Catch
 import           Control.Monad.IO.Class
-import           Database.SQLite        as SQLite
-import           Dupes.FileHash         as FileHash
-import           Dupes.FileStat         as FileStat
-import           Dupes.Index.SQLite     as IndexImpl
+import           Database.SQLite             as SQLite
+import           Dupes.FileHash              as FileHash
+import           Dupes.FileStat              as FileStat
+import           Dupes.Index.Internal.SQLite as Internal
 import           Logging
 import           System.FilePath
 
@@ -22,13 +22,13 @@ construct = IndexPath . (</> "index.sqlite")
 withIndex :: (MonadMask m, MonadIO m) => IndexPath -> (Index -> m a) -> m a
 withIndex (IndexPath path) f = SQLite.with path
                                  (\connection ->
-                                    liftIO (IndexImpl.initialize connection) >> (f . Index)
-                                                                                  connection)
+                                    liftIO (Internal.initialize connection) >> (f . Index)
+                                                                                 connection)
 
 updateFile :: Index -> FilePath -> IO ()
 updateFile (Index connection) path = do
   entry <- computeEntry path
-  IndexImpl.updateEntry connection entry
+  Internal.updateEntry connection entry
 
   where
     computeEntry :: FilePath -> IO FileCacheEntry
