@@ -29,7 +29,7 @@ run :: Options -> IO ()
 run options = getCurrentDirectory >>= Repository.findFrom >>= maybe errorNoIndex (list options)
   where
     errorNoIndex = exitErrorM $(logTag)
-                     [i|Neither path nor any of its parents have a #{appName} index|]
+                     [i|Neither the current directory nor any of its parents have a #{appName} index|]
 
 list :: Options -> Repository -> IO ()
 list (Options { optAll = True }) = printIndex
