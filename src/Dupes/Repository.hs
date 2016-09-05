@@ -69,6 +69,11 @@ case_isRepository_for_repository_is_True = True @=? result
     result = FileAccess.runPure filesystem $ isRepositoryF "/path"
     filesystem = fakeRepositoryAt "/path"
 
+case_isRepository_for_non_repo_path_is_False = False @=? result
+  where
+    result = FileAccess.runPure filesystem $ isRepositoryF "/path"
+    filesystem = []
+
 case_findFrom_when_directory_is_repository = expected @=? actual
   where
     expected = Just "/path"
@@ -105,11 +110,6 @@ case_initialize_is_idempotent = True @=? result
     result = FileAccess.runPure filesystem $ do
       _ <- initializeF "/path"
       isRepositoryF "/path"
-
-case_isRepository_for_non_repo_path_is_False = False @=? result
-  where
-    result = FileAccess.runPure filesystem $ isRepositoryF "/path"
-    filesystem = []
 
 fakeRepositoryAt :: FilePath -> [FilePath]
 fakeRepositoryAt path = [repositorySubdirectory path]
