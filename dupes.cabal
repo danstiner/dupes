@@ -104,6 +104,13 @@ Test-suite library
                      , dupes
                      , tasty
 
+Test-suite executable
+  Type:              exitcode-stdio-1.0
+  Hs-Source-Dirs:    test/executable
+  Main-Is:           Spec.hs
+  GHC-Options:    -threaded
+  Build-Depends:       base >= 4 && < 5
+                     , tasty
 source-repository head
   type: git
   location: git://github.com:danstiner/dupes.git
