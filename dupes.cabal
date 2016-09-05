@@ -95,22 +95,14 @@ executable dupes
                      , pipes-safe
                      , interpolate
 
-Test-suite pure
+Test-suite library
   Type:              exitcode-stdio-1.0
-  Hs-Source-Dirs:    test
-  Main-Is:           PureTestSuite.hs
+  Hs-Source-Dirs:    test/library
+  Main-Is:           Spec.hs
+  GHC-Options:    -threaded
   Build-Depends:       base >= 4 && < 5
                      , dupes
                      , tasty
-
-Test-suite integration
-  Type:           exitcode-stdio-1.0
-  Hs-Source-Dirs: test
-  Main-Is:        IntegrationTestSuite.hs
-  GHC-Options:    -threaded
-  Build-Depends:  base >= 4 && < 5
-                  , dupes
-                  , tasty
 
 source-repository head
   type: git
