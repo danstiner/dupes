@@ -5,13 +5,13 @@
 
 module Pipes.SQLite.Simple (query, query_, integrationTests) where
 
-import           Pipes
-import qualified Pipes.Prelude                as P
-import           Pipes.Safe
 import           Database.SQLite.Simple       (Connection, FromRow, Statement,
                                                ToRow)
 import qualified Database.SQLite.Simple       as SQLite
 import           Database.SQLite.Simple.Types
+import           Pipes
+import qualified Pipes.Prelude                as P
+import           Pipes.Safe
 import           Test.QuickCheck.Monadic
 import           Test.Tasty.QuickCheck
 import           Test.Tasty.TH

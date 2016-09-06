@@ -10,9 +10,9 @@ module Dupes.Repository (
 
 import           Control.Monad
 import           Data.Maybe
-import           Dupes.Index                  as Index
-import           Dupes.WorkingDirectory       as WorkingDirectory
-import           FileAccess                   (FileAccess)
+import           Dupes.Index            as Index
+import           Dupes.WorkingDirectory as WorkingDirectory
+import           FileAccess             (FileAccess)
 import qualified FileAccess
 import           System.FilePath
 

@@ -1,7 +1,7 @@
 module Dupes.WorkingDirectory (WorkingDirectory, construct, walk, makeRelativePath) where
 
 import           Pipes
-import qualified Pipes.Path as Path
+import qualified Pipes.Path      as Path
 import qualified System.FilePath as FilePath
 
 newtype WorkingDirectory = WorkingDirectory FilePath
