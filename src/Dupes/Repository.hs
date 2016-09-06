@@ -8,20 +8,12 @@ module Dupes.Repository (
     pureTestGroup,
     ) where
 
-import           Control.Applicative
 import           Control.Monad
-import           Control.Monad.Trans.Resource
-import           Data.Either.Compat
-import qualified Data.List                    as List
 import           Data.Maybe
 import           Dupes.Index                  as Index
 import           Dupes.WorkingDirectory       as WorkingDirectory
 import           FileAccess                   (FileAccess)
 import qualified FileAccess
-import           Pipes
-import           Pipes.Safe
-import           System.Directory
-import           System.Exit
 import           System.FilePath
 
 import           Test.Tasty.HUnit

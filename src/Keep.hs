@@ -3,15 +3,11 @@
 
 module Keep (pureTests) where
 
-import           Control.Applicative
-import qualified Control.DeepSeq       as DeepSeq
-import           Control.Monad
 import           Pipes
 import           Pipes.Parse
 import           Pipes.Parse.Ext
 import qualified Pipes.Prelude         as P
 
-import           Test.Tasty.HUnit
 import           Test.Tasty.QuickCheck
 import           Test.Tasty.TH
 

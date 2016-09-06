@@ -16,14 +16,12 @@ import           Control.Monad
 import           Crypto.Hash                      as Hash
 import qualified Data.ByteArray                   as ByteArray
 import qualified Data.ByteString                  as B
-import qualified Data.ByteString.Base16           as Base16
 import qualified Data.ByteString.Lazy             as L
 import           Data.Either
 import           Data.Maybe
 import           Data.String.Interpolate
 import           Database.SQLite.Simple.FromField
 import           Database.SQLite.Simple.ToField
-import           System.FilePath
 import           System.IO
 import           System.IO.Temp
 import           Test
