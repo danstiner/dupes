@@ -40,6 +40,7 @@ update repository = hoist liftBase $ Index.withIndex (indexPath repository) $ \i
   walk (workingDirectory repository) >->
   P.filter isFileEntry >->
   P.map Path.getPath >->
+  P.map (makeRelativePath (workingDirectory repository)) >->
   P.mapM (\path -> Index.updateFile index path >> return (UpdatedIndexEntry path))
   where
     isFileEntry (Path.FileEntry _ _) = True
