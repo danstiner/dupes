@@ -29,7 +29,11 @@ matches spec path =
 
 case_matches_exact_path = assert (matches (parse "foo/bar") "foo/bar")
 
-case_matches_simple_asterisk_glob = assert (matches (parse "foo/*") "foo/bar")
+case_star_matches_only_in_directory = do
+  assert (matches (parse "foo/*") "foo/bar")
+  assert $ not (matches (parse "foo/*") "baz/bar")
+
+case_double_star_crosses_directory_boundaries = assert (matches (parse "**/*") "foo/bar/baz")
 
 case_matches_fails_for_negated_path = assert $ not (matches (parse "~foo/bar") "foo/bar")
 

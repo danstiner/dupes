@@ -1,11 +1,15 @@
+{-# LANGUAGE RankNTypes      #-}
 {-# LANGUAGE TemplateHaskell #-}
 
 module Dupes.Index (
     IndexPath,
+    Index,
     withIndex,
     updateFile,
     construct,
     listDuplicates,
+    listHashesWithDuplicates,
+    listFilesWithHash,
     listAll,
     ) where
 
@@ -53,6 +57,12 @@ updateFile (Index connection) path = do
 
 listDuplicates :: Index -> Producer (FilePath, FileHash) (SafeT IO) ()
 listDuplicates (Index connection) = Internal.listDuplicates connection
+
+listHashesWithDuplicates :: Index -> Producer FileHash (SafeT IO) ()
+listHashesWithDuplicates (Index connection) = Internal.listHashesWithDuplicates connection
+
+listFilesWithHash :: Index -> FileHash -> Producer FilePath (SafeT IO) ()
+listFilesWithHash (Index connection) = Internal.listFilesWithHash connection
 
 listAll :: Index -> Producer FilePath (SafeT IO) ()
 listAll = undefined

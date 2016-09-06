@@ -8,6 +8,8 @@ module Dupes.Index.Internal.SQLite (
     updateEntry,
     initialize,
     listDuplicates,
+    listHashesWithDuplicates,
+    listFilesWithHash,
     integrationTests,
     ) where
 
@@ -76,7 +78,34 @@ listDuplicates connection = PSQLite.query connection query ()
               FROM #{tableName}
               GROUP BY hash
               HAVING count() > 1) AS grouping
-        JOIN #{tableName} as entry ON entry.hash = grouping.hash|]
+        JOIN #{tableName} as entry ON entry.hash = grouping.hash
+        ORDER BY grouping.hash|]
+
+listHashesWithDuplicates :: Connection -> Producer FileHash (SafeT IO) ()
+listHashesWithDuplicates connection = PSQLite.query connection query () >-> P.map unOnly
+  where
+    query :: Query
+    query =
+      queryString
+        [i|
+        SELECT hash
+        FROM #{tableName}
+        GROUP BY hash
+        HAVING count() > 1|]
+
+listFilesWithHash :: Connection -> FileHash -> Producer FilePath (SafeT IO) ()
+listFilesWithHash connection hash = PSQLite.query connection query (Only hash) >-> P.map unOnly
+  where
+    query :: Query
+    query =
+      queryString
+        [i|
+        SELECT path
+        FROM #{tableName}
+        WHERE hash = ?|]
+
+unOnly :: Only x -> x
+unOnly (Only x) = x
 
 containsPathWithStat :: Connection -> WorkingDirectoryPath -> FileStat -> IO Bool
 containsPathWithStat connection path stat = do
