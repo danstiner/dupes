@@ -18,10 +18,8 @@ import           Dupes.Index            (Index)
 import qualified Dupes.Index            as Index
 import           Dupes.Repository
 import           Dupes.WorkingDirectory
-import           Lens.Family            (view)
 import           PathSpec
 import           Pipes
-import           Pipes.Group
 import qualified Pipes.Path             as Path
 import qualified Pipes.Prelude          as P
 import           Pipes.Safe
