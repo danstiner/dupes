@@ -11,6 +11,7 @@ module Dupes.Index (
     listHashesWithDuplicates,
     listFilesWithHash,
     listAll,
+    deleteEntryByPath,
     ) where
 
 import           Control.Monad.Catch
@@ -66,3 +67,6 @@ listFilesWithHash (Index connection) = Internal.listFilesWithHash connection
 
 listAll :: Index -> Producer FilePath (SafeT IO) ()
 listAll = undefined
+
+deleteEntryByPath :: Index -> FilePath -> IO ()
+deleteEntryByPath (Index connection) path = Internal.deleteEntryByPath connection (Internal.WorkingDirectoryPath path)

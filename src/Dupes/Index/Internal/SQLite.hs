@@ -11,6 +11,7 @@ module Dupes.Index.Internal.SQLite (
     listHashesWithDuplicates,
     listFilesWithHash,
     integrationTests,
+    deleteEntryByPath,
     ) where
 
 import           Data.Maybe
@@ -128,6 +129,17 @@ updateEntry connection entry@(FileCacheEntry path stat hash) = do
         UPDATE #{tableName}
         SET stat = ?, hash = ?
         WHERE path = ?|]
+
+deleteEntryByPath :: Connection -> WorkingDirectoryPath -> IO ()
+deleteEntryByPath connection path =
+  SQLite.execute connection query (Only path)
+    where
+      query =
+        queryString
+          [i|
+          DELETE
+          FROM #{tableName}
+          WHERE path = ?|]
 
 getEntryByPath :: Connection -> WorkingDirectoryPath -> IO (Maybe FileCacheEntry)
 getEntryByPath connection path =

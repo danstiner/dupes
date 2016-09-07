@@ -82,8 +82,9 @@ executable dupes
   Main-Is:           Main.hs
   Other-Modules:     Commands
                    , Command.Init
-                   , Command.Update
                    , Command.List
+                   , Command.Remove
+                   , Command.Update
                    , Strings
   GHC-Options:       -threaded -Wall -fno-warn-unused-binds -fno-ignore-asserts
   Build-Depends:     base >= 4.5 && <= 5

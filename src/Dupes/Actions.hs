@@ -68,7 +68,9 @@ removeInPaths' pathspecs dryRun index = for hashesWithDuplicates removeForHash >
     actionIsRemove _ = False
     extractPath (RemoveDuplicate path) = path
     removePath :: FilePath -> SafeT IO FilePath
-    removePath path = unless dryRun (liftBase (removeFile path)) >> return path
+    removePath path = unless dryRun (removePath' path) >> return path
+    removePath' :: FilePath -> SafeT IO ()
+    removePath' path = liftBase (removeFile path >> Index.deleteEntryByPath index path)
     removeForHash :: FileHash -> Producer DuplicateAction (SafeT IO) ()
     removeForHash hash = do
       areAnyOutside <- lift $ anyOutside hash
