@@ -14,12 +14,12 @@ import           Test.Tasty                  (defaultMain, testGroup)
 main :: IO ()
 main = defaultMain $
   testGroup "Library tests"
-    [ PathSpec.testGroup
-    , Dupes.Repository.testGroup
-    , Keep.testGroup
-    , Store.testGroup
-    , Database.SQLite.testGroup
-    , Pipes.SQLite.Simple.testGroup
+    [ Database.SQLite.testGroup
     , Dupes.FileHash.testGroup
     , Dupes.Index.Internal.SQLite.testGroup
+    , Dupes.Repository.testGroup
+    , Keep.testGroup
+    , PathSpec.testGroup
+    , Pipes.SQLite.Simple.testGroup
+    , Store.testGroup
     ]
