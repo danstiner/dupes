@@ -5,7 +5,7 @@ module PathSpec (
     PathSpecString,
     matches,
     parse,
-    pureTestGroup,
+    testGroup,
     ) where
 
 import           Data.List
@@ -37,4 +37,4 @@ case_double_star_crosses_directory_boundaries = assert (matches (parse "**/*") "
 
 case_matches_fails_for_negated_path = assert $ not (matches (parse "~foo/bar") "foo/bar")
 
-pureTestGroup = $(testGroupGenerator)
+testGroup = $(testGroupGenerator)

@@ -3,7 +3,7 @@
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE TemplateHaskell     #-}
 
-module Pipes.SQLite.Simple (query, query_, integrationTests) where
+module Pipes.SQLite.Simple (query, query_, testGroup) where
 
 import           Database.SQLite.Simple       (Connection, FromRow, Statement,
                                                ToRow)
@@ -74,4 +74,4 @@ prop_query_produces_correct_rows_in_order xs = monadicIO $ do
            runSafeT $ P.toListM (query_ connection "SELECT i FROM test" >-> P.map fromOnly)
   assert (xs == xs')
 
-integrationTests = $(testGroupGenerator)
+testGroup = $(testGroupGenerator)

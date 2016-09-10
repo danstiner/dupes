@@ -8,7 +8,7 @@ module Dupes.FileHash (
     hashFile,
     nullHash,
     hashByteString,
-    integrationTests,
+    testGroup,
     ) where
 
 import           Control.Exception
@@ -66,4 +66,4 @@ case_hashFile_exclusively_locked_file_is_Left = withSystemTempFile $(tempNameTem
   result <- hashFile path
   assertBool [i|Expected result to be a Left but was #{show result}|] (isLeft result)
 
-integrationTests = $(testGroupGenerator)
+testGroup = $(testGroupGenerator)

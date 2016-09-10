@@ -1,6 +1,6 @@
 {-# LANGUAGE TemplateHaskell #-}
 
-module Database.SQLite (with, Connection, integrationTests) where
+module Database.SQLite (with, Connection, testGroup) where
 
 import           Control.Applicative
 import           Control.Monad.Catch
@@ -29,4 +29,4 @@ case_sql_insert_a_value = SQLite.withConnection ":memory:" $ \connection -> do
   [TestField id value] <- SQLite.query_ connection (SQLite.Query $ T.pack "SELECT * FROM test") :: IO [TestField]
   "value" @=? value
 
-integrationTests = $(testGroupGenerator)
+testGroup = $(testGroupGenerator)

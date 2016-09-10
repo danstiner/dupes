@@ -16,9 +16,11 @@ import           Data.List              (isPrefixOf)
 import           Dupes.FileHash         (FileHash)
 import           Dupes.Index            (Index)
 import qualified Dupes.Index            as Index
-import           Dupes.Repository
+import           Dupes.Repository       (Repository)
+import qualified Dupes.Repository       as Repository
 import           Dupes.WorkingDirectory
-import           PathSpec
+import           PathSpec               (PathSpec)
+import qualified PathSpec
 import           Pipes
 import qualified Pipes.Path             as Path
 import qualified Pipes.Prelude          as P
@@ -34,28 +36,28 @@ data UpdatedIndexEntry = UpdatedIndexEntry FilePath
   deriving Show
 
 update :: Repository -> Producer UpdatedIndexEntry (SafeT IO) ()
-update repository = hoist liftBase $ Index.withIndex (indexPath repository) $ \index ->
-  walk (workingDirectory repository) >->
+update repository = hoist liftBase $ Index.withIndex (Repository.indexPath repository) $ \index ->
+  walk (Repository.workingDirectory repository) >->
   P.filter isFileEntry >->
   P.map Path.getPath >->
-  P.map (makeRelativePath (workingDirectory repository)) >->
+  P.map (makeRelativePath (Repository.workingDirectory repository)) >->
   P.mapM (\path -> Index.updateFile index path >> return (UpdatedIndexEntry path))
   where
     isFileEntry (Path.FileEntry _ _) = True
     isFileEntry _ = False
 
 listAll :: Repository -> Producer FilePath (SafeT IO) ()
-listAll repository = Index.withIndex (indexPath repository) Index.listAll
+listAll repository = Index.withIndex (Repository.indexPath repository) Index.listAll
 
 listDuplicates :: Repository -> Producer (FilePath, FileHash) (SafeT IO) ()
-listDuplicates repository = Index.withIndex (indexPath repository) Index.listDuplicates
+listDuplicates repository = Index.withIndex (Repository.indexPath repository) Index.listDuplicates
 
 data DuplicateAction = KeepDuplicate FilePath
                      | RemoveDuplicate FilePath
   deriving Show
 
 removeInPaths :: Repository -> [PathSpec] -> Bool -> Producer FilePath (SafeT IO) ()
-removeInPaths repository pathspecs dryRun = Index.withIndex (indexPath repository)
+removeInPaths repository pathspecs dryRun = Index.withIndex (Repository.indexPath repository)
                                               (removeInPaths' pathspecs dryRun)
 
 removeInPaths' :: [PathSpec] -> Bool -> Index -> Producer FilePath (SafeT IO) ()
@@ -81,7 +83,7 @@ removeInPaths' pathspecs dryRun index = for hashesWithDuplicates removeForHash >
     pAny' f producer = P.fold (||) False id (producer >-> P.map f)
     removeAllMatchingFor :: FileHash -> Producer DuplicateAction (SafeT IO) ()
     removeAllMatchingFor hash = listFilesWithHash hash >-> removeProducerByPredicate pathSpecMatches
-    pathSpecMatches path = any (`matches` path) pathspecs
+    pathSpecMatches path = any (`PathSpec.matches` path) pathspecs
     hashesWithDuplicates = Index.listHashesWithDuplicates index
     listFilesWithHash = Index.listFilesWithHash index
 
@@ -114,7 +116,7 @@ removeProducerByPredicate f = P.map
 
 removeMatching :: [PathSpec] -> FilePath -> FilePath -> KeepChoice
 removeMatching pathspecs =
-  removeByPredicate (\path -> any (`matches` path) pathspecs)
+  removeByPredicate (\path -> any (`PathSpec.matches` path) pathspecs)
 
 removeMatching'' :: Monad m => forall r. Producer FilePath m r -> Producer DuplicateAction m r
 removeMatching'' = undefined

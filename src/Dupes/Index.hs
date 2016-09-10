@@ -69,4 +69,5 @@ listAll :: Index -> Producer FilePath (SafeT IO) ()
 listAll = undefined
 
 deleteEntryByPath :: Index -> FilePath -> IO ()
-deleteEntryByPath (Index connection) path = Internal.deleteEntryByPath connection (Internal.WorkingDirectoryPath path)
+deleteEntryByPath (Index connection) path = Internal.deleteEntryByPath connection
+                                              (Internal.WorkingDirectoryPath path)

@@ -1,7 +1,7 @@
 {-# LANGUAGE RankNTypes      #-}
 {-# LANGUAGE TemplateHaskell #-}
 
-module Keep (pureTests) where
+module Keep (testGroup) where
 
 import           Pipes
 import           Pipes.Parse
@@ -54,4 +54,4 @@ prop_filter_keeps_at_least_one (NonEmpty xs) = forAll (filterArbitrarily xs) (no
 prop_filter_terminates :: [Int] -> Which -> Bool
 prop_filter_terminates xs which = seq (filterListKeeping (const . const which) xs) True
 
-pureTests = $(testGroupGenerator)
+testGroup = $(testGroupGenerator)

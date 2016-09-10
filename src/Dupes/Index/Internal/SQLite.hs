@@ -10,7 +10,7 @@ module Dupes.Index.Internal.SQLite (
     listDuplicates,
     listHashesWithDuplicates,
     listFilesWithHash,
-    integrationTests,
+    testGroup,
     deleteEntryByPath,
     ) where
 
@@ -20,7 +20,8 @@ import qualified Data.Text                        as T
 import           Database.SQLite.Simple           as SQLite
 import           Database.SQLite.Simple.FromField
 import           Database.SQLite.Simple.ToField
-import           Dupes.FileHash                   as FileHash hiding (integrationTests)
+import           Dupes.FileHash                   (FileHash)
+import qualified Dupes.FileHash                   as FileHash
 import           Dupes.FileStat                   as FileStat
 import           Pipes
 import qualified Pipes.Prelude                    as P
@@ -133,10 +134,10 @@ updateEntry connection entry@(FileCacheEntry path stat hash) = do
 deleteEntryByPath :: Connection -> WorkingDirectoryPath -> IO ()
 deleteEntryByPath connection path =
   SQLite.execute connection query (Only path)
-    where
-      query =
-        queryString
-          [i|
+  where
+    query =
+      queryString
+        [i|
           DELETE
           FROM #{tableName}
           WHERE path = ?|]
@@ -210,4 +211,4 @@ case_update_with_previous_entry_updates = SQLite.withConnection ":memory:" $ \co
     entryPrevious = FileCacheEntry path FileStat.create (FileHash.hashByteString "0")
     entryNew = FileCacheEntry path FileStat.create (FileHash.hashByteString "1")
 
-integrationTests = $(testGroupGenerator)
+testGroup = $(testGroupGenerator)

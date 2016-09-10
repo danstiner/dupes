@@ -5,7 +5,7 @@ module Dupes.Repository (
     initialize,
     findFrom,
     isRepository,
-    pureTestGroup,
+    testGroup,
     ) where
 
 import           Control.Monad
@@ -106,4 +106,4 @@ case_initialize_is_idempotent = True @=? result
 fakeRepositoryAt :: FilePath -> [FilePath]
 fakeRepositoryAt path = [repositorySubdirectory path]
 
-pureTestGroup = $(testGroupGenerator)
+testGroup = $(testGroupGenerator)

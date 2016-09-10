@@ -1,6 +1,6 @@
 {-# LANGUAGE TemplateHaskell #-}
 
-module Store (update, pureTests) where
+module Store (update, testGroup) where
 
 import           Dupes.Repository (Repository)
 
@@ -12,4 +12,4 @@ data UpdateResult = UpdateResult
 update :: Repository -> IO UpdateResult
 update = undefined
 
-pureTests = $(testGroupGenerator)
+testGroup = $(testGroupGenerator)
